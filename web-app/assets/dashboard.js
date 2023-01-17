@@ -5,7 +5,9 @@ const restart = document.querySelector('.restart');
 let reload_flag = 0;
 
 relay.addEventListener('click', function () {
-  window.location.href = 'relay.html';
+  let xhr = new XMLHttpRequest();
+  xhr.open('GET', '/relay', true);
+  xhr.send();
 });
 restart.addEventListener('click', async function (e) {
   e.preventDefault();

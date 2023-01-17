@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connect</title>
+
+    <link rel="stylesheet" href="assets/wifi_connect.css" />
+  </head>
+  <body>
+    <div class="center">
+      <h1><img src="./image/nds.png" alt="NDS" /></h1>
+      <form action="/AP_STA_post" class="form" method="post">
+        <div class="ssid">
+          SSID: <input type="text" class="inpssid" required />
+        </div>
+        <br /><br />
+
+        <div class="pwd">
+          PASS: <input type="password" class="inpPass" required />
+
+          <img class="showPass" src="./image/ey.png" alt="no" />
+        </div>
+        <br /><br /><br /><br />
+
+        <input type="submit" value="connect" class="btn" />
+      </form>
+    </div>
+    <script src="assets/wifi_connect.js"></script>
+  </body>
+</html>
