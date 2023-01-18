@@ -1,18 +1,20 @@
 'use strict';
+//initiation
 const relay = document.querySelector('.relay');
 const info = document.querySelector('.info');
 const restart = document.querySelector('.restart');
 let reload_flag = 0;
-
+//relay button onclick function
 relay.addEventListener('click', function () {
   let xhr = new XMLHttpRequest();
   xhr.open('GET', '/relay', true);
   xhr.send();
 });
+//restart button onclick function
 restart.addEventListener('click', async function (e) {
   e.preventDefault();
   const data = {
-    restart: true,
+    restart: 1,
   };
   const options = {
     method: 'POST',
@@ -30,7 +32,7 @@ restart.addEventListener('click', async function (e) {
     }
   }
 });
-
+//window onload function
 window.addEventListener('load', () => {
   setTimeout(() => {
     alert(
