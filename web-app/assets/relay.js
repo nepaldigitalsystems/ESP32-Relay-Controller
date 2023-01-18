@@ -19,59 +19,449 @@ let Relay16 = document.querySelector('.btn-16');
 let random = document.querySelector('.rnd');
 let serial = document.querySelector('.srl');
 let reload_relay_flag = 0;
+let random_value = 0;
 
-for(i=1;i<17;i++)
-{
-  `Relay${i}`.addEventListener
-}
+let json_data = {
+  Relay1: 0,
+  Relay2: 0,
+  Relay3: 0,
+  Relay4: 0,
+  Relay5: 0,
+  Relay6: 0,
+  Relay7: 0,
+  Relay8: 0,
+  Relay9: 0,
+  Relay10: 0,
+  Relay11: 0,
+  Relay12: 0,
+  Relay13: 0,
+  Relay14: 0,
+  Relay15: 0,
+  Relay16: 0,
+  random: 0,
+  serial: 0,
+};
+let data;
 
+/* inital json_packet */
+console.log(json_data);
 
-btn.addEventListener('click', async function (e) {
- 
+Relay1.addEventListener('click', async function (e) {
   e.preventDefault();
-  const data = {
-Relay1 :a,
-Relay2 :a,
-Relay3 :a,
-Relay4 :a,
-Relay5 :a,
-Relay6 :a,
-Relay7 :a,
-Relay8 :a,
-Relay9 :a,
-Relay10:a,
-Relay11:a,
-Relay12:a,
-Relay13:a,
-Relay14:a,
-Relay15:a,
-Relay16:a,
+  data = {
+    Relay1: Relay1.style.backgroundColor === '#09f774' ? 0 : 1,
   };
   const options = {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify(json_data),
   };
   const response = await fetch('/dashboard', options);
   if (response.status == 200) {
-    const json_data = await response.json();
-    console.log(json_data);
-    console.log('Approve Status : ', json_data.approve);
-    if (json_data.approve == 1) {
-      restart.classList.add('hidden');
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay1_update_success);
+    if (recv_data.Relay1_update_success == 1) {
+      Relay1.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay1 = data.Relay1;
+});
+
+Relay2.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay2: Relay2.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay2_update_success);
+    if (recv_data.Relay2_update_success == 1) {
+      Relay2.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay2 = data.Relay2;
+});
+Relay3.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay3: Relay3.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay3_update_success);
+    if (recv_data.Relay3_update_success == 1) {
+      Relay3.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay3 = data.Relay3;
+});
+Relay4.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay4: Relay4.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay4_update_success);
+    if (recv_data.Relay4_update_success == 1) {
+      Relay4.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay4 = data.Relay4;
+});
+Relay5.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay5: Relay5.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay5_update_success);
+    if (recv_data.Relay5_update_success == 1) {
+      Relay5.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay5 = data.Relay5;
+});
+Relay6.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay6: Relay6.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay6_update_success);
+    if (recv_data.Relay6_update_success == 1) {
+      Relay6.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay6 = data.Relay6;
+});
+
+Relay7.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay7: Relay7.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay7_update_success);
+    if (recv_data.Relay7_update_success == 1) {
+      Relay7.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay7 = data.Relay7;
+});
+Relay8.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay8: Relay8.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay8_update_success);
+    if (recv_data.Relay8_update_success == 1) {
+      Relay8.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay8 = data.Relay8;
+});
+Relay9.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay9: Relay9.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay9_update_success);
+    if (recv_data.Relay9_update_success == 1) {
+      Relay9.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay9 = data.Relay9;
+});
+Relay10.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay10: Relay10.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay10_update_success);
+    if (recv_data.Relay10_update_success == 1) {
+      Relay10.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay10 = data.Relay10;
+});
+Relay11.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay11: Relay11.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay11_update_success);
+    if (recv_data.Relay11_update_success == 1) {
+      Relay11.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay11 = data.Relay11;
+});
+
+Relay12.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay12: Relay12.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay12_update_success);
+    if (recv_data.Relay12_update_success == 1) {
+      Relay12.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay12 = data.Relay12;
+});
+Relay13.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay13: Relay13.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay13_update_success);
+    if (recv_data.Relay13_update_success == 1) {
+      Relay13.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay13 = data.Relay13;
+});
+Relay14.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay14: Relay14.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay14_update_success);
+    if (recv_data.Relay14_update_success == 1) {
+      Relay14.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay14 = data.Relay14;
+});
+Relay15.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay15: Relay15.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay15_update_success);
+    if (recv_data.Relay15_update_success == 1) {
+      Relay15.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay15 = data.Relay15;
+});
+
+Relay16.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    Relay16: Relay16.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.Relay16_update_success);
+    if (recv_data.Relay16_update_success == 1) {
+      Relay16.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.Relay16 = data.Relay16;
+});
+random.addEventListener('click', async function (e) {
+  e.preventDefault();
+  random_value++;
+  if (random_value > 4) {
+    random_value = 0;
+  }
+  data = {
+    random: random_value,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.random_update_success);
+    // if (recv_data.random_update_success == 1) {
+    //   random.style.backgroundColor = '#09f774';
+    // }
+  }
+  console.log(data);
+  json_data.random = data.random;
+});
+serial.addEventListener('click', async function (e) {
+  e.preventDefault();
+  data = {
+    serial: serial.style.backgroundColor === '#09f774' ? 0 : 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.serial_update_success);
+    if (recv_data.serial_update_success == 1) {
+      serial.style.backgroundColor = '#09f774';
+    }
+  }
+  console.log(data);
+  json_data.serial = data.serial;
+
+  // send updated json packet
+});
+
+btn.addEventListener('click', async function (e) {
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(json_data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const recv_data = await response.json();
+    console.log(recv_data);
+    console.log('Approve Status : ', recv_data.approve);
+    if (recv_data.approve == 1) {
       alert('Restarting the system...');
-      window.location.replace('http://192.168.1.100/nds');
+      window.location.replace('http://192.168.1.100/');
     }
   }
 });
+
 //window onload function
 window.addEventListener('load', () => {
   setTimeout(() => {
-    // alert(
-    //   //'Warning! Session Timeout due to inactivity..... Reload to redirect into login page. '
-    //   'Now you can reload.'
-    // );
+    reload_relay_flag = 1;
   }, 2000);
-  reload_relay_flag = 1;
+  setTimeout(() => {
+    alert(
+      'Warning! Session Timeout due to inactivity..... \n Reload to redirect into login page. '
+    );
+  }, 175000);
 });
 window.onload;
 

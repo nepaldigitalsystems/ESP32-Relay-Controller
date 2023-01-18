@@ -4,12 +4,16 @@ const relay = document.querySelector('.relay');
 const info = document.querySelector('.info');
 const restart = document.querySelector('.restart');
 let reload_dashboard_flag = 0;
-
+let reload_relay_flag = 0;
 //relay button onclick function
 relay.addEventListener('click', function () {
-  let xhr = new XMLHttpRequest();
-  xhr.open('GET', '/relay', true);
-  xhr.send();
+  fetch('http://192.168.1.100/relay')
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data);
+      // use the data here
+    })
+    .catch((error) => console.error(error));
 });
 //restart button onclick function
 restart.addEventListener('click', async function (e) {
@@ -36,13 +40,13 @@ restart.addEventListener('click', async function (e) {
 //window onload function
 window.addEventListener('load', () => {
   setTimeout(() => {
-    // alert(
-    //   //'Warning! Session Timeout due to inactivity..... Reload to redirect into login page. '
-    //   'Now you can reload.'
-    // );
+    reload_dashboard_flag = 1;
   }, 2000);
-  reload_dashboard_flag = 1;
-  
+  setTimeout(() => {
+    alert(
+      'Warning! Session Timeout due to inactivity..... \n Reload to redirect into login page. '
+    );
+  }, 175000);
 });
 window.onload;
 window.addEventListener('beforeunload', async function () {
@@ -51,8 +55,6 @@ window.addEventListener('beforeunload', async function () {
     console.log(response.status);
     console.log(response.statusText);
     alert('Refreshing dashboard...');
-    reload_flag = 0;
+    reload_dashboard_flag = 0;
   }
-
- 
 });
