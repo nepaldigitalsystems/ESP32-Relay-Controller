@@ -28,6 +28,7 @@ form.addEventListener('submit', function (e) {
   );
 
   alert(`Resetting your wifi. Connect your device to "${ssid.value}" network.`);
+  window.location.replace('http://192.168.1.100/');
 });
 ssid.maxLength = '31';
 pass.maxLength = '31';

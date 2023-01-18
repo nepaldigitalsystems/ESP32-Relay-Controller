@@ -6,7 +6,7 @@
 .center {
   position: absolute;
   top: 40%;
-  left: 50%;
+  left: 60%;
   transform: translate(-50%, -50%);
   width: 50%;
   text-align: center;
@@ -21,10 +21,9 @@
   display: block;
   border-radius: 30px;
   margin: 10px 0;
-  width: 200px;
+  width: 100px;
   padding: 10px;
-  font-size: 30px;
-
+  font-size: 20px;
   background-color: #273e68;
   color: #a0a0a0;
   border: none;
@@ -33,6 +32,23 @@
 .btn:hover {
   background-color: #a0a0a0;
   color: #273e68;
+}
+.rnd
+{
+  position:absolute;
+  top: 30%;
+  right: 120%;
+  background-color: rgb(168, 30, 30);
+  color: #a0a0a0;
+
+}
+.srl
+{
+  position: absolute;
+  top: 50%;
+  right: 120%;
+  background-color: rgb(85, 84, 4);
+  color: #a0a0a0;
 }
 footer {
   position: fixed;

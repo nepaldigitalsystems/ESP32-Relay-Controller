@@ -3,7 +3,8 @@
 const relay = document.querySelector('.relay');
 const info = document.querySelector('.info');
 const restart = document.querySelector('.restart');
-let reload_flag = 0;
+let reload_dashboard_flag = 0;
+
 //relay button onclick function
 relay.addEventListener('click', function () {
   let xhr = new XMLHttpRequest();
@@ -35,21 +36,23 @@ restart.addEventListener('click', async function (e) {
 //window onload function
 window.addEventListener('load', () => {
   setTimeout(() => {
-    alert(
-      'Warning! Session Timeout due to inactivity..... Reload to redirect into login page. '
-    );
-  }, 175000);
-  reload_flag = 1;
+    // alert(
+    //   //'Warning! Session Timeout due to inactivity..... Reload to redirect into login page. '
+    //   'Now you can reload.'
+    // );
+  }, 2000);
+  reload_dashboard_flag = 1;
+  
 });
 window.onload;
 window.addEventListener('beforeunload', async function () {
-  if (reload_flag == 1) {
-    const response = await fetch('/dashboard');
+  if (reload_dashboard_flag == 1) {
+    const response = await fetch('/refresh_dashboard', options);
     console.log(response.status);
     console.log(response.statusText);
-    alert(
-      'You are being redirected to login page.... Please re-enter your credentials.'
-    );
+    alert('Refreshing dashboard...');
     reload_flag = 0;
   }
+
+ 
 });
