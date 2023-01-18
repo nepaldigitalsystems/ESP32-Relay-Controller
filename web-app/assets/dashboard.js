@@ -28,7 +28,7 @@ restart.addEventListener('click', async function (e) {
     if (json_data.approve == 1) {
       restart.classList.add('hidden');
       alert('Restarting the system...');
-      window.location.replace('http://192.168.1.100/nds');
+      window.location.replace('http://192.168.1.100/');
     }
   }
 });
