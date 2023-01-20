@@ -13,13 +13,14 @@ body {
 
 .center {
   position: absolute;
+  border: 1px solid rgba(0, 0, 0, 0.3);
   border-radius: 10px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 450px;
   background: #fff;
-  border-radius: 10px;
+  
   box-shadow: 10px 15px 15px 15px rgba(0, 0, 0, 0.1);
 }
 .center h1 {
@@ -40,9 +41,7 @@ body {
 
   background: #fff;
 }
-span {
-  color: #a0a0a0;
-}
+
 .ssid {
   position: relative;
   align-items: center;
@@ -72,6 +71,7 @@ span {
 }
 form .inpssid,
 form .inpPass {
+  border: 1px solid #000;
   height: 30px;
   outline: none;
 }
@@ -84,10 +84,36 @@ form .inpPass {
   width: 20px;
   background-color: #fff;
 }
+footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 13vh;
+  text-align: center;
+  color: #273e68;
+  background-color: #a0a0a0;
+}
+footer p {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+footer p span {
+  font-weight: bold;
+}
 
-@media screen and (max-width: 480px) {
+@media screen and (max-width: 650px) {
   .center {
+    position: absolute;
+    border-radius: 10px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 400px;
+    background: #fff;
+    
+    box-shadow: 10px 15px 15px 15px rgba(0, 0, 0, 0.1);
   }
   form .inpssid,
   form .inpPass {

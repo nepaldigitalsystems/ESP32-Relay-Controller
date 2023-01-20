@@ -418,20 +418,54 @@ random.addEventListener('click', async function (e) {
     if (random_value !== 0 && bt.value !== 'r') {
       bt.disabled = true;
       bt.classList.add('disabled');
-      bt.style.backgroundColor = '#a0a0a0';
-      bt.style.color = '#a0a0a0';
-    } else if (random_value === 0) {
-      bt.disabled = false;
-      bt.classList.remove('disabled');
       bt.style.backgroundColor = '#273e68';
       bt.style.color = '#a0a0a0';
       if (bt.value === 's') {
         bt.style.backgroundColor = 'purple';
         bt.style.color = '#fff';
       }
+    } else if (random_value === 0) {
+      bt.disabled = false;
+      bt.classList.remove('disabled');
+      bt.style.backgroundColor = '#273e68';
+      bt.style.color = '#a0a0a0';
+      bt.addEventListener('mouseover',function()
+      {
+        bt.style.backgroundColor = '#a0a0a0';
+      bt.style.color = '#273e68';
+      })
+      bt.addEventListener('mouseout',function()
+      {
+        bt.style.backgroundColor = '#273e68';
+      bt.style.color = '#a0a0a0';
+      })
+      if (bt.value === 's') {
+        bt.style.backgroundColor = 'purple';
+        bt.style.color = '#fff';
+        bt.addEventListener('mouseover',function()
+      {
+        bt.style.backgroundColor = '#fff';
+      bt.style.color = 'purple';
+      })
+      bt.addEventListener('mouseout',function()
+      {
+        bt.style.backgroundColor = 'purple';
+      bt.style.color = '#fff';
+      })
+      }
       if (bt.value === 'r') {
         bt.style.backgroundColor = 'orange';
         bt.style.color = '#fff';
+        bt.addEventListener('mouseover',function()
+      {
+        bt.style.backgroundColor = '#fff';
+      bt.style.color = 'orange';
+      })
+      bt.addEventListener('mouseout',function()
+      {
+        bt.style.backgroundColor = 'orange';
+      bt.style.color = '#fff';
+      })
       }
       console.log(bt);
     }
@@ -466,9 +500,13 @@ serial.addEventListener('click', async function (e) {
     if (bt.value !== 's' && data.serial === 1) {
       bt.disabled = true;
       bt.classList.add('disabled');
-      bt.style.backgroundColor = '#a0a0a0';
+      bt.style.backgroundColor = '#273e68';
       bt.style.color = '#a0a0a0';
-    }  else {
+      if (bt.value === 'r') {
+        bt.style.backgroundColor = 'orange';
+        bt.style.color = '#fff';
+      }
+    } else {
       bt.disabled = false;
       bt.classList.remove('disabled');
       bt.style.backgroundColor = '#273e68';
@@ -477,10 +515,7 @@ serial.addEventListener('click', async function (e) {
         bt.style.backgroundColor = 'purple';
         bt.style.color = '#fff';
       }
-      if (bt.value === 'r') {
-        bt.style.backgroundColor = 'orange';
-        bt.style.color = '#fff';
-      }
+
       console.log(bt);
     }
   }
@@ -504,24 +539,6 @@ serial.addEventListener('click', async function (e) {
   // send updated json packet
 });
 
-// btn.addEventListener('click', async function (e) {
-//   const options = {
-//     method: 'POST',
-//     body: JSON.stringify(json_data),
-//   };
-//   const response = await fetch('/dashboard', options);
-//   if (response.status == 200) {
-//     const recv_data = await response.json();
-//     console.log(recv_data);
-//     console.log('Approve Status : ', recv_data.approve);
-//     if (recv_data.approve == 1) {
-//       alert('Restarting the system...');
-//       window.location.replace('http://192.168.1.100/');
-//     }
-//   }
-// });
-
-//window onload function
 window.addEventListener('load', () => {
   setTimeout(() => {
     reload_relay_flag = 1;
