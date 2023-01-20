@@ -8,12 +8,14 @@ let reload_relay_flag = 0;
 //relay button onclick function
 relay.addEventListener('click', function () {
   fetch('http://192.168.1.100/relay')
-    .then((response) => response.json())
-    .then((data) => {
-      console.log(data);
-      // use the data here
-    })
-    .catch((error) => console.error(error));
+    .then((response) => response.text())
+    .then(
+      // Do something with the HTML content here
+      window.location.replace('http://192.168.1.100/relay')
+    )
+    .catch((error) => {
+      console.error(error);
+    });
 });
 //restart button onclick function
 restart.addEventListener('click', async function (e) {
@@ -41,7 +43,7 @@ restart.addEventListener('click', async function (e) {
 window.addEventListener('load', () => {
   setTimeout(() => {
     reload_dashboard_flag = 1;
-  }, 2000);
+  }, 5000);
   setTimeout(() => {
     alert(
       'Warning! Session Timeout due to inactivity..... \n Reload to redirect into login page. '

@@ -48,6 +48,7 @@ console.log(json_data);
 
 Relay1.addEventListener('click', async function (e) {
   e.preventDefault();
+
   data = {
     Relay1: Relay1.style.backgroundColor === '#09f774' ? 0 : 1,
   };
@@ -55,7 +56,7 @@ Relay1.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -66,6 +67,7 @@ Relay1.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay1 = data.Relay1;
+  console.log(json_data);
 });
 
 Relay2.addEventListener('click', async function (e) {
@@ -77,7 +79,7 @@ Relay2.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -88,6 +90,7 @@ Relay2.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay2 = data.Relay2;
+  console.log(json_data);
 });
 Relay3.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -98,7 +101,7 @@ Relay3.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -109,6 +112,7 @@ Relay3.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay3 = data.Relay3;
+  console.log(json_data);
 });
 Relay4.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -119,7 +123,7 @@ Relay4.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -130,6 +134,7 @@ Relay4.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay4 = data.Relay4;
+  console.log(json_data);
 });
 Relay5.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -140,7 +145,7 @@ Relay5.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -151,6 +156,7 @@ Relay5.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay5 = data.Relay5;
+  console.log(json_data);
 });
 Relay6.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -161,7 +167,7 @@ Relay6.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -172,6 +178,7 @@ Relay6.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay6 = data.Relay6;
+  console.log(json_data);
 });
 
 Relay7.addEventListener('click', async function (e) {
@@ -183,7 +190,7 @@ Relay7.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -194,6 +201,7 @@ Relay7.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay7 = data.Relay7;
+  console.log(json_data);
 });
 Relay8.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -204,7 +212,7 @@ Relay8.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -215,6 +223,7 @@ Relay8.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay8 = data.Relay8;
+  console.log(json_data);
 });
 Relay9.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -225,7 +234,7 @@ Relay9.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -236,6 +245,7 @@ Relay9.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay9 = data.Relay9;
+  console.log(json_data);
 });
 Relay10.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -246,7 +256,7 @@ Relay10.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -257,6 +267,7 @@ Relay10.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay10 = data.Relay10;
+  console.log(json_data);
 });
 Relay11.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -267,7 +278,7 @@ Relay11.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -278,6 +289,7 @@ Relay11.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay11 = data.Relay11;
+  console.log(json_data);
 });
 
 Relay12.addEventListener('click', async function (e) {
@@ -289,7 +301,7 @@ Relay12.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -300,6 +312,7 @@ Relay12.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay12 = data.Relay12;
+  console.log(json_data);
 });
 Relay13.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -310,7 +323,7 @@ Relay13.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -321,6 +334,7 @@ Relay13.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay13 = data.Relay13;
+  console.log(json_data);
 });
 Relay14.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -331,7 +345,7 @@ Relay14.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -342,6 +356,7 @@ Relay14.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay14 = data.Relay14;
+  console.log(json_data);
 });
 Relay15.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -352,7 +367,7 @@ Relay15.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -363,6 +378,7 @@ Relay15.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay15 = data.Relay15;
+  console.log(json_data);
 });
 
 Relay16.addEventListener('click', async function (e) {
@@ -374,7 +390,7 @@ Relay16.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -385,12 +401,40 @@ Relay16.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.Relay16 = data.Relay16;
+  console.log(json_data);
 });
+random.innerHTML = `Random [${random_value === 0 ? 'OFF' : random_value}]`;
+
 random.addEventListener('click', async function (e) {
   e.preventDefault();
   random_value++;
+
   if (random_value > 4) {
     random_value = 0;
+  }
+  random.innerHTML = `Random [${random_value === 0 ? 'OFF' : random_value}]`;
+  console.log(random.innerHTML);
+  for (const bt of btn) {
+    if (random_value !== 0 && bt.value !== 'r') {
+      bt.disabled = true;
+      bt.classList.add('disabled');
+      bt.style.backgroundColor = '#a0a0a0';
+      bt.style.color = '#a0a0a0';
+    } else if (random_value === 0) {
+      bt.disabled = false;
+      bt.classList.remove('disabled');
+      bt.style.backgroundColor = '#273e68';
+      bt.style.color = '#a0a0a0';
+      if (bt.value === 's') {
+        bt.style.backgroundColor = 'purple';
+        bt.style.color = '#fff';
+      }
+      if (bt.value === 'r') {
+        bt.style.backgroundColor = 'orange';
+        bt.style.color = '#fff';
+      }
+      console.log(bt);
+    }
   }
   data = {
     random: random_value,
@@ -399,7 +443,7 @@ random.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -410,17 +454,41 @@ random.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.random = data.random;
+  console.log(json_data);
 });
 serial.addEventListener('click', async function (e) {
   e.preventDefault();
+
   data = {
     serial: serial.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  for (const bt of btn) {
+    if (bt.value !== 's' && data.serial === 1) {
+      bt.disabled = true;
+      bt.classList.add('disabled');
+      bt.style.backgroundColor = '#a0a0a0';
+      bt.style.color = '#a0a0a0';
+    }  else {
+      bt.disabled = false;
+      bt.classList.remove('disabled');
+      bt.style.backgroundColor = '#273e68';
+      bt.style.color = '#a0a0a0';
+      if (bt.value === 's') {
+        bt.style.backgroundColor = 'purple';
+        bt.style.color = '#fff';
+      }
+      if (bt.value === 'r') {
+        bt.style.backgroundColor = 'orange';
+        bt.style.color = '#fff';
+      }
+      console.log(bt);
+    }
+  }
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
   };
-  const response = await fetch('/dashboard', options);
+  const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
     console.log(recv_data);
@@ -431,26 +499,27 @@ serial.addEventListener('click', async function (e) {
   }
   console.log(data);
   json_data.serial = data.serial;
+  console.log(json_data);
 
   // send updated json packet
 });
 
-btn.addEventListener('click', async function (e) {
-  const options = {
-    method: 'POST',
-    body: JSON.stringify(json_data),
-  };
-  const response = await fetch('/dashboard', options);
-  if (response.status == 200) {
-    const recv_data = await response.json();
-    console.log(recv_data);
-    console.log('Approve Status : ', recv_data.approve);
-    if (recv_data.approve == 1) {
-      alert('Restarting the system...');
-      window.location.replace('http://192.168.1.100/');
-    }
-  }
-});
+// btn.addEventListener('click', async function (e) {
+//   const options = {
+//     method: 'POST',
+//     body: JSON.stringify(json_data),
+//   };
+//   const response = await fetch('/dashboard', options);
+//   if (response.status == 200) {
+//     const recv_data = await response.json();
+//     console.log(recv_data);
+//     console.log('Approve Status : ', recv_data.approve);
+//     if (recv_data.approve == 1) {
+//       alert('Restarting the system...');
+//       window.location.replace('http://192.168.1.100/');
+//     }
+//   }
+// });
 
 //window onload function
 window.addEventListener('load', () => {
@@ -464,11 +533,12 @@ window.addEventListener('load', () => {
   }, 175000);
 });
 window.onload;
-
-if (reload_relay_flag == 1) {
-  const response = await fetch('/refresh_relay', options);
-  console.log(response.status);
-  console.log(response.statusText);
-  alert('Refreshing Relay_Page...');
-  reload_flag = 0;
-}
+window.addEventListener('beforeunload', async function () {
+  if (reload_relay_flag == 1) {
+    const response = fetch('/refresh_relay', options);
+    console.log(response.status);
+    console.log(response.statusText);
+    alert('Refreshing Relay_Page...');
+    reload_flag = 0;
+  }
+});

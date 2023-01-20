@@ -5,25 +5,31 @@
 }
 .center {
   position: absolute;
-  top: 40%;
-  left: 60%;
+  top: 43%;
+  left: 50%;
   transform: translate(-50%, -50%);
-  width: 50%;
   text-align: center;
   background: #fff;
   padding: 30px;
+  column-count: 2;
 }
 .col1 {
-  width: 50%;
-  float: left;
+  margin-right: 100px;
 }
+.col2 {
+  margin-left: 50px;
+}
+/* .col1 {
+  width: 100%;
+  float: left;
+} */
 .btn {
   display: block;
   border-radius: 30px;
-  margin: 25px 0;
-  width: 100px;
+  margin-bottom: 20px;
+  width: 160px;
   padding: 10px;
-  font-size: 18px;
+  font-size: 20px;
   background-color: #273e68;
   color: #a0a0a0;
   border: none;
@@ -32,19 +38,13 @@
 .btn:hover {
   background-color: #a0a0a0;
   color: #273e68;
-  border: 2px solid #273e68;
+  /* border: 2px solid #273e68; */
 }
 .rnd {
-  position: absolute;
-  top: 30%;
-  right: 120%;
   background-color: orange;
   color: #fff;
 }
 .srl {
-  position: absolute;
-  top: 50%;
-  right: 120%;
   background-color: purple;
   color: #fff;
 }
@@ -65,4 +65,19 @@ footer p {
 }
 footer p span {
   font-weight: bold;
+}
+.disabled {
+  cursor: not-allowed;
+}
+@media screen and (max-width: 480px) {
+  .col1 {
+    margin-right: 0;
+  }
+  .col2 {
+    margin-left: 0;
+  }
+  .btn {
+    width: 120px;
+    font-size: 15px;
+  }
 }
