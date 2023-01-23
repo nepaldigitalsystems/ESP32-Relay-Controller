@@ -4,24 +4,21 @@
   box-sizing: border-box;
 }
 body {
-  height: 1500px;
+  height: auto;
 }
 table {
   position: absolute;
-  /* width: 50%; */
-  /* height: 1500px; */
-  top: 50%;
+  width: 50%;
+  top: 40%;
   left: 50%;
   transform: translate(-50%, -50%);
-
-  /* border: 1px solid #000; */
 }
 table th {
-    border: 1px solid #000;
-    margin: 10px;
-    padding: 10px;
-    text-align: center;
-  }
+  border: 1px solid #000;
+  margin: 10px;
+  padding: 10px;
+  text-align: center;
+}
 table tr {
   border: 1px solid #000;
   margin: 0;
@@ -30,8 +27,8 @@ table tr {
 }
 table td {
   border: 1px solid #000;
-/* border-bottom: hidden;*/
-border-top: hidden; 
+  /* border-bottom: hidden;*/
+  border-top: hidden;
   padding: 5px;
   text-align: center;
 }

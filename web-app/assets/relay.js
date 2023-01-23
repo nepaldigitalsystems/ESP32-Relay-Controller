@@ -52,6 +52,8 @@ Relay1.addEventListener('click', async function (e) {
   data = {
     Relay1: Relay1.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay1 = data.Relay1;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -66,8 +68,7 @@ Relay1.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay1 = data.Relay1;
-  console.log(json_data);
+  
 });
 
 Relay2.addEventListener('click', async function (e) {
@@ -75,6 +76,8 @@ Relay2.addEventListener('click', async function (e) {
   data = {
     Relay2: Relay2.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay2 = data.Relay2;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -89,14 +92,14 @@ Relay2.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay2 = data.Relay2;
-  console.log(json_data);
 });
 Relay3.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
     Relay3: Relay3.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  console.log(data);
+  json_data.Relay3 = data.Relay3;
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -110,8 +113,7 @@ Relay3.addEventListener('click', async function (e) {
       Relay3.style.backgroundColor = '#09f774';
     }
   }
-  console.log(data);
-  json_data.Relay3 = data.Relay3;
+ 
   console.log(json_data);
 });
 Relay4.addEventListener('click', async function (e) {
@@ -119,6 +121,8 @@ Relay4.addEventListener('click', async function (e) {
   data = {
     Relay4: Relay4.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay4 = data.Relay4;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -133,14 +137,15 @@ Relay4.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay4 = data.Relay4;
-  console.log(json_data);
+  
 });
 Relay5.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
     Relay5: Relay5.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay5 = data.Relay5;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -155,14 +160,15 @@ Relay5.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay5 = data.Relay5;
-  console.log(json_data);
+
 });
 Relay6.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
     Relay6: Relay6.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay6 = data.Relay6;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -177,8 +183,7 @@ Relay6.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay6 = data.Relay6;
-  console.log(json_data);
+  
 });
 
 Relay7.addEventListener('click', async function (e) {
@@ -186,6 +191,8 @@ Relay7.addEventListener('click', async function (e) {
   data = {
     Relay7: Relay7.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay7 = data.Relay7;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -200,14 +207,15 @@ Relay7.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay7 = data.Relay7;
-  console.log(json_data);
+ 
 });
 Relay8.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
     Relay8: Relay8.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay8 = data.Relay8;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -222,14 +230,15 @@ Relay8.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay8 = data.Relay8;
-  console.log(json_data);
+ 
 });
 Relay9.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
     Relay9: Relay9.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay9 = data.Relay9;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -244,14 +253,15 @@ Relay9.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay9 = data.Relay9;
-  console.log(json_data);
+ 
 });
 Relay10.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
     Relay10: Relay10.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay10 = data.Relay10;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -266,14 +276,15 @@ Relay10.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay10 = data.Relay10;
-  console.log(json_data);
+ 
 });
 Relay11.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
     Relay11: Relay11.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay11 = data.Relay11;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -288,8 +299,7 @@ Relay11.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay11 = data.Relay11;
-  console.log(json_data);
+
 });
 
 Relay12.addEventListener('click', async function (e) {
@@ -297,6 +307,8 @@ Relay12.addEventListener('click', async function (e) {
   data = {
     Relay12: Relay12.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay12 = data.Relay12;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -311,14 +323,15 @@ Relay12.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay12 = data.Relay12;
-  console.log(json_data);
+ 
 });
 Relay13.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
     Relay13: Relay13.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay13 = data.Relay13;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -333,14 +346,15 @@ Relay13.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay13 = data.Relay13;
-  console.log(json_data);
+  
 });
 Relay14.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
     Relay14: Relay14.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay14 = data.Relay14;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -355,14 +369,15 @@ Relay14.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay14 = data.Relay14;
-  console.log(json_data);
+ 
 });
 Relay15.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
     Relay15: Relay15.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay15 = data.Relay15;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -377,8 +392,7 @@ Relay15.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay15 = data.Relay15;
-  console.log(json_data);
+ 
 });
 
 Relay16.addEventListener('click', async function (e) {
@@ -386,6 +400,8 @@ Relay16.addEventListener('click', async function (e) {
   data = {
     Relay16: Relay16.style.backgroundColor === '#09f774' ? 0 : 1,
   };
+  json_data.Relay16 = data.Relay16;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -400,8 +416,7 @@ Relay16.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.Relay16 = data.Relay16;
-  console.log(json_data);
+ 
 });
 random.innerHTML = `Random [${random_value === 0 ? 'OFF' : random_value}]`;
 
@@ -467,6 +482,8 @@ random.addEventListener('click', async function (e) {
   data = {
     random: random_value,
   };
+  json_data.random = data.random;
+  console.log(json_data);
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -481,8 +498,7 @@ random.addEventListener('click', async function (e) {
     // }
   }
   console.log(data);
-  json_data.random = data.random;
-  console.log(json_data);
+ 
 });
 serial.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -513,6 +529,9 @@ serial.addEventListener('click', async function (e) {
       console.log(bt);
     }
   }
+  json_data.serial = data.serial;
+  console.log(json_data);
+
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -527,9 +546,7 @@ serial.addEventListener('click', async function (e) {
     }
   }
   console.log(data);
-  json_data.serial = data.serial;
-  console.log(json_data);
-
+ 
   // send updated json packet
 });
 

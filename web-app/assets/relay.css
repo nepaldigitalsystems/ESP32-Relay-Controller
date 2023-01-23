@@ -3,7 +3,11 @@
   padding: 0;
   box-sizing: border-box;
 }
+/* body {
+  height: max-content;
+} */
 .center {
+  height: auto;
   position: absolute;
   top: 43%;
   left: 50%;
@@ -79,5 +83,8 @@ footer p span {
   .btn {
     width: 120px;
     font-size: 15px;
+  }
+  body {
+    height: fit-content;
   }
 }
