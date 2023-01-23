@@ -582,12 +582,12 @@ window.addEventListener('load', () => {
   }, 175000);
 });
 window.onload;
-window.addEventListener('beforeunload', async function () {
-  if (reload_relay_flag == 1) {
-    const response = fetch('/refresh_relay', options);
-    console.log(response.status);
-    console.log(response.statusText);
-    alert('Refreshing Relay_Page...');
-    reload_flag = 0;
-  }
-});
+// window.addEventListener('beforeunload', async function () {
+//   if (reload_relay_flag == 1) {
+//     const response = fetch('/refresh_relay', options);
+//     console.log(response.status);
+//     console.log(response.statusText);
+//     alert('Refreshing Relay_Page...');
+//     reload_flag = 0;
+//   }
+// });

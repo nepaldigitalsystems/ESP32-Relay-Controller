@@ -6,16 +6,16 @@ const restart = document.querySelector('.restart');
 const table = document.querySelector('table');
 let reload_dashboard_flag = 0;
 let reload_relay_flag = 0;
-td1 = document.querySelector('.cm');
-td2 = document.querySelector('.ci');
-td3 = document.querySelector('.cc');
-td4 = document.querySelector('.fs');
-td5 = document.querySelector('.hs');
-td6 = document.querySelector('.fd');
-td7 = document.querySelector('.fi');
-td8 = document.querySelector('.fh');
-td9 = document.querySelector('.bc');
-td10 = document.querySelector('.ct');
+let td1 = document.querySelector('.cm');
+let td2 = document.querySelector('.ci');
+let td3 = document.querySelector('.cc');
+let td4 = document.querySelector('.fs');
+let td5 = document.querySelector('.hs');
+let td6 = document.querySelector('.fd');
+let td7 = document.querySelector('.fi');
+let td8 = document.querySelector('.fh');
+let td9 = document.querySelector('.bc');
+let td10 = document.querySelector('.ct');
 //relay button onclick function
 relay.addEventListener('click', function () {
   fetch('http://192.168.1.100/relay')
@@ -95,12 +95,12 @@ window.addEventListener('load', () => {
   }, 175000);
 });
 window.onload;
-window.addEventListener('beforeunload', async function () {
-  if (reload_dashboard_flag == 1) {
-    const response = await fetch('/refresh_dashboard', options);
-    console.log(response.status);
-    console.log(response.statusText);
-    alert('Refreshing dashboard...');
-    reload_dashboard_flag = 0;
-  }
-});
+// window.addEventListener('beforeunload', async function () {
+//   if (reload_dashboard_flag == 1) {
+//     const response = await fetch('/refresh_dashboard', options);
+//     console.log(response.status);
+//     console.log(response.statusText);
+//     alert('Refreshing dashboard...');
+//     reload_dashboard_flag = 0;
+//   }
+// });
