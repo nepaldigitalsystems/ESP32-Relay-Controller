@@ -429,43 +429,37 @@ random.addEventListener('click', async function (e) {
       bt.classList.remove('disabled');
       bt.style.backgroundColor = '#273e68';
       bt.style.color = '#a0a0a0';
-      bt.addEventListener('mouseover',function()
-      {
+      bt.addEventListener('mouseover', function () {
         bt.style.backgroundColor = '#a0a0a0';
-      bt.style.color = '#273e68';
-      })
-      bt.addEventListener('mouseout',function()
-      {
+        bt.style.color = '#273e68';
+      });
+      bt.addEventListener('mouseout', function () {
         bt.style.backgroundColor = '#273e68';
-      bt.style.color = '#a0a0a0';
-      })
+        bt.style.color = '#a0a0a0';
+      });
       if (bt.value === 's') {
         bt.style.backgroundColor = 'purple';
         bt.style.color = '#fff';
-        bt.addEventListener('mouseover',function()
-      {
-        bt.style.backgroundColor = '#fff';
-      bt.style.color = 'purple';
-      })
-      bt.addEventListener('mouseout',function()
-      {
-        bt.style.backgroundColor = 'purple';
-      bt.style.color = '#fff';
-      })
+        bt.addEventListener('mouseover', function () {
+          bt.style.backgroundColor = '#a0a0a0';
+          bt.style.color = '#273e68';
+        });
+        bt.addEventListener('mouseout', function () {
+          bt.style.backgroundColor = 'purple';
+          bt.style.color = '#fff';
+        });
       }
       if (bt.value === 'r') {
         bt.style.backgroundColor = 'orange';
         bt.style.color = '#fff';
-        bt.addEventListener('mouseover',function()
-      {
-        bt.style.backgroundColor = '#fff';
-      bt.style.color = 'orange';
-      })
-      bt.addEventListener('mouseout',function()
-      {
-        bt.style.backgroundColor = 'orange';
-      bt.style.color = '#fff';
-      })
+        bt.addEventListener('mouseover', function () {
+          bt.style.backgroundColor = '#a0a0a0';
+          bt.style.color = '#273e68';
+        });
+        bt.addEventListener('mouseout', function () {
+          bt.style.backgroundColor = 'orange';
+          bt.style.color = '#fff';
+        });
       }
       console.log(bt);
     }

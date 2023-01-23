@@ -17,6 +17,28 @@ relay.addEventListener('click', function () {
       console.error(error);
     });
 });
+//info button onclick function
+info.addEventListener('click', async function (e) {
+  e.preventDefault();
+  const data = {
+    InfoReq: 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(data),
+  };
+  const response = await fetch('/dashboard', options);
+  if (response.status == 200) {
+    const json_data = await response.json();
+    console.log(json_data);
+    // console.log('Approve Status : ', json_data.approve);
+    if (json_data.approve == 1) {
+      // info.classList.add('hidden');
+      // alert('Restarting the system...');
+      window.location.replace('http://192.168.1.100/info');
+    }
+  }
+});
 //restart button onclick function
 restart.addEventListener('click', async function (e) {
   e.preventDefault();
