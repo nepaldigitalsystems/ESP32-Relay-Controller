@@ -18,11 +18,11 @@ let reload_relay_flag = 0;
 // let td10 = document.querySelector('.ct');
 //relay button onclick function
 relay.addEventListener('click', function () {
-  fetch('http://192.168.1.100/relay')
+  fetch('/relay')
     .then((response) => response.text())
     .then(
       // Do something with the HTML content here
-      window.location.replace('http://192.168.1.100/relay')
+      window.location.replace('/relay')
     )
     .catch((error) => {
       console.error(error);
@@ -30,11 +30,11 @@ relay.addEventListener('click', function () {
 });
 //info button onclick function
 info.addEventListener('click', function () {
-  fetch('http://192.168.1.100/dashboard')
+  fetch('/dashboard')
     .then((response) => response.text())
     .then(
       // Do something with the HTML content here
-      window.location.replace('http://192.168.1.100/info')
+      window.location.replace('/info')
     )
     .catch((error) => {
       console.error(error);
@@ -58,15 +58,15 @@ restart.addEventListener('click', async function (e) {
     if (json_data.approve == 1) {
       // restart.classList.add('hidden');
       // alert('Restarting the system...');
-      window.location.replace('http://192.168.1.100/');
+      window.location.replace('/');
     }
   }
 });
 //window onload function
 window.addEventListener('load', () => {
-  setTimeout(() => {
-    reload_dashboard_flag = 1;
-  }, 5000);
+  // setTimeout(() => {
+  //   reload_dashboard_flag = 1;
+  // }, 5000);
   setTimeout(() => {
     alert(
       'Warning! Session Timeout due to inactivity..... \n Reload to redirect into login page. '

@@ -23,17 +23,18 @@ window.addEventListener('load', async function (e) {
     const json_data = await response.json();
     console.log(json_data);
     // console.log('Approve Status : ', json_data.approve);
-    if (json_data.approve == 1) {
-      td1 = json_data.CHIP_MODEL;
-      td2 = json_data.CHIP_ID_MAC;
-      td3 = json_data.CHIP_CORES;
-      td4 = json_data.FLASH_SIZE;
-      td5 = json_data.HEAP_SIZE;
-      td6 = json_data.FREE_DRAM;
-      td7 = json_data.FREE_IRAM;
-      td8 = json_data.FREE_HEAP;
-      td9 = json_data.BOOT_COUNT;
-      td10 = json_data.COMPILE_TIME;
+    if (json_data.Approve == 1) {
+      td1.innerHTML = json_data.CHIP_MODEL;
+      td2.innerHTML = json_data.CHIP_ID_MAC;
+      td3.innerHTML = json_data.CHIP_CORES;
+      td4.innerHTML = json_data.FLASH_SIZE;
+      td5.innerHTML = json_data.HEAP_SIZE;
+      td6.innerHTML = json_data.FREE_DRAM;
+      td7.innerHTML = json_data.FREE_IRAM;
+      td8.innerHTML = json_data.FREE_HEAP;
+      td9.innerHTML = json_data.BOOT_COUNT;
+      td10.innerHTML = json_data.COMPILE_TIME;
+
       // window.location.reload;
       // info.classList.add('hidden');
       // alert('Restarting the system...');
@@ -41,4 +42,5 @@ window.addEventListener('load', async function (e) {
     }
   }
 });
+
 window.onload;
