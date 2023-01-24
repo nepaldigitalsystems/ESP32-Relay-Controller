@@ -15,20 +15,32 @@ showPass.addEventListener('click', function () {
   }
 });
 
-form.addEventListener('submit', function (e) {
-  e.preventDefault();
-  let xhr = new XMLHttpRequest();
-  xhr.open('POST', '/AP_STA_post', true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.send(
-    JSON.stringify({
+
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const data = {
       local_ssid: ssid.value,
       local_pass: pass.value,
-    })
-  );
-
+    };
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(data),
+    };
+    const response = await fetch('/', options);
+    if (response.status == 200) {
+      const json_data = await response.json();
+      console.log(json_data);
+      console.log('Approve Status : ', json_data.approve);
+      if (json_data.approve == 1) {
+        
+        window.location.replace('/');
+      }
+    }
+  });
   alert(`Resetting your wifi. Connect your device to "${ssid.value}" network.`);
-  window.location.replace('/');
-});
+  alert('I love u');
+    location.replace('/alert_connect_nds');
+
 ssid.maxLength = '31';
 pass.maxLength = '31';

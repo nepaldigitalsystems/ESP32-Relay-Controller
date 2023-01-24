@@ -6,17 +6,6 @@ const restart = document.querySelector('.restart');
 const table = document.querySelector('table');
 let reload_dashboard_flag = 0;
 let reload_relay_flag = 0;
-// let td1 = document.querySelector('.cm');
-// let td2 = document.querySelector('.ci');
-// let td3 = document.querySelector('.cc');
-// let td4 = document.querySelector('.fs');
-// let td5 = document.querySelector('.hs');
-// let td6 = document.querySelector('.fd');
-// let td7 = document.querySelector('.fi');
-// let td8 = document.querySelector('.fh');
-// let td9 = document.querySelector('.bc');
-// let td10 = document.querySelector('.ct');
-//relay button onclick function
 relay.addEventListener('click', function () {
   fetch('/relay')
     .then((response) => response.text())
@@ -56,8 +45,6 @@ restart.addEventListener('click', async function (e) {
     console.log(json_data);
     console.log('Approve Status : ', json_data.approve);
     if (json_data.approve == 1) {
-      // restart.classList.add('hidden');
-      // alert('Restarting the system...');
       window.location.replace('/');
     }
   }

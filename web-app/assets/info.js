@@ -21,8 +21,8 @@ window.addEventListener('load', async function (e) {
   const response = await fetch('/info_post', options);
   if (response.status == 200) {
     const json_data = await response.json();
-    console.log(json_data);
-    // console.log('Approve Status : ', json_data.approve);
+    
+   
     if (json_data.Approve == 1) {
       td1.innerHTML = json_data.CHIP_MODEL;
       td2.innerHTML = json_data.CHIP_ID_MAC;
@@ -35,10 +35,7 @@ window.addEventListener('load', async function (e) {
       td9.innerHTML = json_data.BOOT_COUNT;
       td10.innerHTML = json_data.COMPILE_TIME;
 
-      // window.location.reload;
-      // info.classList.add('hidden');
-      // alert('Restarting the system...');
-      //   window.location.replace('http://192.168.1.100/info');
+    
     }
   }
 });

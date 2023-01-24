@@ -45,7 +45,6 @@ let data;
 
 Relay1.addEventListener('click', async function (e) {
   e.preventDefault();
-
   data = {
     Relay1: Relay1.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
   };
@@ -58,20 +57,18 @@ Relay1.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
-    console.log('Relay1_Task_Completed : ', recv_data.Relay1_update_success);
+   console.log('Relay1_Task_Completed : ', recv_data.Relay1_update_success);
     if (recv_data.Relay1_update_success === 1) {
       if (Relay1.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay1.style.backgroundColor = rgb(39, 62, 104);
-        Relay1.style.color = rgb(160, 160, 160);
+        Relay1.style.color = 'rgb(255,255,255)';
+        Relay1.style.backgroundColor = 'rgb(39, 62, 104)';
       } else {
-        Relay1.style.backgroundColor = rgb(9, 247, 116);
-        Relay1.style.color = rgb(160, 160, 160);
+        Relay1.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay1.style.color = 'rgb(255,255,255)';
       }
     }
   }
 });
-
 Relay2.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
@@ -86,15 +83,14 @@ Relay2.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay2_Task_Completed : ', recv_data.Relay2_update_success);
     if (recv_data.Relay2_update_success === 1) {
       if (Relay2.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay2.style.backgroundColor = rgb(39, 62, 104);
-        Relay2.style.color = rgb(160, 160, 160);
+        Relay2.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay2.style.color = 'rgb(255,255,255)';
       } else {
-        Relay2.style.backgroundColor = rgb(9, 247, 116);
-        Relay2.style.color = rgb(160, 160, 160);
+        Relay2.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay2.style.color = 'rgb(255,255,255)';
       }
     }
   }
@@ -104,7 +100,6 @@ Relay3.addEventListener('click', async function (e) {
   data = {
     Relay3: Relay3.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
   };
-
   json_data.Relay3 = data.Relay3;
   const options = {
     method: 'POST',
@@ -113,19 +108,17 @@ Relay3.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay3_Task_Completed : ', recv_data.Relay3_update_success);
     if (recv_data.Relay3_update_success === 1) {
       if (Relay3.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay3.style.backgroundColor = rgb(39, 62, 104);
-        Relay3.style.color = rgb(160, 160, 160);
+        Relay3.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay3.style.color = 'rgb(255,255,255)';
       } else {
-        Relay3.style.backgroundColor = rgb(9, 247, 116);
-        Relay3.style.color = rgb(160, 160, 160);
+        Relay3.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay3.style.color = 'rgb(255,255,255)';
       }
     }
   }
-
   console.log(json_data);
 });
 Relay4.addEventListener('click', async function (e) {
@@ -142,15 +135,14 @@ Relay4.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay4_Task_Completed : ', recv_data.Relay4_update_success);
     if (recv_data.Relay4_update_success === 1) {
       if (Relay4.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay4.style.backgroundColor = rgb(39, 62, 104);
-        Relay4.style.color = rgb(160, 160, 160);
+        Relay4.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay4.style.color = 'rgb(255,255,255)';
       } else {
-        Relay4.style.backgroundColor = rgb(9, 247, 116);
-        Relay4.style.color = rgb(160, 160, 160);
+        Relay4.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay4.style.color = 'rgb(255,255,255)';
       }
     }
   }
@@ -169,15 +161,14 @@ Relay5.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay5_Task_Completed : ', recv_data.Relay5_update_success);
     if (recv_data.Relay5_update_success === 1) {
       if (Relay5.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay5.style.backgroundColor = rgb(39, 62, 104);
-        Relay5.style.color = rgb(160, 160, 160);
+        Relay5.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay5.style.color = 'rgb(255,255,255)';
       } else {
-        Relay5.style.backgroundColor = rgb(9, 247, 116);
-        Relay5.style.color = rgb(160, 160, 160);
+        Relay5.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay5.style.color = 'rgb(255,255,255)';
       }
     }
   }
@@ -196,20 +187,18 @@ Relay6.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay6_Task_Completed : ', recv_data.Relay6_update_success);
     if (recv_data.Relay6_update_success === 1) {
       if (Relay6.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay6.style.backgroundColor = rgb(39, 62, 104);
-        Relay6.style.color = rgb(160, 160, 160);
+        Relay6.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay6.style.color = 'rgb(255,255,255)';
       } else {
-        Relay6.style.backgroundColor = rgb(9, 247, 116);
-        Relay6.style.color = rgb(160, 160, 160);
+        Relay6.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay6.style.color = 'rgb(255,255,255)';
       }
     }
   }
 });
-
 Relay7.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
@@ -224,15 +213,14 @@ Relay7.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay7_Task_Completed : ', recv_data.Relay7_update_success);
     if (recv_data.Relay7_update_success === 1) {
       if (Relay7.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay7.style.backgroundColor = rgb(39, 62, 104);
-        Relay7.style.color = rgb(160, 160, 160);
+        Relay7.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay7.style.color = 'rgb(255,255,255)';
       } else {
-        Relay7.style.backgroundColor = rgb(9, 247, 116);
-        Relay7.style.color = rgb(160, 160, 160);
+        Relay7.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay7.style.color = 'rgb(255,255,255)';
       }
     }
   }
@@ -251,15 +239,14 @@ Relay8.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay8_Task_Completed : ', recv_data.Relay8_update_success);
     if (recv_data.Relay8_update_success === 1) {
       if (Relay8.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay8.style.backgroundColor = rgb(39, 62, 104);
-        Relay8.style.color = rgb(160, 160, 160);
+        Relay8.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay8.style.color = 'rgb(255,255,255)';
       } else {
-        Relay8.style.backgroundColor = rgb(9, 247, 116);
-        Relay8.style.color = rgb(160, 160, 160);
+        Relay8.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay8.style.color = 'rgb(255,255,255)';
       }
     }
   }
@@ -278,15 +265,14 @@ Relay9.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay9_Task_Completed : ', recv_data.Relay9_update_success);
     if (recv_data.Relay9_update_success === 1) {
       if (Relay9.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay9.style.backgroundColor = rgb(39, 62, 104);
-        Relay9.style.color = rgb(160, 160, 160);
+        Relay9.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay9.style.color = 'rgb(255,255,255)';
       } else {
-        Relay9.style.backgroundColor = rgb(9, 247, 116);
-        Relay9.style.color = rgb(160, 160, 160);
+        Relay9.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay9.style.color = 'rgb(255,255,255)';
       }
     }
   }
@@ -305,15 +291,14 @@ Relay10.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay10_Task_Completed : ', recv_data.Relay10_update_success);
     if (recv_data.Relay10_update_success === 1) {
       if (Relay10.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay10.style.backgroundColor = rgb(39, 62, 104);
-        Relay10.style.color = rgb(160, 160, 160);
+        Relay10.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay10.style.color = 'rgb(255,255,255)';
       } else {
-        Relay10.style.backgroundColor = rgb(9, 247, 116);
-        Relay10.style.color = rgb(160, 160, 160);
+        Relay10.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay10.style.color = 'rgb(255,255,255)';
       }
     }
   }
@@ -332,20 +317,18 @@ Relay11.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay11_Task_Completed : ', recv_data.Relay11_update_success);
     if (recv_data.Relay11_update_success === 1) {
       if (Relay11.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay11.style.backgroundColor = rgb(39, 62, 104);
-        Relay11.style.color = rgb(160, 160, 160);
+        Relay11.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay11.style.color = 'rgb(255,255,255)';
       } else {
-        Relay11.style.backgroundColor = rgb(9, 247, 116);
-        Relay11.style.color = rgb(160, 160, 160);
+        Relay11.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay11.style.color = 'rgb(255,255,255)';
       }
     }
   }
 });
-
 Relay12.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
@@ -360,15 +343,14 @@ Relay12.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay12_Task_Completed : ', recv_data.Relay12_update_success);
     if (recv_data.Relay12_update_success === 1) {
       if (Relay12.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay12.style.backgroundColor = rgb(39, 62, 104);
-        Relay12.style.color = rgb(160, 160, 160);
+        Relay12.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay12.style.color = 'rgb(255,255,255)';
       } else {
-        Relay12.style.backgroundColor = rgb(9, 247, 116);
-        Relay12.style.color = rgb(160, 160, 160);
+        Relay12.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay12.style.color = 'rgb(255,255,255)';
       }
     }
   }
@@ -387,15 +369,14 @@ Relay13.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay13_Task_Completed : ', recv_data.Relay13_update_success);
     if (recv_data.Relay13_update_success === 1) {
       if (Relay13.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay13.style.backgroundColor = rgb(39, 62, 104);
-        Relay13.style.color = rgb(160, 160, 160);
+        Relay13.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay13.style.color = 'rgb(255,255,255)';
       } else {
-        Relay13.style.backgroundColor = rgb(9, 247, 116);
-        Relay13.style.color = rgb(160, 160, 160);
+        Relay13.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay13.style.color = 'rgb(255,255,255)';
       }
     }
   }
@@ -414,15 +395,14 @@ Relay14.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay14_Task_Completed : ', recv_data.Relay14_update_success);
     if (recv_data.Relay14_update_success === 1) {
       if (Relay14.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay14.style.backgroundColor = rgb(39, 62, 104);
-        Relay14.style.color = rgb(160, 160, 160);
+        Relay14.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay14.style.color = 'rgb(255,255,255)';
       } else {
-        Relay14.style.backgroundColor = rgb(9, 247, 116);
-        Relay14.style.color = rgb(160, 160, 160);
+        Relay14.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay14.style.color = 'rgb(255,255,255)';
       }
     }
   }
@@ -441,20 +421,18 @@ Relay15.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay15_Task_Completed : ', recv_data.Relay15_update_success);
     if (recv_data.Relay15_update_success === 1) {
       if (Relay15.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay15.style.backgroundColor = rgb(39, 62, 104);
-        Relay15.style.color = rgb(160, 160, 160);
+        Relay15.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay15.style.color = 'rgb(255,255,255)';
       } else {
-        Relay15.style.backgroundColor = rgb(9, 247, 116);
-        Relay15.style.color = rgb(160, 160, 160);
+        Relay15.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay15.style.color = 'rgb(255,255,255)';
       }
     }
   }
 });
-
 Relay16.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
@@ -469,25 +447,22 @@ Relay16.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log('Relay16_Task_Completed : ', recv_data.Relay16_update_success);
     if (recv_data.Relay16_update_success === 1) {
       if (Relay16.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay16.style.backgroundColor = rgb(39, 62, 104);
-        Relay16.style.color = rgb(160, 160, 160);
+        Relay16.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay16.style.color = 'rgb(255,255,255)';
       } else {
-        Relay16.style.backgroundColor = rgb(9, 247, 116);
-        Relay16.style.color = rgb(160, 160, 160);
+        Relay16.style.backgroundColor = 'rgb(9, 247, 116)';
+        Relay16.style.color = 'rgb(255,255,255)';
       }
     }
   }
 });
 random.innerHTML = `Random [${random_value === 0 ? 'OFF' : random_value}]`;
-
 random.addEventListener('click', async function (e) {
   e.preventDefault();
   random_value++;
-
   if (random_value > 4) {
     random_value = 0;
   }
@@ -498,7 +473,7 @@ random.addEventListener('click', async function (e) {
       bt.disabled = true;
       bt.classList.add('disabled');
       bt.style.backgroundColor = '#273e68';
-      bt.style.color = '#a0a0a0';
+      bt.style.color = '#fff';
       if (bt.value === 's') {
         bt.style.backgroundColor = 'purple';
         bt.style.color = '#fff';
@@ -507,40 +482,15 @@ random.addEventListener('click', async function (e) {
       bt.disabled = false;
       bt.classList.remove('disabled');
       bt.style.backgroundColor = '#273e68';
-      bt.style.color = '#a0a0a0';
-      bt.addEventListener('mouseover', function () {
-        bt.style.backgroundColor = '#a0a0a0';
-        bt.style.color = '#273e68';
-      });
-      bt.addEventListener('mouseout', function () {
-        bt.style.backgroundColor = '#273e68';
-        bt.style.color = '#a0a0a0';
-      });
+      bt.style.color = '#fff';
       if (bt.value === 's') {
         bt.style.backgroundColor = 'purple';
         bt.style.color = '#fff';
-        bt.addEventListener('mouseover', function () {
-          bt.style.backgroundColor = '#a0a0a0';
-          bt.style.color = '#273e68';
-        });
-        bt.addEventListener('mouseout', function () {
-          bt.style.backgroundColor = 'purple';
-          bt.style.color = '#fff';
-        });
       }
       if (bt.value === 'r') {
         bt.style.backgroundColor = 'orange';
         bt.style.color = '#fff';
-        bt.addEventListener('mouseover', function () {
-          bt.style.backgroundColor = '#a0a0a0';
-          bt.style.color = '#273e68';
-        });
-        bt.addEventListener('mouseout', function () {
-          bt.style.backgroundColor = 'orange';
-          bt.style.color = '#fff';
-        });
       }
-      // console.log(bt);
     }
   }
   data = {
@@ -555,21 +505,14 @@ random.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log(
       'random_update_success_Status : ',
       recv_data.random_update_success
     );
-    // if (recv_data.random_update_success === 1) {
-    //     random.style.backgroundColor === 'rgb(9, 247, 116)'
-    //         ? (random.style.backgroundColor = 'rgb(39, 62, 104)')
-    //         : (random.style.backgroundColor = 'rgb(9, 247, 116)');
-    // }
   }
 });
 serial.addEventListener('click', async function (e) {
   e.preventDefault();
-
   data = {
     serial: serial.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
   };
@@ -578,7 +521,7 @@ serial.addEventListener('click', async function (e) {
       bt.disabled = true;
       bt.classList.add('disabled');
       bt.style.backgroundColor = '#273e68';
-      bt.style.color = '#a0a0a0';
+      bt.style.color = '#fff';
       if (bt.value === 'r') {
         bt.style.backgroundColor = 'orange';
         bt.style.color = '#fff';
@@ -587,7 +530,7 @@ serial.addEventListener('click', async function (e) {
       bt.disabled = false;
       bt.classList.remove('disabled');
       bt.style.backgroundColor = '#273e68';
-      bt.style.color = '#a0a0a0';
+      bt.style.color = '#fff';
       if (bt.value === 's') {
         bt.style.backgroundColor = 'purple';
         bt.style.color = '#fff';
@@ -596,7 +539,6 @@ serial.addEventListener('click', async function (e) {
   }
   json_data.serial = data.serial;
   console.log(json_data);
-
   const options = {
     method: 'POST',
     body: JSON.stringify(json_data),
@@ -604,25 +546,21 @@ serial.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-
     console.log(
       'serial_update_success_Status : ',
       recv_data.serial_update_success
     );
     if (recv_data.serial_update_success === 1) {
       if (serial.style.backgroundColor === 'rgb(9, 247, 116)') {
-        serial.style.backgroundColor = rgb(39, 62, 104);
-        serial.style.color = rgb(160, 160, 160);
+        serial.style.backgroundColor = 'rgb(39, 62, 104)';
+        serial.style.color = 'rgb(255, 255, 255)';
       } else {
-        serial.style.backgroundColor = rgb(128, 0, 128);
-        serial.style.color = rgb(255, 255, 255);
+        serial.style.backgroundColor = 'rgb(128, 0, 128)';
+        serial.style.color = 'rgb(255, 255, 255)';
       }
     }
   }
-
-  // send updated json packet
 });
-
 window.addEventListener('load', () => {
   // setTimeout(() => {
   //   reload_relay_flag = 1;
