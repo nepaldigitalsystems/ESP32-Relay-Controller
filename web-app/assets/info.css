@@ -6,6 +6,15 @@
 body {
   height: auto;
 }
+img {
+  position: absolute;
+  top: 2%;
+  left: 2%;
+  height: 30px;
+  width: 30px;
+  background-color: #fff;
+  cursor: pointer;
+}
 table {
   position: absolute;
   width: 50%;

@@ -9,6 +9,10 @@ let td7 = document.querySelector('.fi');
 let td8 = document.querySelector('.fh');
 let td9 = document.querySelector('.bc');
 let td10 = document.querySelector('.ct');
+let home = document.querySelector('.img');
+home.addEventListener('click', function () {
+  window.location.replace('/dashboard');
+});
 window.addEventListener('load', async function (e) {
   e.preventDefault();
   const data = {
@@ -21,8 +25,7 @@ window.addEventListener('load', async function (e) {
   const response = await fetch('/info_post', options);
   if (response.status == 200) {
     const json_data = await response.json();
-    
-   
+
     if (json_data.Approve == 1) {
       td1.innerHTML = json_data.CHIP_MODEL;
       td2.innerHTML = json_data.CHIP_ID_MAC;
@@ -34,8 +37,6 @@ window.addEventListener('load', async function (e) {
       td8.innerHTML = json_data.FREE_HEAP;
       td9.innerHTML = json_data.BOOT_COUNT;
       td10.innerHTML = json_data.COMPILE_TIME;
-
-    
     }
   }
 });

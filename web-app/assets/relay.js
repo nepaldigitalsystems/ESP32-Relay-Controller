@@ -18,6 +18,7 @@ let Relay15 = document.querySelector('.btn-15');
 let Relay16 = document.querySelector('.btn-16');
 let random = document.querySelector('.rnd');
 let serial = document.querySelector('.srl');
+let home = document.querySelector('.img');
 let reload_relay_flag = 0;
 let random_value = 0;
 
@@ -42,7 +43,9 @@ let json_data = {
   serial: 0,
 };
 let data;
-
+home.addEventListener('click', function () {
+  window.location.replace('/dashboard');
+});
 Relay1.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
@@ -57,7 +60,7 @@ Relay1.addEventListener('click', async function (e) {
   const response = await fetch('/relay_json_post', options);
   if (response.status == 200) {
     const recv_data = await response.json();
-   console.log('Relay1_Task_Completed : ', recv_data.Relay1_update_success);
+    console.log('Relay1_Task_Completed : ', recv_data.Relay1_update_success);
     if (recv_data.Relay1_update_success === 1) {
       if (Relay1.style.backgroundColor === 'rgb(9, 247, 116)') {
         Relay1.style.color = 'rgb(255,255,255)';
@@ -526,13 +529,16 @@ serial.addEventListener('click', async function (e) {
         bt.style.backgroundColor = 'orange';
         bt.style.color = '#fff';
       }
+    } else if (bt.value === 's' && data.serial === 1) {
+      bt.style.backgroundColor = 'rgb(9, 247, 116)';
+      bt.style.color = '#fff';
     } else {
       bt.disabled = false;
       bt.classList.remove('disabled');
       bt.style.backgroundColor = '#273e68';
       bt.style.color = '#fff';
       if (bt.value === 's') {
-        bt.style.backgroundColor = 'purple';
+        bt.style.backgroundColor = 'rgb(128, 0, 128)';
         bt.style.color = '#fff';
       }
     }
@@ -552,7 +558,7 @@ serial.addEventListener('click', async function (e) {
     );
     if (recv_data.serial_update_success === 1) {
       if (serial.style.backgroundColor === 'rgb(9, 247, 116)') {
-        serial.style.backgroundColor = 'rgb(39, 62, 104)';
+        serial.style.backgroundColor = 'rgb(9, 247, 116)';
         serial.style.color = 'rgb(255, 255, 255)';
       } else {
         serial.style.backgroundColor = 'rgb(128, 0, 128)';

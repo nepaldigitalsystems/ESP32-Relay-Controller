@@ -15,7 +15,6 @@ showPass.addEventListener('click', function () {
 });
 textFieldunameEl.maxLength = '31';
 textFieldpwdEl.maxLength = '31';
-let flag = 0;
 form.addEventListener('submit', async function (e) {
   e.preventDefault();
   const data = {
