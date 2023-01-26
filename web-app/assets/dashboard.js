@@ -50,17 +50,17 @@ restart.addEventListener('click', async function (e) {
   }
 });
 //window onload function
-window.addEventListener('load', () => {
-  // setTimeout(() => {
-  //   reload_dashboard_flag = 1;
-  // }, 5000);
-  setTimeout(() => {
-    alert(
-      'Warning! Session Timeout due to inactivity..... \n Reload to redirect into login page. '
-    );
-  }, 175000);
-});
-window.onload;
+// window.addEventListener('load', () => {
+//   // setTimeout(() => {
+//   //   reload_dashboard_flag = 1;
+//   // }, 5000);
+//   setTimeout(() => {
+//     alert(
+//       'Warning! Session Timeout due to inactivity..... \n Reload to redirect into login page. '
+//     );
+//   }, 175000);
+// });
+// window.onload;
 // window.addEventListener('beforeunload', async function () {
 //   if (reload_dashboard_flag == 1) {
 //     const response = await fetch('/refresh_dashboard', options);

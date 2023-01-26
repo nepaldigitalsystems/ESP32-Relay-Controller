@@ -22,6 +22,7 @@ img {
   width: 30px;
   background-color: #fff;
   cursor: pointer;
+  z-index: 1;
 }
 .col1 {
   margin-right: 100px;
@@ -84,6 +85,6 @@ footer p span {
     font-size: 15px;
   }
   body {
-    height: fit-content;
+    height: auto;
   }
 }

@@ -9,6 +9,7 @@ let td7 = document.querySelector('.fi');
 let td8 = document.querySelector('.fh');
 let td9 = document.querySelector('.bc');
 let td10 = document.querySelector('.ct');
+let td11 = document.querySelector('.ut');
 let home = document.querySelector('.img');
 home.addEventListener('click', function () {
   window.location.replace('/dashboard');
@@ -37,6 +38,7 @@ window.addEventListener('load', async function (e) {
       td8.innerHTML = json_data.FREE_HEAP;
       td9.innerHTML = json_data.BOOT_COUNT;
       td10.innerHTML = json_data.COMPILE_TIME;
+      td11.innerHTML = json_data.UP_TIME;
     }
   }
 });

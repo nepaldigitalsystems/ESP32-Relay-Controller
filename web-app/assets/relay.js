@@ -567,17 +567,17 @@ serial.addEventListener('click', async function (e) {
     }
   }
 });
-window.addEventListener('load', () => {
-  // setTimeout(() => {
-  //   reload_relay_flag = 1;
-  // }, 2000);
-  setTimeout(() => {
-    alert(
-      'Warning! Session Timeout due to inactivity..... \n Reload to redirect into login page. '
-    );
-  }, 175000);
-});
-window.onload;
+// window.addEventListener('load', () => {
+//   // setTimeout(() => {
+//   //   reload_relay_flag = 1;
+//   // }, 2000);
+//   setTimeout(() => {
+//     alert(
+//       'Warning! Session Timeout due to inactivity..... \n Reload to redirect into login page. '
+//     );
+//   }, 175000);
+// });
+// window.onload;
 // window.addEventListener('beforeunload', async function () {
 //   if (reload_relay_flag == 1) {
 //     const response = fetch('/refresh_relay', options);
