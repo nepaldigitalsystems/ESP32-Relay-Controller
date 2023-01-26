@@ -2,6 +2,7 @@
 //initiation
 const relay = document.querySelector('.relay');
 const info = document.querySelector('.info');
+const settings = document.querySelector('.settings');
 const restart = document.querySelector('.restart');
 const table = document.querySelector('table');
 let reload_dashboard_flag = 0;
@@ -46,6 +47,25 @@ restart.addEventListener('click', async function (e) {
     console.log('Approve Status : ', json_data.approve);
     if (json_data.approve == 1) {
       window.location.replace('/');
+    }
+  }
+});
+settings.addEventListener('click', async function (e) {
+  e.preventDefault();
+  const data = {
+    settings: 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(data),
+  };
+  const response = await fetch('/settings_post', options);
+  if (response.status == 200) {
+    const json_data = await response.json();
+    console.log(json_data);
+    console.log('Approve Status : ', json_data.approve);
+    if (json_data.approve == 1) {
+      window.location.replace('/settings');
     }
   }
 });
