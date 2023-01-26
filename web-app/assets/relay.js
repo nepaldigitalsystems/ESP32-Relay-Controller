@@ -18,7 +18,7 @@ let Relay15 = document.querySelector('.btn-15');
 let Relay16 = document.querySelector('.btn-16');
 let random = document.querySelector('.rnd');
 let serial = document.querySelector('.srl');
-let home = document.querySelector('.img');
+let home = document.querySelector('.home');
 let reload_relay_flag = 0;
 let random_value = 0;
 
@@ -537,6 +537,10 @@ serial.addEventListener('click', async function (e) {
       bt.classList.remove('disabled');
       bt.style.backgroundColor = '#273e68';
       bt.style.color = '#fff';
+      if (bt.value === 'r') {
+        bt.style.backgroundColor = 'orange';
+        bt.style.color = '#fff';
+      }
       if (bt.value === 's') {
         bt.style.backgroundColor = 'rgb(128, 0, 128)';
         bt.style.color = '#fff';

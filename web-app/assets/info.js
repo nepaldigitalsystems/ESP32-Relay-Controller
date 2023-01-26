@@ -10,7 +10,7 @@ let td8 = document.querySelector('.fh');
 let td9 = document.querySelector('.bc');
 let td10 = document.querySelector('.ct');
 let td11 = document.querySelector('.ut');
-let home = document.querySelector('.img');
+let home = document.querySelector('.home');
 home.addEventListener('click', function () {
   window.location.replace('/dashboard');
 });

@@ -14,12 +14,16 @@
   padding: 30px;
   column-count: 2;
 }
-img {
-  position: absolute;
-  top: 2%;
-  left: 2%;
-  height: 30px;
-  width: 30px;
+.home {
+  position: fixed;
+  top: 1%;
+  left: 1%;
+  width: 5%;
+  height: 5%;
+  font-size: 250%;
+  text-align: center;
+  color: #273e68;
+  border: none;
   background-color: #fff;
   cursor: pointer;
   z-index: 1;
