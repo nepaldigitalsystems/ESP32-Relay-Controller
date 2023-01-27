@@ -37,7 +37,7 @@ form.addEventListener('submit', async function (e) {
       alert(
         `Resetting your wifi. Connect your device to "${ssid.value}" network. \n Your NDS_IP is 192.168.${json_data.IP_addr3}.100`
       );
-      window.location.replace('/');
+      window.location.reload;
     }
   }
 });

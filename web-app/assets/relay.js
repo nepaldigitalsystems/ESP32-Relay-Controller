@@ -42,10 +42,38 @@ let json_data = {
   random: 0,
   serial: 0,
 };
+
 let data;
 home.addEventListener('click', function () {
   window.location.replace('/dashboard');
 });
+// const  rel = async function (e) {`
+// e.preventDefault();
+// data = {
+//   Relay${i}: Relay${i}.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
+// };
+// json_data.Relay${i} = data.Relay${i};
+// console.log(json_data);
+// const options = {
+//   method: 'POST',
+//   body: JSON.stringify(json_data),
+// };
+// const response = await fetch('/relay_json_post', options);
+// if (response.status == 200) {
+//   const recv_data = await response.json();
+//   console.log('Relay${i}_Task_Completed : ', recv_data.Relay${i}_update_success);
+//   if (recv_data.Relay${i}_update_success === 1) {
+//     if (Relay${i}.style.backgroundColor === 'rgb(9, 247, 116)') {
+//       Relay${i}.style.color = 'rgb(255,255,255)';
+//       Relay${i}.style.backgroundColor = 'rgb(39, 62, 104)';
+//     } else {
+//       Relay${i}.style.backgroundColor = 'rgb(9, 247, 116)';
+//       Relay${i}.style.color = 'rgb(255,255,255)';
+//     }
+//   }
+// }
+// `}
+
 Relay1.addEventListener('click', async function (e) {
   e.preventDefault();
   data = {
@@ -349,8 +377,9 @@ Relay12.addEventListener('click', async function (e) {
     console.log('Relay12_Task_Completed : ', recv_data.Relay12_update_success);
     if (recv_data.Relay12_update_success === 1) {
       if (Relay12.style.backgroundColor === 'rgb(9, 247, 116)') {
-        Relay12.style.backgroundColor = 'rgb(39, 62, 104)';
-        Relay12.style.color = 'rgb(255,255,255)';
+        //green
+        Relay12.style.backgroundColor = 'rgb(39, 62, 104)'; //blue
+        Relay12.style.color = 'rgb(255,255,255)'; //white
       } else {
         Relay12.style.backgroundColor = 'rgb(9, 247, 116)';
         Relay12.style.color = 'rgb(255,255,255)';
