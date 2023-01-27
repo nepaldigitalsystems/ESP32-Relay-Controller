@@ -2,12 +2,16 @@ let form = document.querySelector('form');
 let curr = document.querySelector('.currpass');
 let newpass = document.querySelector('.newpass');
 let conpass = document.querySelector('.conpass');
-let newUser = document.querySelector('.newuser');
+let newUser = document.querySelector('.uname');
 let showPass0 = document.querySelector('.showPass0');
 let showPass1 = document.querySelector('.showPass1');
 let showPass2 = document.querySelector('.showPass2');
 let check = document.querySelector('.cb');
 let home = document.querySelector('.home');
+newUser.maxLength = '31';
+newpass.maxLength = '31';
+curr.maxLength = '31';
+conpass.maxLength = '31';
 home.addEventListener('click', function () {
   window.location.replace('/dashboard');
 });
@@ -20,8 +24,7 @@ showPass0.addEventListener('click', function () {
     showPass0.src = './image/ey.png';
   }
 });
-newUser.maxLength = '31';
-newpass.maxLength = '31';
+
 showPass1.addEventListener('click', function () {
   if (newpass.type === 'password') {
     newpass.type = 'text';
@@ -41,15 +44,16 @@ showPass2.addEventListener('click', function () {
   }
 });
 check.addEventListener('click', function () {
-  newUser.classList.remove('hidden');
+  newUser.classList.toggle('hidden');
 });
-form.addEventListener('click', async function (e) {
+
+form.addEventListener('submit', async function (e) {
   e.preventDefault();
   const data = {
     current_password: curr.value,
     new_password: newpass.value,
     confirm_password: conpass.value,
-    new_username: newUser.value,
+    new_username: newUser.value == '' ? 'ADMIN' : newUser.value,
   };
   const options = {
     method: 'POST',
