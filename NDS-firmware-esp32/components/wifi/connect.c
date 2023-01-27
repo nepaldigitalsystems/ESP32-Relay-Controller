@@ -1,4 +1,6 @@
 #include "stdio.h"
+#include "nvs_flash.h"
+#include "nvs.h"
 #include "string.h"
 #include "esp_log.h"
 #include "esp_err.h"
@@ -8,7 +10,9 @@
 #include "esp_netif.h"
 #include "esp_wifi.h"
 
-uint8_t reconnect_count = 0;
+// variable to avoid connection fail loop when changing wifi modes
+static uint8_t reconnect_count = 0;
+static uint32_t sta_addr3 = 0;
 // just creating a global reference to station network interface
 esp_netif_t *esp_netif = NULL;
 // [encapsulate within this file only] ; create event groups for wifi_events
@@ -110,9 +114,12 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
         // inidicate the start of wifi
         ESP_LOGW("STA_EVENT", "CONNECTING...");
         esp_wifi_connect();
+        reconnect_count = 0;
         break;
     case SYSTEM_EVENT_STA_CONNECTED:
+
         ESP_LOGW("STA_EVENT", "CONNECTED...");
+        reconnect_count = 0;
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED: // cannot declare a structure within a scope of switch statement ; so isolate it {}
     {
@@ -125,11 +132,27 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
         }
         const char *err = get_error(wifi_event_sta_disconnected->reason);
         ESP_LOGW("STA_EVENT", "DISCONNECTED : %s", err);
-        if((reconnect_count < 10) && (esp_wifi_connect() != ESP_OK))
+        if (reconnect_count < 4)
         {
             reconnect_count++;
-            ESP_LOGI("Reconnect_Count", "%d", reconnect_count);
+            ESP_LOGI("RECONNECT_TAG", "System restart in => %d", reconnect_count);
         }
+        else
+        {
+            ESP_LOGI("RECONNECT_TAG", "Wrong creds!!. Erasing ssid & pass from : 'wifiCreds' And Restarting.");
+            nvs_handle_t my_handle;
+            ESP_ERROR_CHECK(nvs_open("wifiCreds", NVS_READWRITE, &my_handle));
+            ESP_ERROR_CHECK(nvs_erase_all(my_handle));
+            ESP_ERROR_CHECK(nvs_commit(my_handle));
+            // nvs_close(my_handle);
+            // nvs_handle_t my_handle;
+            ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &my_handle));
+            ESP_ERROR_CHECK(nvs_erase_all(my_handle));
+            ESP_ERROR_CHECK(nvs_commit(my_handle));
+            nvs_close(my_handle);
+            esp_restart();
+        }
+        esp_wifi_connect();
         xEventGroupSetBits(wifi_events, DISCONNECTED_GOT_IP); // wifi_events => BIT1 ; True
     }
     break;
@@ -138,6 +161,16 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
         ESP_LOGE("IP_EVENT", "STATION GOT IP.. ESP32-STA IP:" IPSTR, IP2STR(&event->ip_info.ip));
         xEventGroupSetBits(wifi_events, CONNECTED_GOT_IP); // wifi_events => BIT0 ; True
+        if (sta_addr3 == 0)
+        {
+            sta_addr3 = (uint32_t)esp_ip4_addr3_16(&event->ip_info.ip);
+            ESP_LOGE("STA_IP_TAG", "ESP32_NEW, IP_addr3: %d", sta_addr3);
+            nvs_handle_t sta_host;
+            ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &sta_host));
+            ESP_ERROR_CHECK(nvs_set_u32(sta_host, "no.", sta_addr3));
+            ESP_ERROR_CHECK(nvs_commit(sta_host));
+            nvs_close(sta_host);
+        }
     }
     break;
     case WIFI_EVENT_AP_START:
@@ -191,14 +224,26 @@ esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
     memset(&wifi_config, 0, sizeof(wifi_config));                                          // or you can just pass null in handle
     strncpy((char *)wifi_config.sta.ssid, SSID, sizeof(wifi_config.sta.ssid) - 1);         // [31byte + 1-terminator] // only two types to choose fro (ap / sta)
     strncpy((char *)wifi_config.sta.password, PASS, sizeof(wifi_config.sta.password) - 1); // [31byte + 1-terminator] // only two types to choose fro (ap / sta)
+    // check for internally stored , sta_host_number
+    nvs_handle_t my_handle;
+    ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &my_handle));
+    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u32(my_handle, "no.", &sta_addr3))
+    {
+        sta_addr3 = 0;
+    }
+    ESP_ERROR_CHECK(nvs_commit(my_handle));
+    nvs_close(my_handle);
+    if (sta_addr3 > 0)
+    {
+        esp_netif_dhcpc_stop(esp_netif);
+        esp_netif_ip_info_t ip_info;
+        IP4_ADDR(&ip_info.ip, 192, 168, sta_addr3, 100);
+        IP4_ADDR(&ip_info.gw, 192, 168, sta_addr3, 254);
+        IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
+        esp_netif_set_ip_info(esp_netif, &ip_info);
+    }
 
-    esp_netif_dhcpc_stop(esp_netif);
-    esp_netif_ip_info_t ip_info;
-    IP4_ADDR(&ip_info.ip, 192, 168, 1, 100);
-    IP4_ADDR(&ip_info.gw, 192, 168, 1, 254);
-    IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
-    esp_netif_set_ip_info(esp_netif, &ip_info);
-
+    // start the esp32 wifi
     esp_wifi_set_mode(WIFI_MODE_STA);                   // setting the mode of wifi (AP / STA)
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config); // pass the wifi_config ; if set as station
     esp_wifi_start();
@@ -213,7 +258,6 @@ esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
     {
         return ESP_OK;
     }
-
     return ESP_FAIL;
 }
 

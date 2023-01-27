@@ -14,20 +14,34 @@ showPass.addEventListener('click', function () {
     showPass.src = './image/ey.png';
   }
 });
-
-form.addEventListener('submit', function (e) {
-  e.preventDefault();
-  let xhr = new XMLHttpRequest();
-  xhr.open('POST', '/AP_STA_post', true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.send(
-    JSON.stringify({
-      local_ssid: ssid.value,
-      local_pass: pass.value,
-    })
-  );
-
-  alert(`Resetting your wifi. Connect your device to "${ssid.value}" network.`);
-});
 ssid.maxLength = '31';
 pass.maxLength = '31';
+
+form.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const data = {
+    local_ssid: ssid.value,
+    local_pass: pass.value,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(data),
+  };
+  const response = await fetch('/AP_STA_post', options);
+  if (response.status == 200) {
+    const json_data = await response.json();
+    console.log(json_data);
+    console.log('IP_addr3:', json_data.IP_addr3);
+
+    if (json_data.IP_addr3 >= 0) {
+      alert(
+        `Resetting your wifi. Connect your device to "${ssid.value}" network. \n Your NDS_IP is 192.168.${(json_data.IP_addr3) == 0 ? 'X' : (json_data.IP_addr3)}.100`
+      );
+      window.location.reload;
+    }
+  }
+});
+// alert(
+//   `Resetting your wifi. Connect your device to "${ssid.value}" network. \n Your NDS_IP is 192.168.${json_data.IP_addr3}.100`
+// );
+// location.replace('/');

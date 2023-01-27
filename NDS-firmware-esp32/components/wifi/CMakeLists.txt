@@ -1,2 +1,3 @@
 idf_component_register(SRCS "connect.c"
-                    INCLUDE_DIRS ".")
+                    INCLUDE_DIRS "."
+                    REQUIRES nvs_flash)

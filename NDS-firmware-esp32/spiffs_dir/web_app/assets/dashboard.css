@@ -7,7 +7,7 @@
 .center {
     position: absolute;
     text-align: center;
-    top: 30%;
+    top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
     background: #fff;
@@ -33,6 +33,11 @@
     color: #273e68;
 }
 
+.restart {
+    background-color: red;
+    color: #a0a0a0;
+}
+
 footer {
     position: absolute;
     bottom: 0;
@@ -40,7 +45,7 @@ footer {
     height: 15vh;
     text-align: center;
     color: #273e68;
-    background-color: #a0a0a0;
+    background-color: #b9b9b9;
 }
 
 footer p {
@@ -52,4 +57,9 @@ footer p {
 
 footer p span {
     font-weight: bold;
+}
+
+.hidden {
+    background-color: green;
+    color: #fff;
 }

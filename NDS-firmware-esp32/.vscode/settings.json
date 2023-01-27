@@ -52,7 +52,14 @@
         "streambuf": "c",
         "tuple": "c",
         "type_traits": "c",
-        "utility": "c"
+        "utility": "c",
+        "sntp.h": "c",
+        "esp_sntp.h": "c",
+        "sstream": "c",
+        "regex": "c",
+        "timer.h": "c",
+        "esp_system.h": "c",
+        "functional": "c"
     },
     "idf.flashType": "UART"
 }

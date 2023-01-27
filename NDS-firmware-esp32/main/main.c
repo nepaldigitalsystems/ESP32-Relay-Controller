@@ -6,7 +6,7 @@
 #include "nvs_flash.h"
 #include "toggleled.h"
 #include "cJSON.h"
-
+#include "driver/timer.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_spiffs.h"
@@ -14,14 +14,15 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-
-#include "esp_sntp.h"
+#include "freertos/semphr.h"
 #include "esp_spi_flash.h"
 #include "esp_system.h"
 #include "lwip/sockets.h"
-#include "time.h"
+#include "driver/gpio.h"
 
-/*
+/* LIST of namespaces and keys
+ * namespace => sta_num ; key = no. ;
+ * namespace => sta_num ; key = no. ;
  * namespace => wifiCreds ; key = store_ssid  ;
  * namespace => wifiCreds ; key = store_pass  ;
  * namespace => loginCreds ; key = username  ;
@@ -29,7 +30,37 @@
  * namespace => Reboot ; key = statusAP  ;
  * namespace => Reboot ; key = statusSTA  ;
  * namespace => bootVal ; key = COUNT  ;
+ * namespace => Relay_Status ; key = Relay1;
+ * namespace => Relay_Status ; key = Relay2;
+ * namespace => Relay_Status ; key = Relay3;
+ * namespace => Relay_Status ; key = Relay4;
+ * namespace => Relay_Status ; key = Relay5;
+ * namespace => Relay_Status ; key = Relay6;
+ * namespace => Relay_Status ; key = Relay7;
+ * namespace => Relay_Status ; key = Relay8;
+ * namespace => Relay_Status ; key = Relay9;
+ * namespace => Relay_Status ; key = Relay10;
+ * namespace => Relay_Status ; key = Relay11;
+ * namespace => Relay_Status ; key = Relay12;
+ * namespace => Relay_Status ; key = Relay13;
+ * namespace => Relay_Status ; key = Relay14;
+ * namespace => Relay_Status ; key = Relay15;
+ * namespace => Relay_Status ; key = Relay16;
+ * namespace => Relay_Status ; key = random;
+ * namespace => Relay_Status ; key = serial;
  */
+
+/*Relay ON / OFF*/
+#define r_ON 0
+#define r_OFF 1
+uint8_t Relay_Status_Value[RELAY_UPDATE_MAX] = {0};   // 1-18
+uint8_t Relay_Update_Success[RELAY_UPDATE_MAX] = {0}; // 1-18
+
+/* list of relay_pins [ 0-15 ] */
+gpio_num_t relay_pins[16] = {GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_33, GPIO_NUM_32, GPIO_NUM_2, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_23};
+static TaskHandle_t receiveHandler = NULL;
+xSemaphoreHandle xSema = NULL;
+static esp_timer_handle_t esp_timer_handle;
 
 /* Reboot mode index */
 #define AP_mode 0
@@ -40,13 +71,10 @@
 /* local_wifi cred index */
 #define local_ssid_index 0
 #define local_pass_index 1
-/*Complie Date and Time (only once)*/
-const char *compile_date = __DATE__;
-const char *compile_time = __TIME__;
 
 // have to send a struct inseade of void
-bool AP_restart = false;  // Restart once
-bool STA_restart = false; // Restart once
+static bool AP_restart = false;  // Restart once
+static bool STA_restart = false; // Restart once
 
 void RESTART_WIFI(uint8_t mode)
 {
@@ -69,8 +97,7 @@ void RESTART_WIFI(uint8_t mode)
     switch (res)
     {
     case ESP_ERR_NVS_NOT_FOUND:
-        ESP_LOGE("REBOOT_TAG", "Value not set yet");
-        ESP_LOGE("REBOOT_TAG", "Restarting ...");
+        ESP_LOGE("REBOOT_TAG", "Value not set yet . Restarting ...");
         break;
     case ESP_OK:
         if (mode)
@@ -93,32 +120,51 @@ void RESTART_WIFI(uint8_t mode)
 }
 esp_err_t inspect_login_data(auth_t *Data, nvs_handle *login, const char *KEY, uint8_t index)
 {
-    esp_err_t err = ESP_FAIL;
+    esp_err_t err = ESP_FAIL; // ESP_FAIL -> NVS_EMPTY -> ADMIN
     size_t required_size;
     nvs_get_str(*login, KEY, NULL, &required_size); // dynamic allocation and required_size => length required to hold the value.
     char *sample = malloc(required_size);
-    esp_err_t result = nvs_get_str(*login, KEY, sample, &required_size);
-    switch (result)
+
+    switch (nvs_get_str(*login, KEY, sample, &required_size)) // extracted the 'username / password' into 'sample' variable
     {
     case ESP_ERR_NVS_NOT_FOUND:
-        ESP_LOGE("NVS_TAG", "%s not set yet.... Storing New & approved %s", KEY, KEY);
-        err = ESP_OK; // writes to the local_config structure if [data doesn't exist]
+        ESP_LOGE("LOGIN_TAG", "%s not set yet.... Default %s : ADMIN", KEY, KEY);
+        err = ESP_FAIL;                                     // [data doesn't exist] ---> use :- name & pass => ADMIN & ADMIN
+        ESP_ERROR_CHECK(nvs_set_str(*login, KEY, "ADMIN")); // storing "ADMIN", if nvs is empty.
         break;
     case ESP_OK:
-        ESP_LOGI("NVS_TAG", "NVS_stored : %s is = %s", KEY, sample);
+        err = ESP_OK; // [data exists] ----> correct logins ----> [response.approve = true;]
+        ESP_LOGW("LOGIN_TAG", "NVS_stored : %s is = %s", KEY, sample);
         if ((index == 0))
         {
             if (strcmp(Data->username, sample) == 0)
-                ESP_LOGW("NVS_TAG", "USERNAME ... Approved");
+            {
+                ESP_LOGW("LOGIN_TAG", "USERNAME ........ Approved");
+                response.approve = true;
+            }
+            else
+            {
+                ESP_LOGE("LOGIN_TAG", "WRONG USERNAME ENTRY ........ Not Approved");
+                response.approve = false;
+            }
         }
         else if ((index == 1))
         {
             if (strcmp(Data->password, sample) == 0)
-                ESP_LOGW("NVS_TAG", "PASSWORD ... Approved");
+            {
+                ESP_LOGW("LOGIN_TAG", "PASSWORD ........ Approved");
+                response.approve = true;
+            }
+            else
+            {
+                ESP_LOGE("LOGIN_TAG", "WRONG PASSWORD ENTRY ........ Not Approved");
+                response.approve = false;
+            }
         }
         break;
     default:
-        ESP_LOGE("NVS_TAG", "Error (%s) opening NVS login!\n", esp_err_to_name(result));
+        err = ESP_FAIL;
+        ESP_ERROR_CHECK(nvs_set_str(*login, KEY, "ADMIN")); // Storing "ADMIN" in NVS , if data extraction error occurs.
         break;
     }
     ESP_ERROR_CHECK(nvs_commit(*login));
@@ -132,8 +178,7 @@ esp_err_t inspect_wifiCred_data(ap_config_t *local_config, nvs_handle *handle, c
     size_t req_size;
     nvs_get_str(*handle, KEY, NULL, &req_size); // dynamic allocation
     char *sample = malloc(req_size);
-    esp_err_t result = nvs_get_str(*handle, KEY, sample, &req_size); // key => store_ssid
-    switch (result)                                                  // test for ssid
+    switch (nvs_get_str(*handle, KEY, sample, &req_size)) // test for ssid
     {
     case ESP_ERR_NVS_NOT_FOUND:
         ESP_LOGE("NVS_TAG", "%s value not set yet", KEY);
@@ -152,7 +197,6 @@ esp_err_t inspect_wifiCred_data(ap_config_t *local_config, nvs_handle *handle, c
         err = ESP_OK; // reads from the local_config structure if [data exist]
         break;
     default:
-        ESP_LOGE("NVS_TAG", "Error (%s) opening NVS handle!\n", esp_err_to_name(result));
         break;
     }
     ESP_ERROR_CHECK(nvs_commit(*handle));
@@ -163,15 +207,17 @@ esp_err_t inspect_wifiCred_data(ap_config_t *local_config, nvs_handle *handle, c
 
 esp_err_t login_cred(auth_t *Data) // compares the internal login creds with given "Data" arg
 {
-    nvs_handle login; // nvs_handle_t = nvs_handle
-    esp_err_t err;
+    nvs_handle login;
+    esp_err_t err1, err2;
     ESP_ERROR_CHECK(nvs_open("loginCreds", NVS_READWRITE, &login)); // namespace => loginCreds
-    err = inspect_login_data(Data, &login, "username", username_index);
-    err = inspect_login_data(Data, &login, "password", password_index);
+    err1 = inspect_login_data(Data, &login, "username", username_index);
+    err2 = inspect_login_data(Data, &login, "password", password_index);
     nvs_close(login);
-    return (err);
+    if ((err1 == err2) == ESP_OK)
+        return ESP_OK;
+    else
+        return ESP_FAIL;
 }
-
 esp_err_t initialize_nvs(ap_config_t *local_config)
 {
     // initialize the default NVS partition
@@ -191,35 +237,19 @@ esp_err_t initialize_nvs(ap_config_t *local_config)
     return (err);
 }
 
-void get_CompileTime(void)
-{
-    char timestamp[50];
-    struct tm Start_Time;
-    strptime(compile_date, "%b %d %Y", &Start_Time);
-    strptime(compile_time, "%I:%M:%S", &Start_Time);
-    strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %I:%M:%S.%p", &Start_Time); // convert date and time to string
-    ESP_LOGW("Compiled_Time", "  Start -----> %s", timestamp);
-}
-
 void Boot_count(void)
 {
     nvs_handle BOOT;
     ESP_ERROR_CHECK(nvs_open("bootVal", NVS_READWRITE, &BOOT));
-
     uint16_t val = 0;
-    esp_err_t result = nvs_get_u16(BOOT, "COUNT", &val);
-    switch (result)
+    // esp_err_t result = nvs_get_u16(BOOT, "COUNT", &val);
+    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u16(BOOT, "COUNT", &val))
     {
-    case ESP_ERR_NVS_NOT_FOUND:
-    case ESP_ERR_NOT_FOUND:
         ESP_LOGW("BOOT_TAG", "First Boot.");
-        break;
-    case ESP_OK:
+    }
+    else
+    {
         ESP_LOGW("BOOT_TAG", "Boot_count => %d", val);
-        break;
-    default:
-        ESP_LOGW("BOOT_TAG", "Error (%s) opening NVS BOOT_count!\n", esp_err_to_name(result));
-        break;
     }
     val++;
     ESP_ERROR_CHECK(nvs_set_u16(BOOT, "COUNT", val));
@@ -227,42 +257,199 @@ void Boot_count(void)
     nvs_close(BOOT);
 }
 
-void CHIP_INFO(void)
+static void Serial_Timer_Callback(void *params) // service routine for rtos-timer
 {
-    uint8_t chipId[6];
-    esp_chip_info_t chip_info;
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    esp_efuse_mac_get_default(chipId);
-
-    /*ESP32 info*/
-    esp_chip_info(&chip_info);
-    ESP_LOGI("CHIP_TAG", "This is ESP32 chip with %d CPU cores, WiFi%s%s, ",
-             chip_info.cores,
-             (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-             (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
-
-    ESP_LOGI("CHIP_TAG", "silicon revision %d, ", chip_info.revision);
-    ESP_LOGI("CHIP_TAG", "%dMB %s flash", spi_flash_get_chip_size() / (1024 * 1024),
-             (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
-    ESP_LOGI("CHIP_TAG", "idf version is %s", esp_get_idf_version());
-    ESP_LOGI("CHIP_TAG", "MAC/Chip id: %02x:%02x:%02x:%02x:%02x:%02x", chipId[0], chipId[1], chipId[2], chipId[3], chipId[4], chipId[5]);
-
-    /*RAM info*/
-    ESP_LOGI("CHIP_TAG", "Free Heap Size = %dkb [ DRAM ]", xPortGetFreeHeapSize());
-    ESP_LOGI("CHIP_TAG", "DRAM = %d", DRam);
-    ESP_LOGI("CHIP_TAG", "IRam = %d", IRam);
-    int free = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("CHIP_TAG", "free = %d", free);
-
-    /*boot count*/
-    Boot_count();
+    static int position = 0;
+    if ((position > 1) && (position < 16))
+    {
+        gpio_set_level(relay_pins[position - 2], r_OFF);
+        gpio_set_level(relay_pins[position - 1], r_ON);
+        gpio_set_level(relay_pins[position], r_ON);
+    }
+    else if (position == 16)
+        gpio_set_level(relay_pins[position - 2], r_OFF);
+    else
+    {
+        gpio_set_level(relay_pins[position], r_ON);
+        gpio_set_level(relay_pins[15], r_OFF);
+    }
+    // shift the pointer position
+    position++;
+    if (position > 16)
+        position = 0;
 }
 
+void init_gpio_timer()
+{
+    for (int i = 0; i < 16; i++) // 0-15
+    {
+        gpio_pad_select_gpio(relay_pins[i]);
+        gpio_set_direction(relay_pins[i], GPIO_MODE_OUTPUT);
+    }
+}
+
+void Serial_Patttern_task(void *params) // receiver
+{
+    uint32_t state;
+    static esp_err_t isOn = ESP_FAIL;
+    while (1)
+    {
+        xTaskNotifyWait(0, 0, &state, portMAX_DELAY);
+        ESP_LOGE("Notification_serial_task", "State_sent : %d", state);
+        switch (state)
+        {
+        case 1:
+            // Start the timer
+            isOn = esp_timer_start_periodic(esp_timer_handle, 1000000); // 1sec
+            ESP_LOGI("SERIAL_TIMER", "STARTED : state - ON");
+            break;
+        case 0:
+            if (isOn == ESP_OK)
+            {
+                esp_timer_stop(esp_timer_handle);
+                isOn = ESP_FAIL;
+                ESP_LOGI("SERIAL_TIMER", "STOPPED : state - OFF");
+            }
+            break;
+        }
+    }
+    vTaskDelete(NULL);
+}
+
+void Random_Pattern_generation(uint8_t comb)
+{
+    if (comb != 0)
+    {
+        int lower = 0, upper = 15, arr_size = 0, count = 0, Asize = 0, temp = 0;
+        int *append_num;
+        time_t t;
+        // decide the combinations pattern
+        count = 16 - (int)comb;
+        arr_size = sizeof(int) * count;
+        append_num = (int *)malloc(arr_size);
+        srand((unsigned)time(&t));
+
+        // generate no of. 'count' => random values from [0-15]
+        for (int i = 0; i < count; i++)
+        {
+            append_num[i] = (rand() % (upper - lower + 1)) + lower;
+        }
+
+        // remove duplicate from append_num if any
+        Asize = arr_size / sizeof(int);
+        for (int i = 0; i < (Asize - 1); i++)
+        {
+            for (int j = i + 1; j < Asize; j++)
+            {
+                if (*(append_num + i) == *(append_num + j))
+                {
+                    temp = *(append_num + j);
+                    *(append_num + j) = *(append_num + Asize - 1);
+                    *(append_num + Asize - 1) = temp;
+                    Asize--;
+                }
+            }
+        }
+        // now apply relay ON/OFF
+        for (int i = 0; i < Asize; i++)
+        {
+            // may need to invert the gpio_set_level
+            Relay_Update_Success[append_num[i]] = (gpio_set_level(relay_pins[append_num[i]], (uint32_t)r_ON) == ESP_OK) ? 1 : 0; // set relay_update_success = '1', if the gpio_set is successful
+        }
+    }
+}
+
+void Relay_switch_update(void *params) // sender
+{
+    init_gpio_timer();
+    while (1)
+    {
+        if (xSema != NULL)
+        {
+            // Gate to block from running , if access not given
+            if (xSemaphoreTake(xSema, portMAX_DELAY))
+            {
+                /******************************************************************************************************************/
+                // retrieve the Relay values from internal
+                nvs_handle update;
+                ESP_ERROR_CHECK(nvs_open("Relay_Status", NVS_READWRITE, &update));
+                uint8_t val = 0;
+                if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, "random", &val))
+                    Relay_Status_Value[RANDOM_UPDATE] = 0;
+                else
+                    Relay_Status_Value[RANDOM_UPDATE] = val; // 0,1,2,3,4
+                // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %d : %s", "random", val, (Relay_Status_Value[RANDOM_UPDATE] ? "random_ON" : "random_OFF"));
+
+                if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, "serial", &val))
+                    Relay_Status_Value[SERIAL_UPDATE] = 0;
+                else
+                    Relay_Status_Value[SERIAL_UPDATE] = val; // 1,0
+                // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %d : %s", "serial", val, (Relay_Status_Value[SERIAL_UPDATE] ? "serial_ON" : "serial_OFF"));
+
+                for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
+                {
+                    char *str = (char *)malloc(sizeof("Relay") + 2);
+                    memset(str, 0, sizeof("Relay") + 2);
+                    sprintf(str, "Relay%u", i);
+                    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, str, &val))
+                        Relay_Status_Value[i] = r_OFF; // need to be inverted
+                    else
+                        Relay_Status_Value[i] = val; // 1,0
+                    // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %s ", str, (Relay_Status_Value[i]) ? "r_OFF" : "r_ON");
+                    free(str);
+                }
+                nvs_close(update);
+
+                /****************************************************************************************************************************/
+                // Generate the "update_success_status" for each button
+                if (Relay_Status_Value[SERIAL_UPDATE] == 0 && Relay_Status_Value[RANDOM_UPDATE] == 0)
+                {
+                    ESP_LOGI("Activate", " --> BTNS ONLY");
+                    // stop serial first if active
+                    xTaskNotify(receiveHandler, (0 << 0), eSetValueWithOverwrite);
+
+                    for (int i = 0; i < 16; i++)
+                    { // set relay_update_success = '1', if the gpio_set is successful // may need to invert the gpio_set_level
+                        Relay_Update_Success[i + 1] = (gpio_set_level(relay_pins[i], (uint32_t)Relay_Status_Value[i + 1]) == ESP_OK) ? 1 : 0;
+                    }
+                    Relay_Update_Success[RANDOM_UPDATE] = 0;
+                    Relay_Update_Success[SERIAL_UPDATE] = 0;
+                }
+                else
+                {
+                    xTaskNotify(receiveHandler, (0 << 0), eSetValueWithOverwrite); // first check & deactivate serial timer
+                    for (int i = 0; i < 16; i++)                                   // clear out all the relays to activate serial or random phase
+                    {
+                        gpio_set_level(relay_pins[i], (uint32_t)r_OFF);
+                    }
+                    if (Relay_Status_Value[SERIAL_UPDATE] == 1 && Relay_Status_Value[RANDOM_UPDATE] == 0)
+                    {
+                        ESP_LOGI("Activate", " --> SERIAL PATTERN");
+                        memset(Relay_Update_Success, 0, sizeof(Relay_Update_Success)); // Except for 'Serial' ; set all reply status as false
+                        Relay_Update_Success[SERIAL_UPDATE] = 1;
+                        xTaskNotify(receiveHandler, (1 << 0), eSetValueWithOverwrite); // give 'activation notification' to serial task
+                    }
+                    else if (Relay_Status_Value[RANDOM_UPDATE] != 0 && Relay_Status_Value[SERIAL_UPDATE] == 0)
+                    {
+                        ESP_LOGI("Activate", " --> RANDOM PATTERN : %d", Relay_Status_Value[RANDOM_UPDATE]);
+                        memset(Relay_Update_Success, 0, sizeof(Relay_Update_Success)); // Except for 'Serial' ; set all reply status as false
+                        Relay_Update_Success[RANDOM_UPDATE] = 1;
+                        Random_Pattern_generation(Relay_Status_Value[RANDOM_UPDATE]); // call a function to generate random patterns
+                    }
+                }
+                /******************************************************************************************************************/
+            }
+        }
+    }
+    vTaskDelete(NULL);
+}
 void app_main(void)
 {
-    ESP_LOGE("ESP_timer", "app started %lld mS", esp_timer_get_time() / 1000);
-    get_CompileTime();
+    // initialize serial timer
+    const esp_timer_create_args_t esp_timer_create_args = {
+        .callback = Serial_Timer_Callback,
+        .name = "Serial timer"};
+    esp_timer_create(&esp_timer_create_args, &esp_timer_handle);
 
     ap_config_t local_config; // ssid store sample
     wifi_init();
@@ -275,9 +462,12 @@ void app_main(void)
             ESP_LOGW("STA_connect", "CONNECT TO LOCAL_SSID ... Successful.");
             RESTART_WIFI(STA_mode);
             if (!STA_restart)
-            {
                 esp_restart();
-            }
+
+            xSema = xSemaphoreCreateBinary();
+            xTaskCreate(Serial_Patttern_task, "Serial Pattern Generator", 4096, NULL, 5, &receiveHandler); // receiver
+            xTaskCreate(Relay_switch_update, "Relay_switch_update", 4096, NULL, 6, NULL);                  // sender // higher priority
+            xSemaphoreGive(xSema);                                                                         // activate the 'resume_operation_functionality'
         }
     }
     else
@@ -285,10 +475,7 @@ void app_main(void)
         ESP_LOGW("AP_connect", "NO_LOCAL_SSID found.... Re-enter local network");
         wifi_connect_ap("ESP-32_local");
         if (!AP_restart)
-        {
             esp_restart();
-        }
     }
-    // generate the chip info
-    CHIP_INFO();
+    Boot_count();
 }

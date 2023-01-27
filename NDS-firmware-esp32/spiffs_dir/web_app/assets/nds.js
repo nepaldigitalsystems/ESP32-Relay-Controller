@@ -15,7 +15,7 @@ showPass.addEventListener('click', function () {
 });
 textFieldunameEl.maxLength = '31';
 textFieldpwdEl.maxLength = '31';
-let flag = 0;
+
 form.addEventListener('submit', async function (e) {
     e.preventDefault();
     const data = {
@@ -33,12 +33,12 @@ form.addEventListener('submit', async function (e) {
         console.log('Approve Status : ', json_data.approve);
         if (json_data.approve == 1) {
             alert('loading the dashboard site');
-            window.location.replace('http://192.168.1.100/dashboard');
+            location.replace('/dashboard');
         }
     } else {
         console.log(response.status);
         console.log(response.statusText);
         alert('Wrong username/password. Try again!!');
-        window.location.reload();
+        location.reload();
     }
 });

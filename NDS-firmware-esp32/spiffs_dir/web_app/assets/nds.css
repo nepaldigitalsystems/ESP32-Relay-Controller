@@ -1,86 +1,113 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: sans-serif;
-    height: 100vh;
-    background-color: #273e68;
-    overflow: hidden;
-  }
-  
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  height: 100vh;
+  background-color: #273e68;
+  overflow: hidden;
+}
+
+.center {
+  position: absolute;
+  border-radius: 10px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 10px 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.center img {
+  position: relative;
+  margin-top: 30px;
+  background-color: #fff;
+  left: 35%;
+  height: 50px;
+  width: 120px;
+}
+
+.center form {
+  padding: 0 40px;
+  box-sizing: border-box;
+}
+
+form .txt-field {
+  position: relative;
+  border-bottom: 2px solid #273e68;
+  margin: 40px 0;
+}
+
+.txt-field input {
+  width: 100%;
+  padding: 0 5px;
+  height: 40px;
+  font-size: 16px;
+  border: none;
+  background: none;
+  outline: none;
+}
+
+form .btn {
+  width: 100%;
+  position: relative;
+  padding: 0 40px;
+  height: 50px;
+  border: none;
+  margin-bottom: 20px;
+  background: #273e68;
+  border-radius: 10px;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+}
+
+form .btn:hover {
+  border-color: #fff;
+  transition: 0.5s;
+}
+
+.txt-field .showPass {
+  position: relative;
+  width: 25px;
+  height: 25px;
+  top: 35px;
+  left: 90%;
+  background: #fff;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 13vh;
+  text-align: center;
+  color: #273e68;
+  background-color: #a0a0a0;
+}
+
+footer p {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+footer p span {
+  font-weight: bold;
+}
+
+@media screen and (max-width: 480px) {
   .center {
-    position: absolute;
-    border-radius: 10px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 400px;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 10px 10px 15px rgba(0, 0, 0, 0.1);
+    width: 300px;
   }
-  
-  .center img {
-    position: relative;
-    margin-top: 30px;
-    background-color: #fff;
-    left: 35%;
-    height: 50px;
-    width: 120px;
-  }
-  
-  .center form {
-    padding: 0 40px;
-    box-sizing: border-box;
-  }
-  form .txt-field {
-    position: relative;
-    border-bottom: 2px solid #273e68;
-    margin: 40px 0;
-  }
-  .txt-field input {
-    width: 100%;
-    padding: 0 5px;
-    height: 40px;
-    font-size: 16px;
-    border: none;
-    background: none;
-    outline: none;
-  }
-  form .btn {
-    width: 100%;
-    position: relative;
-    padding: 0 40px;
-    height: 50px;
-    border: none;
-    margin-bottom: 20px;
-    background: #273e68;
-    border-radius: 10px;
-    font-size: 20px;
-    color: #fff;
-    font-weight: 700;
-    cursor: pointer;
-    outline: none;
-  }
-  form .btn:hover {
-    border-color: #fff;
-    transition: 0.5s;
-  }
-  .txt-field .showPass {
-    position: relative;
-    width: 25px;
-    height: 25px;
-    top: 35px;
-    left: 90%;
-    background: #fff;
-  }
-  @media screen and (max-width: 480px) {
-    .center {
-      width: 300px;
-    }
-  }
-  
+}
