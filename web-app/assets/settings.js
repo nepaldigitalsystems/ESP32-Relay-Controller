@@ -53,12 +53,13 @@ form.addEventListener('submit', async function (e) {
     current_password: curr.value,
     new_password: newpass.value,
     confirm_password: conpass.value,
-    new_username: newUser.value == '' ? 'ADMIN' : newUser.value,
+    new_username: newUser.value == null ? "ADMIN" : newUser.value,
   };
   const options = {
     method: 'POST',
     body: JSON.stringify(data),
   };
+  alert('Entering....');
   const response = await fetch('/settings_post', options);
   if (response.status == 200) {
     const json_data = await response.json();

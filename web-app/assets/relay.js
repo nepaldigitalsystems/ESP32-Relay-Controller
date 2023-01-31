@@ -21,6 +21,121 @@ let serial = document.querySelector('.srl');
 let home = document.querySelector('.home');
 let reload_relay_flag = 0;
 let random_value = 0;
+var btn_req = 0;
+let data;
+
+const fun = function (recv_data) {
+  json_data.Relay1 = recv_data.Relay1;
+  if (json_data.Relay1 == 1) {
+    Relay1.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay1.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay2 = recv_data.Relay2;
+  if (json_data.Relay2 == 1) {
+    Relay2.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay2.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay3 = recv_data.Relay3;
+  if (json_data.Relay3 == 1) {
+    Relay3.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay3.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay4 = recv_data.Relay4;
+  if (json_data.Relay4 == 1) {
+    Relay4.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay4.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay5 = recv_data.Relay5;
+  if (json_data.Relay5 == 1) {
+    Relay5.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay5.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay6 = recv_data.Relay6;
+  if (json_data.Relay6 == 1) {
+    Relay6.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay6.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay7 = recv_data.Relay7;
+  if (json_data.Relay7 == 1) {
+    Relay7.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay7.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay8 = recv_data.Relay8;
+  if (json_data.Relay8 == 1) {
+    Relay8.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay8.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay9 = recv_data.Relay9;
+  if (json_data.Relay9 == 1) {
+    Relay9.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay9.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay10 = recv_data.Relay10;
+  if (json_data.Relay10 == 1) {
+    Relay10.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay10.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay11 = recv_data.Relay11;
+  if (json_data.Relay11 == 1) {
+    Relay11.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay11.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay12 = recv_data.Relay12;
+  if (json_data.Relay12 == 1) {
+    Relay12.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay12.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay13 = recv_data.Relay13;
+  if (json_data.Relay13 == 1) {
+    Relay13.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay13.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay14 = recv_data.Relay14;
+  if (json_data.Relay14 == 1) {
+    Relay14.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay14.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay15 = recv_data.Relay15;
+  if (json_data.Relay15 == 1) {
+    Relay15.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay15.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+  json_data.Relay16 = recv_data.Relay16;
+  if (json_data.Relay16 == 1) {
+    Relay16.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    Relay16.style.backgroundColor = 'rgb(39, 62, 104)';
+  }
+};
+const ref_fun = async function () {
+  const data = {
+    InfoReq: 1,
+  };
+  const options = {
+    method: 'POST',
+    body: JSON.stringify(data),
+  };
+  const response = await fetch('/relay_btn_post', options);
+  if (response.status == 200) {
+    const refresh_onload_data = await response.json();
+    fun(refresh_onload_data);
+  }
+};
 
 let json_data = {
   Relay1: 0,
@@ -42,37 +157,15 @@ let json_data = {
   random: 0,
   serial: 0,
 };
-
-let data;
 home.addEventListener('click', function () {
   window.location.replace('/dashboard');
 });
-// const  rel = async function (e) {`
-// e.preventDefault();
-// data = {
-//   Relay${i}: Relay${i}.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
-// };
-// json_data.Relay${i} = data.Relay${i};
-// console.log(json_data);
-// const options = {
-//   method: 'POST',
-//   body: JSON.stringify(json_data),
-// };
-// const response = await fetch('/relay_json_post', options);
-// if (response.status == 200) {
-//   const recv_data = await response.json();
-//   console.log('Relay${i}_Task_Completed : ', recv_data.Relay${i}_update_success);
-//   if (recv_data.Relay${i}_update_success === 1) {
-//     if (Relay${i}.style.backgroundColor === 'rgb(9, 247, 116)') {
-//       Relay${i}.style.color = 'rgb(255,255,255)';
-//       Relay${i}.style.backgroundColor = 'rgb(39, 62, 104)';
-//     } else {
-//       Relay${i}.style.backgroundColor = 'rgb(9, 247, 116)';
-//       Relay${i}.style.color = 'rgb(255,255,255)';
-//     }
-//   }
-// }
-// `}
+
+window.addEventListener('load', async function (e) {
+  btn_req = 1;
+  e.preventDefault();
+  ref_fun();
+});
 
 Relay1.addEventListener('click', async function (e) {
   e.preventDefault();
@@ -98,6 +191,7 @@ Relay1.addEventListener('click', async function (e) {
         Relay1.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay2.addEventListener('click', async function (e) {
@@ -124,6 +218,7 @@ Relay2.addEventListener('click', async function (e) {
         Relay2.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay3.addEventListener('click', async function (e) {
@@ -149,6 +244,7 @@ Relay3.addEventListener('click', async function (e) {
         Relay3.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
   console.log(json_data);
 });
@@ -176,6 +272,7 @@ Relay4.addEventListener('click', async function (e) {
         Relay4.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay5.addEventListener('click', async function (e) {
@@ -202,6 +299,7 @@ Relay5.addEventListener('click', async function (e) {
         Relay5.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay6.addEventListener('click', async function (e) {
@@ -228,6 +326,7 @@ Relay6.addEventListener('click', async function (e) {
         Relay6.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay7.addEventListener('click', async function (e) {
@@ -254,6 +353,7 @@ Relay7.addEventListener('click', async function (e) {
         Relay7.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay8.addEventListener('click', async function (e) {
@@ -280,6 +380,7 @@ Relay8.addEventListener('click', async function (e) {
         Relay8.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay9.addEventListener('click', async function (e) {
@@ -306,6 +407,7 @@ Relay9.addEventListener('click', async function (e) {
         Relay9.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay10.addEventListener('click', async function (e) {
@@ -332,6 +434,7 @@ Relay10.addEventListener('click', async function (e) {
         Relay10.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay11.addEventListener('click', async function (e) {
@@ -358,6 +461,7 @@ Relay11.addEventListener('click', async function (e) {
         Relay11.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay12.addEventListener('click', async function (e) {
@@ -377,14 +481,14 @@ Relay12.addEventListener('click', async function (e) {
     console.log('Relay12_Task_Completed : ', recv_data.Relay12_update_success);
     if (recv_data.Relay12_update_success === 1) {
       if (Relay12.style.backgroundColor === 'rgb(9, 247, 116)') {
-        //green
-        Relay12.style.backgroundColor = 'rgb(39, 62, 104)'; //blue
-        Relay12.style.color = 'rgb(255,255,255)'; //white
+        Relay12.style.backgroundColor = 'rgb(39, 62, 104)';
+        Relay12.style.color = 'rgb(255,255,255)';
       } else {
         Relay12.style.backgroundColor = 'rgb(9, 247, 116)';
         Relay12.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay13.addEventListener('click', async function (e) {
@@ -411,6 +515,7 @@ Relay13.addEventListener('click', async function (e) {
         Relay13.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay14.addEventListener('click', async function (e) {
@@ -437,6 +542,7 @@ Relay14.addEventListener('click', async function (e) {
         Relay14.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay15.addEventListener('click', async function (e) {
@@ -463,6 +569,7 @@ Relay15.addEventListener('click', async function (e) {
         Relay15.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 Relay16.addEventListener('click', async function (e) {
@@ -489,6 +596,7 @@ Relay16.addEventListener('click', async function (e) {
         Relay16.style.color = 'rgb(255,255,255)';
       }
     }
+    fun(recv_data);
   }
 });
 random.innerHTML = `Random [${random_value === 0 ? 'OFF' : random_value}]`;
@@ -620,3 +728,7 @@ serial.addEventListener('click', async function (e) {
 //     reload_flag = 0;
 //   }
 // });
+
+const countDown = setInterval(() => {
+  ref_fun();
+}, 5000);
