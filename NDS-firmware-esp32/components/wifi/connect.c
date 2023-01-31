@@ -132,7 +132,7 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
         }
         const char *err = get_error(wifi_event_sta_disconnected->reason);
         ESP_LOGW("STA_EVENT", "DISCONNECTED : %s", err);
-        if (reconnect_count < 4)
+        if (reconnect_count < 4)// 3 tries
         {
             reconnect_count++;
             ESP_LOGI("RECONNECT_TAG", "System restart in => %d", reconnect_count);
@@ -144,8 +144,6 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
             ESP_ERROR_CHECK(nvs_open("wifiCreds", NVS_READWRITE, &my_handle));
             ESP_ERROR_CHECK(nvs_erase_all(my_handle));
             ESP_ERROR_CHECK(nvs_commit(my_handle));
-            // nvs_close(my_handle);
-            // nvs_handle_t my_handle;
             ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &my_handle));
             ESP_ERROR_CHECK(nvs_erase_all(my_handle));
             ESP_ERROR_CHECK(nvs_commit(my_handle));

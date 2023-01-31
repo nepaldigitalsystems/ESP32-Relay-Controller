@@ -150,33 +150,9 @@ esp_err_t relay_handler(httpd_req_t *req) // generally we dont want other file t
         // relay_inUse = true;
         httpd_resp_set_type(req, "text/html");
         file_open("/spiffs/relay.html", req); // Also, can send other response values from here
-
-        // if (Relay_Status_Value[SERIAL_UPDATE] == 0 && Relay_Status_Value[RANDOM_UPDATE] == 0) // for default operation, send back 'relay_status_values' also.
-        // {
-        //     // generate a json packet of 'Prev_relay_status'.
-        //     cJSON *JSON_data = cJSON_CreateObject();
-        //     for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
-        //     {
-        //         char *str = (char *)malloc(sizeof("Relay") + 2);
-        //         memset(str, 0, sizeof("Relay") + 2);
-        //         sprintf(str, "Relay%u", i);
-        //         cJSON_AddNumberToObject(JSON_data, str, (Relay_Status_Value[i]) ? 0 : 1); // sending back the inverse to web browser (avoid confusion) ; r_ON => 1 ; r_OFF = 0
-        //         free(str);
-        //     }
-        //     char *string_json = cJSON_Print(JSON_data);
-        //     ESP_LOGE("JSON_REPLY", "%s", string_json);
-        //     httpd_resp_set_type(req, "application/json"); // sending json data as response
-        //     httpd_resp_sendstr(req, string_json);         // chunk
-        //     httpd_resp_send(req, NULL, 0);
-        //     free(string_json);
-        //     cJSON_free(JSON_data);
-        //     return ESP_OK;
-        // }
     }
     else
     {
-        // httpd_resp_set_status(req, "204 NO CONTENT");
-        // httpd_resp_send(req, NULL, 0);
         httpd_resp_set_status(req, "302 FOUND");
         httpd_resp_set_hdr(req, "location", "/");
         file_open("/spiffs/nds.html", req);
@@ -268,9 +244,9 @@ esp_err_t captive_handler(httpd_req_t *req) // generally we dont want other file
 esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    static settings_pass_name_t set_pass_name;
-    set_t esp;
-    char buffer[150];
+    static settings_pass_name_t set_pass_name = {0};
+    static set_t ESP;
+    char buffer[200];
     memset(&buffer, 0, sizeof(buffer));
     httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
     ESP_LOGW("settings_post", "Buffer : %s", buffer);
@@ -284,7 +260,7 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
 
     if (strcmp(set_pass_name.new_password, set_pass_name.confirm_password) == 0)
     {
-        esp.send = true;
+        ESP.receive = true;
         // read the internal password and compare with current
         nvs_handle_t set_pass_handle;
         ESP_ERROR_CHECK(nvs_open("loginCreds", NVS_READWRITE, &set_pass_handle));
@@ -294,41 +270,48 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
         switch (nvs_get_str(set_pass_handle, "password", sample, &required_size))
         {
         case ESP_ERR_NVS_NOT_FOUND:
-            esp.receive = false;
+            ESP.receive = false;
             ESP_LOGE("Setting_New_User_Pass_TAG", "Prev-password [To-be replaced] => not found...., Retry with Default pass :- ADMIN");
             ESP_ERROR_CHECK(nvs_set_str(set_pass_handle, "password", "ADMIN"));
             ESP_ERROR_CHECK(nvs_commit(set_pass_handle));
             break;
         case ESP_OK:
-            ESP_LOGW("Setting_New_User_Pass_TAG", "NVS_stored : Prev-password is => %s [To-be replaced] by New-password =>%s ", sample, set_pass_name.confirm_password);
-            (strcmp(set_pass_name.current_password, sample) == 0) ? (esp.receive = true) : (esp.receive = false); // true => match
-            // Now setup new password, if all conditions matches
+            ESP.receive = true;
+            ESP_LOGW("Setting_New_User_Pass_TAG", "NVS_stored : Prev-password is => '%s' [To-be replaced] by New-password =>%s ", sample, set_pass_name.confirm_password);
+            if (strcmp(set_pass_name.current_password, sample) == 0)
+            { // the prev-password matches
+                ESP_LOGI("Setting_New_User_Pass_TAG", "Storing the New-pass : '%s' in NVS storage....", set_pass_name.confirm_password);
+                ESP_ERROR_CHECK(nvs_set_str(set_pass_handle, "password", set_pass_name.confirm_password));
+                ESP_ERROR_CHECK(nvs_commit(set_pass_handle));
+                if (strcmp("ADMIN", set_pass_name.new_username) != 0)
+                {
+                    ESP_LOGI("Setting_New_User_Pass_TAG", "Storing the New-username : '%s' in NVS storage....", set_pass_name.new_username);
+                    ESP_ERROR_CHECK(nvs_set_str(set_pass_handle, "username", set_pass_name.new_username));
+                    ESP_ERROR_CHECK(nvs_commit(set_pass_handle));
+                }
+            }
+            else
+            { // the prev-password doesn't  match
+                ESP.receive = false;
+                ESP_LOGE("Setting_New_User_Pass_TAG", "WRONG current-password.... Please try again!!.");
+            }
             break;
         default:
-            // forgot pass
+            ESP.receive = false;
             break;
         }
-        if (esp.receive)
-        {
-            ESP_LOGI("Setting_New_User_Pass_TAG", "Storing New-pass : %s", set_pass_name.confirm_password);
-            ESP_ERROR_CHECK(nvs_set_str(set_pass_handle, "password", set_pass_name.confirm_password));
-            ESP_ERROR_CHECK(nvs_commit(set_pass_handle));
-        }
-        // else
-        //     ESP_ERROR_CHECK(nvs_set_str(set_pass_handle, "password", set_pass.confirm_password));
-
         if (sample != NULL)
             free(sample);
         nvs_close(set_pass_handle);
     }
     else
     {
-        esp.send = false;
+        ESP_LOGE("Setting_New_User_Pass_TAG", "New Pass: %s & Confirm Pass: %s, Doesn't match", set_pass_name.new_password, set_pass_name.confirm_password);
+        ESP.receive = false;
     }
-
     // Preparing json data
     cJSON *JSON_data = cJSON_CreateObject();
-    (esp.send && esp.receive) ? (cJSON_AddNumberToObject(JSON_data, "password_set_success", 1)) : (cJSON_AddNumberToObject(JSON_data, "password_set_success", 0));
+    (ESP.receive) ? (cJSON_AddNumberToObject(JSON_data, "password_set_success", 1)) : (cJSON_AddNumberToObject(JSON_data, "password_set_success", 0));
     char *string_json = cJSON_Print(JSON_data);
     ESP_LOGE("JSON_REPLY", "%s", string_json);
     httpd_resp_set_type(req, "application/json"); // sending json data as response
@@ -336,14 +319,13 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
-
     return ESP_OK;
 }
 
 esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    set_t esp;
+    static set_t esp;
     char buffer[5];
     memset(&buffer, 0, sizeof(buffer));
     httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
@@ -351,7 +333,7 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
 
     cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
     esp.receive = cJSON_GetObjectItem(payload, "InfoReq")->valueint;
-    ESP_LOGI("Parse_tag", "Info Requested => %s", (esp.receive) ? "True" : "False");
+    ESP_LOGI("PARSE_TAG", "Info Requested => %s", (esp.receive) ? "True" : "False");
     cJSON_Delete(payload);
     if (esp.receive)
     {
@@ -451,7 +433,7 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
             free(str);
         }
         cJSON_Delete(payload);
-        ESP_LOGE("RELAY_JSON_POST_PARSE", "serial = %d , random = %d", Relay_Status_Value[SERIAL_UPDATE], Relay_Status_Value[RANDOM_UPDATE]);
+        ESP_LOGW("RELAY_JSON_POST_PARSE", "serial = %d , random = %d", Relay_Status_Value[SERIAL_UPDATE], Relay_Status_Value[RANDOM_UPDATE]);
         /******************************************* STORING NEW RELAY STATUS ******************************************************************/
         // Storing button status in nvs-storage
         nvs_handle_t nvs_relay;
@@ -514,7 +496,7 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
                 free(str);
             }
         }
-        char *string_json = cJSON_Print(JSON_data);
+        char *string_json = cJSON_PrintUnformatted(JSON_data);
         ESP_LOGE("JSON_REPLY", "%s", string_json);
         /******************************************  SENDING *******************************************************************/
         // sending json reply packet
@@ -534,38 +516,81 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
     return ESP_OK;
 }
 
+esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post is activated
+{
+    ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
+    char buffer[5];
+    memset(&buffer, 0, sizeof(buffer));
+    httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
+    ESP_LOGW("RELAY_STATE_POST", "Buffer : %s", buffer);
+    /********************************************* CREATING JSON ****************************************************************/
+    // creating new json packet to send the success_status as reply
+    cJSON *JSON_data = cJSON_CreateObject();
+    if (Relay_Status_Value[SERIAL_UPDATE] == 0 && Relay_Status_Value[RANDOM_UPDATE] == 0) // for default operation, send back 'relay_status_values' also.
+    {
+        for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
+        {
+            char *str = (char *)malloc(sizeof("Relay") + 2);
+            memset(str, 0, sizeof("Relay") + 2);
+            sprintf(str, "Relay%u", i);
+            cJSON_AddNumberToObject(JSON_data, str, (Relay_Status_Value[i]) ? 0 : 1); // sending back the inverse to web browser (avoid confusion) ; r_ON => 1 ; r_OFF = 0
+            free(str);
+        }
+    }
+    else
+    {
+        for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // for 'serial' or 'random' case
+        {
+            char *str = (char *)malloc(sizeof("Relay") + 2);
+            memset(str, 0, sizeof("Relay") + 2);
+            sprintf(str, "Relay%u", i);
+            cJSON_AddNumberToObject(JSON_data, str, 0); // r_OFF = 0
+            free(str);
+        }
+    }
+    char *string_json = cJSON_PrintUnformatted(JSON_data);
+    ESP_LOGE("JSON_REPLY_BTN_REFRESH", "%s", string_json);
+    /******************************************  SENDING *******************************************************************/
+    // sending json reply packet
+    httpd_resp_set_type(req, "application/json"); // sending json data as response
+    httpd_resp_sendstr(req, string_json);         // chunk
+    httpd_resp_send(req, NULL, 0);
+    free(string_json);
+    cJSON_free(JSON_data);
+    return ESP_OK;
+}
+
 esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    set_t esp;
+    static set_t Esp;
     char buffer[5]; // this stores username and password into buffer //
     memset(&buffer, 0, sizeof(buffer));
     httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
     ESP_LOGW("restart_post", "Buffer : %s", buffer);
 
     cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
-    esp.receive = cJSON_GetObjectItem(payload, "restart")->valueint;
-    ESP_LOGI("Parse_tag", "Restart Requested => %s", (esp.receive) ? "True" : "False");
+    Esp.receive = cJSON_GetObjectItem(payload, "restart")->valueint;
+    ESP_LOGI("PARSE_TAG", "Restart Requested => %s", (Esp.receive) ? "True" : "False");
     cJSON_Delete(payload);
 
     // Preparing json data
     cJSON *JSON_data = cJSON_CreateObject();
-    cJSON_AddNumberToObject(JSON_data, "approve", 1); // approve -> 'restart'
+    (Esp.receive) ? cJSON_AddNumberToObject(JSON_data, "restart_successful", 1) : cJSON_AddNumberToObject(JSON_data, "restart_successful", 0); // approve -> 'restart'
     char *string_json = cJSON_Print(JSON_data);
-    ESP_LOGE("JSON_REPLY", "%s", string_json);
+    ESP_LOGE("JSON_REPLY_RESTART", "%s", string_json);
     httpd_resp_set_type(req, "application/json"); // sending json data as response
     httpd_resp_sendstr(req, string_json);         // chunk
     httpd_resp_send(req, NULL, 0);
-
     free(string_json);
     cJSON_free(JSON_data);
 
-    if (esp.receive)
+    if (Esp.receive)
     {
         for (int i = 3; i > 0; i--)
         {
-            ESP_LOGE("RESTART_TAG", "Restarting in ... %d", i);
-            vTaskDelay(750 / portTICK_PERIOD_MS);
+            ESP_LOGW("RESTART_TAG", "Restarting in ... %d", i);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
         ESP_LOGE("RESTARTING ESP_32", "NOW...");
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -587,8 +612,8 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
     cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
     strcpy(cred.username, cJSON_GetObjectItem(payload, "username")->valuestring);
     strcpy(cred.password, cJSON_GetObjectItem(payload, "password")->valuestring);
-    ESP_LOGI("Parse_tag", "USERNAME = %s", cred.username);
-    ESP_LOGI("Parse_tag", "PASSWORD = %s", cred.password);
+    ESP_LOGI("PARSE_TAG", "USERNAME = %s", cred.username);
+    ESP_LOGI("PARSE_TAG", "PASSWORD = %s", cred.password);
     cJSON_Delete(payload);
 
     //     manual parsing
@@ -607,7 +632,7 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
     // Then compare the username and password
     if (response.login_mode == init_mode) // init_mode -> 0
     {
-        ESP_LOGI("AUTH_TAG", "....Init_Mode....");
+        ESP_LOGI("AUTH_TAG", "....Init_Mode....[ADMIN/ADMIN]");
         if ((strcmp(cred.username, "ADMIN") == 0) && (strcmp(cred.password, "ADMIN") == 0))
         {
             response.approve = true;
@@ -624,7 +649,7 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
     }
     else if (response.login_mode == operation_mode) // If entered & stored: username and password match, Then login_cred will generate --> [response.approve = true]
     {
-        ESP_LOGI("AUTH_TAG", "....Operation_Mode....");
+        ESP_LOGI("AUTH_TAG", "....Operation_Mode....[user_creds]");
         if (response.approve == false)
         {
             ESP_LOGE("AUTH_TAG", "Please reload into same IP. Incorrect username/password");
@@ -754,7 +779,7 @@ void connect_to_local_AP(void *params)
     ESP_LOGE("PARSE_SSID", "%s", ap_config->local_ssid);
     ESP_LOGE("PARSE_PASS", "%s", ap_config->local_pass);
 
-    if (wifi_connect_sta(ap_config->local_ssid, ap_config->local_pass, 15000) == ESP_OK) // if the local ssid/pass doesn't match
+    if (wifi_connect_sta(ap_config->local_ssid, ap_config->local_pass, 20000) == ESP_OK) // if the local ssid/pass doesn't match
     {
         ESP_LOGI("AP_to_STA_TAG", "CONNECTED TO New_SSID... > Saving cred of %s in NVS... ", ap_config->local_ssid);
         // nvs_flash_init(); // no harm in re_initing the nvs
@@ -810,28 +835,29 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
     //     ESP_ERROR_CHECK(nvs_set_str(nvs_write_handle,"store_pass", ap_config->local_pass));       // key = store_pass ; value = structure{}
     //     ESP_ERROR_CHECK(nvs_commit(nvs_write_handle));
     //     nvs_close(nvs_write_handle);
+
     // alternative parsing
-    if ((strstr(buffer, "local_ssid") != NULL) && (strstr(buffer, "local_pass") != NULL))
-    {
-        cJSON *payload = cJSON_Parse(buffer);
-        strcpy(ap_config.local_ssid, cJSON_GetObjectItem(payload, "local_ssid")->valuestring); // this "ap_config" structure is passed to connect to new ssid
-        strcpy(ap_config.local_pass, cJSON_GetObjectItem(payload, "local_pass")->valuestring);
-        cJSON_Delete(payload);
+    // if ((strstr(buffer, "local_ssid") != NULL) && (strstr(buffer, "local_pass") != NULL))
+    // {
+    cJSON *payload = cJSON_Parse(buffer);
+    strcpy(ap_config.local_ssid, cJSON_GetObjectItem(payload, "local_ssid")->valuestring); // this "ap_config" structure is passed to connect to new ssid
+    strcpy(ap_config.local_pass, cJSON_GetObjectItem(payload, "local_pass")->valuestring);
+    cJSON_Delete(payload);
 
-        cJSON *JSON_data = cJSON_CreateObject();
-        cJSON_AddNumberToObject(JSON_data, "IP_addr3", 0); // INTERNAL STORAGE
-        char *string_json = cJSON_Print(JSON_data);
-        ESP_LOGE("JSON_REPLY", "%s", string_json);
-        httpd_resp_set_type(req, "application/json"); // sending json data as response
-        httpd_resp_sendstr(req, string_json);         // chunk
-        httpd_resp_send(req, NULL, 0);
+    cJSON *JSON_data = cJSON_CreateObject();
+    cJSON_AddNumberToObject(JSON_data, "IP_addr3", 0); // INTERNAL STORAGE
+    char *string_json = cJSON_Print(JSON_data);
+    ESP_LOGE("JSON_REPLY", "%s", string_json);
+    httpd_resp_set_type(req, "application/json"); // sending json data as response
+    httpd_resp_sendstr(req, string_json);         // chunk
+    httpd_resp_send(req, NULL, 0);
 
-        free(string_json);
-        cJSON_free(JSON_data);
+    free(string_json);
+    cJSON_free(JSON_data);
 
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        xTaskCreate(connect_to_local_AP, "connect_to_local_ap", 4096, &ap_config, 1, NULL);
-    }
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    xTaskCreate(connect_to_local_AP, "connect_to_local_ap", 4096, &ap_config, 1, NULL);
+    // }
     return ESP_OK;
 }
 /****************** to scan URLS when [ esp => AP type ]*****************************/
@@ -912,6 +938,7 @@ void http_server_ap_mode(void)
     httpd_unregister_uri_handler(server, "/settings_post", HTTP_POST);
     httpd_unregister_uri_handler(server, "/restart", HTTP_POST);
     httpd_unregister_uri_handler(server, "/login_auth_post", HTTP_POST);
+    httpd_unregister_uri_handler(server, "/relay_btn_refresh", HTTP_POST);
     httpd_unregister_uri_handler(server, "/relay_json_post", HTTP_POST);
 
     httpd_uri_t get_ap_list_url = {
@@ -970,6 +997,7 @@ void http_server_sta_mode(void)
         .handler = relay_handler};
     // .handler = (relay_inUse) ? login_handler : relay_handler};
     httpd_register_uri_handler(server, &relay_url);
+
     httpd_uri_t settings_url = {
         .uri = "/settings",
         .method = HTTP_GET,
@@ -1001,11 +1029,17 @@ void http_server_sta_mode(void)
         .handler = restart_handler};
     httpd_register_uri_handler(server, &restart_post);
 
-    httpd_uri_t settings_post = {
+    httpd_uri_t settings_post_url = {
         .uri = "/settings_post",
         .method = HTTP_POST,
         .handler = settings_post_handler};
-    httpd_register_uri_handler(server, &settings_post);
+    httpd_register_uri_handler(server, &settings_post_url);
+
+    httpd_uri_t relay_btn_refresh_url = {
+        .uri = "/relay_btn_refresh",
+        .method = HTTP_POST,
+        .handler = relay_btn_refresh_handler};
+    httpd_register_uri_handler(server, &relay_btn_refresh_url);
 
     httpd_uri_t relay_json_post_url = {
         .uri = "/relay_json_post",

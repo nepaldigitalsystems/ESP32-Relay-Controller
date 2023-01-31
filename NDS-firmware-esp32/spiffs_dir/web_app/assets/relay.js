@@ -171,7 +171,7 @@ Relay1.addEventListener('click', async function (e) {
                 Relay1.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
+        fun(recv_data); // inspect the button states
     }
 });
 Relay2.addEventListener('click', async function (e) {
@@ -688,6 +688,11 @@ serial.addEventListener('click', async function (e) {
         }
     }
 });
+
+
+
+
+
 // window.addEventListener('load', () => {
 //   // setTimeout(() => {
 //   //   reload_relay_flag = 1;

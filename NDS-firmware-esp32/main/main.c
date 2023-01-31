@@ -19,6 +19,7 @@
 #include "esp_system.h"
 #include "lwip/sockets.h"
 #include "driver/gpio.h"
+#include "mdns.h"
 
 /* LIST of namespaces and keys
  * namespace => sta_num ; key = no. ;
@@ -443,6 +444,7 @@ void Relay_switch_update(void *params) // sender
     }
     vTaskDelete(NULL);
 }
+
 void app_main(void)
 {
     // initialize serial timer

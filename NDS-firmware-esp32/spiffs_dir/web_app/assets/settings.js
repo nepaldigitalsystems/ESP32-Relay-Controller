@@ -12,9 +12,6 @@ newUser.maxLength = '31';
 newpass.maxLength = '31';
 curr.maxLength = '31';
 conpass.maxLength = '31';
-check.addEventListener('click', function () {
-    newUser.classList.toggle('hidden');
-});
 home.addEventListener('click', function () {
     window.location.replace('/dashboard');
 });
@@ -46,7 +43,9 @@ showPass2.addEventListener('click', function () {
         showPass2.src = './image/ey.png';
     }
 });
-
+check.addEventListener('click', function () {
+    newUser.classList.toggle('hidden');
+});
 
 form.addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -54,18 +53,19 @@ form.addEventListener('submit', async function (e) {
         current_password: curr.value,
         new_password: newpass.value,
         confirm_password: conpass.value,
-        new_username: newUser.value == '' ? 'ADMIN' : newUser.value,
+        new_username: newUser.value == null ? "ADMIN" : newUser.value,
     };
     const options = {
         method: 'POST',
         body: JSON.stringify(data),
     };
+    alert('Submitting...');
     const response = await fetch('/settings_post', options);
     if (response.status == 200) {
         const json_data = await response.json();
         console.log(json_data);
-        console.log('Approve Status : ', json_data.password_set_success);
-        if (json_data.password_set_success == 1) {
+        console.log('Approve Status : ', json_data.approve);
+        if (json_data.approve == 1) {
             window.location.replace('/');
         }
     }

@@ -12,7 +12,6 @@ relay.addEventListener('click', function () {
   fetch('/dashboard')
     .then((response) => response.text())
     .then(
-      // Do something with the HTML content here
       window.location.replace('/relay')
     )
     .catch((error) => {
@@ -24,7 +23,6 @@ info.addEventListener('click', function () {
   fetch('/dashboard')
     .then((response) => response.text())
     .then(
-      // Do something with the HTML content here
       window.location.replace('/info')
     )
     .catch((error) => {
@@ -41,14 +39,16 @@ restart.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(data),
   };
+
+  alert('Restarting ESP32...');
   const response = await fetch('/restart', options);
   if (response.status == 200) {
     const json_data = await response.json();
     console.log(json_data);
-    console.log('Approve Status : ', json_data.approve);
-    if (json_data.approve == 1) {
-      window.location.replace('/dashboard');
-      window.location.reload;
+    console.log('Restart_success_Status : ', json_data.restart_successful);
+    if (json_data.restart_successful == 1) {
+      location.replace('/');
+      alert('Restart successful');
     }
   }
 });
@@ -57,7 +57,6 @@ settings.addEventListener('click', function () {
   fetch('/dashboard')
     .then((response) => response.text())
     .then(
-      // Do something with the HTML content here
       window.location.replace('/settings')
     )
     .catch((error) => {

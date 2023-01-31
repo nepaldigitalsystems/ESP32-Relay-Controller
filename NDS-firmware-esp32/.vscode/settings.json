@@ -59,7 +59,11 @@
         "regex": "c",
         "timer.h": "c",
         "esp_system.h": "c",
-        "functional": "c"
+        "functional": "c",
+        "portable.h": "c",
+        "portmacro.h": "c",
+        "spinlock.h": "c",
+        "cpu.h": "c"
     },
     "idf.flashType": "UART"
 }
