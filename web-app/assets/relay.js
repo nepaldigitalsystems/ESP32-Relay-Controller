@@ -23,7 +23,26 @@ let reload_relay_flag = 0;
 let random_value = 0;
 var btn_req = 0;
 let data;
-
+let json_data = {
+  Relay1: 0,
+  Relay2: 0,
+  Relay3: 0,
+  Relay4: 0,
+  Relay5: 0,
+  Relay6: 0,
+  Relay7: 0,
+  Relay8: 0,
+  Relay9: 0,
+  Relay10: 0,
+  Relay11: 0,
+  Relay12: 0,
+  Relay13: 0,
+  Relay14: 0,
+  Relay15: 0,
+  Relay16: 0,
+  random: 0,
+  serial: 0,
+};
 const fun = function (recv_data) {
   json_data.Relay1 = recv_data.Relay1;
   if (json_data.Relay1 == 1) {
@@ -121,6 +140,18 @@ const fun = function (recv_data) {
   } else {
     Relay16.style.backgroundColor = 'rgb(39, 62, 104)';
   }
+  json_data.random = recv_data.random;
+  if (json_data.random > 0) {
+    random.innerHTML = `Random [${json_data.random}]`;
+  } else {
+    random.innerHTML = `Random [OFF]`;
+  }
+  json_data.serial = recv_data.Relay16;
+  if (json_data.serial == 1) {
+    serial.style.backgroundColor = 'rgb(9, 247, 116)';
+  } else {
+    serial.style.backgroundColor = 'rgb(128, 0, 128)';
+  }
 };
 const ref_fun = async function () {
   const data = {
@@ -130,33 +161,13 @@ const ref_fun = async function () {
     method: 'POST',
     body: JSON.stringify(data),
   };
-  const response = await fetch('/relay_btn_post', options);
+  const response = await fetch('/relay_btn_refresh', options);
   if (response.status == 200) {
     const refresh_onload_data = await response.json();
     fun(refresh_onload_data);
   }
 };
 
-let json_data = {
-  Relay1: 0,
-  Relay2: 0,
-  Relay3: 0,
-  Relay4: 0,
-  Relay5: 0,
-  Relay6: 0,
-  Relay7: 0,
-  Relay8: 0,
-  Relay9: 0,
-  Relay10: 0,
-  Relay11: 0,
-  Relay12: 0,
-  Relay13: 0,
-  Relay14: 0,
-  Relay15: 0,
-  Relay16: 0,
-  random: 0,
-  serial: 0,
-};
 home.addEventListener('click', function () {
   window.location.replace('/dashboard');
 });
@@ -731,4 +742,4 @@ serial.addEventListener('click', async function (e) {
 
 const countDown = setInterval(() => {
   ref_fun();
-}, 5000);
+}, 7000);

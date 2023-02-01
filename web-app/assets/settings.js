@@ -3,15 +3,21 @@ let curr = document.querySelector('.currpass');
 let newpass = document.querySelector('.newpass');
 let conpass = document.querySelector('.conpass');
 let newUser = document.querySelector('.uname');
+let user_name = document.querySelector('.newuser');
 let showPass0 = document.querySelector('.showPass0');
 let showPass1 = document.querySelector('.showPass1');
 let showPass2 = document.querySelector('.showPass2');
 let check = document.querySelector('.cb');
 let home = document.querySelector('.home');
+let pass_warn = document.querySelector('.incpw');
 newUser.maxLength = '31';
-newpass.maxLength = '31';
+user_name.maxLength = '31';
 curr.maxLength = '31';
 conpass.maxLength = '31';
+newUser.minLength = '8';
+user_name.minLength = '8';
+curr.minLength = '8';
+conpass.minLength = '8';
 home.addEventListener('click', function () {
   window.location.replace('/dashboard');
 });
@@ -49,24 +55,30 @@ check.addEventListener('click', function () {
 
 form.addEventListener('submit', async function (e) {
   e.preventDefault();
-  const data = {
-    current_password: curr.value,
-    new_password: newpass.value,
-    confirm_password: conpass.value,
-    new_username: newUser.value == null ? "ADMIN" : newUser.value,
-  };
-  const options = {
-    method: 'POST',
-    body: JSON.stringify(data),
-  };
-  alert('Entering....');
-  const response = await fetch('/settings_post', options);
-  if (response.status == 200) {
-    const json_data = await response.json();
-    console.log(json_data);
-    console.log('Approve Status : ', json_data.approve);
-    if (json_data.approve == 1) {
-      window.location.replace('/');
+  if (newpass.value !== conpass.value) {
+    newpass.value = '';
+    conpass.value = '';
+    pass_warn.classList.remove('hidden');
+  } else {
+    const data = {
+      current_password: curr.value,
+      new_password: newpass.value,
+      confirm_password: conpass.value,
+      new_username: user_name.value ? user_name.value : 'ADMIN',
+    };
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(data),
+    };
+    alert('Submitting....');
+    const response = await fetch('/settings_post', options);
+    if (response.status == 200) {
+      const json_data = await response.json();
+      console.log(json_data);
+      console.log('password_set_success : ', json_data.password_set_success);
+      if (json_data.password_set_success == 1) {
+        window.location.replace('/');
+      }
     }
   }
 });

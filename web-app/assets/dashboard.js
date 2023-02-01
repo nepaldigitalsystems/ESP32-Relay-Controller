@@ -7,6 +7,10 @@ const restart = document.querySelector('.restart');
 const table = document.querySelector('table');
 let reload_dashboard_flag = 0;
 let reload_relay_flag = 0;
+home.addEventListener('click', function () {
+  alert('Signing out....');
+  window.location.replace('/');
+});
 relay.addEventListener('click', function () {
   fetch('/relay')
     .then((response) => response.text())

@@ -8,7 +8,6 @@ body {
   padding: 0;
   font-family: sans-serif;
   height: 100vh;
-  
 }
 
 .center {
@@ -40,8 +39,7 @@ body {
 
   background: #fff;
 }
-.cb
-{
+.cb {
   z-index: 1;
   cursor: pointer;
 }
@@ -88,9 +86,8 @@ body {
   cursor: pointer;
   z-index: 1;
 }
- span
-{
-  color: rgba(0, 0, 0, 0.8)
+span {
+  color: rgba(0, 0, 0, 0.8);
 }
 .newPass .showPass1 {
   position: relative;
@@ -134,7 +131,9 @@ form .conPass {
   width: 40%;
   outline: none;
 }
-
+.incpw {
+  color: red;
+}
 .newPass .showPass {
   position: relative;
   left: -8%;
