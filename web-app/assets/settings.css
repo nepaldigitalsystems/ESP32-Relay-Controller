@@ -174,4 +174,10 @@ footer p span {
     right: 11%;
     cursor: pointer;
   }
+  .home
+  {
+    position:fixed;
+    top: 1%;
+    left: 18%;
+  }
 }

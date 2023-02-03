@@ -29,8 +29,8 @@ form.addEventListener('submit', async function (e) {
     console.log(json_data);
     console.log('Approve Status : ', json_data.approve);
     if (json_data.approve == 1) {
-      alert('loading the dashboard site');
-      window.location.replace('http://192.168.1.100/dashboard');
+      
+      window.location.replace('/dashboard');
     }
   } else {
     console.log(response.status);
