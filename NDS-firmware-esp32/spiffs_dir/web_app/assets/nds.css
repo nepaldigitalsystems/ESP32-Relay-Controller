@@ -13,6 +13,10 @@ body {
   overflow: hidden;
 }
 
+input .txtpwd {
+  display: inline;
+}
+
 .center {
   position: absolute;
   border-radius: 10px;
@@ -43,6 +47,7 @@ form .txt-field {
   position: relative;
   border-bottom: 2px solid #273e68;
   margin: 40px 0;
+  padding: 0;
 }
 
 .txt-field input {
@@ -76,13 +81,11 @@ form .btn:hover {
   transition: 0.5s;
 }
 
-.txt-field .showPass {
+.txt-field span {
   position: relative;
-  width: 25px;
-  height: 25px;
   top: 35px;
-  left: 90%;
-  background: #fff;
+  left: 93%;
+  cursor: pointer;
 }
 
 footer {

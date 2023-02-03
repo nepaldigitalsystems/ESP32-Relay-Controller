@@ -39,7 +39,6 @@ typedef struct auth_tt
 typedef struct resp_tt
 {
     bool approve;
-    bool login_mode; // [0->init_mode] // [1->operation_mode]
 } resp_t;
 resp_t response; // Use carefully  // only global access for login authentication
 
@@ -75,6 +74,7 @@ typedef enum Relay_Status
     RELAY_UPDATE_MAX
 } e_Relay_Status_t;
 
-// extern uint8_t Relay_Status_Value[RELAY_UPDATE_MAX];   // 1-18
-// extern uint8_t Relay_Update_Success[RELAY_UPDATE_MAX]; // 1-18
+#define default_username "adminuser"
+#define default_password "adminpass"
+
 #endif

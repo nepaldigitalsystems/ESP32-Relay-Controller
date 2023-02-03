@@ -14,8 +14,7 @@ body {
 
 .center {
   position: absolute;
-  border: 1px solid rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
+
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -42,6 +41,12 @@ body {
   width: 100px;
 
   background: #fff;
+}
+
+.pwd span {
+  position: relative;
+  right: 9%;
+  cursor: pointer;
 }
 
 .ssid {
@@ -80,14 +85,6 @@ form .inpPass {
   outline: none;
 }
 
-.pwd .showPass {
-  position: relative;
-  left: -8%;
-  top: 13px;
-  height: 26px;
-  width: 20px;
-  background-color: #fff;
-}
 
 footer {
   position: fixed;

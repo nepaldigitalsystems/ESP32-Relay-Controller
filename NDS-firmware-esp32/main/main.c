@@ -61,7 +61,8 @@ uint8_t Relay_Update_Success[RELAY_UPDATE_MAX] = {0}; // 1-18
 gpio_num_t relay_pins[16] = {GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_33, GPIO_NUM_32, GPIO_NUM_2, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_23};
 static TaskHandle_t receiveHandler = NULL;
 xSemaphoreHandle xSema = NULL;
-static esp_timer_handle_t esp_timer_handle;
+static esp_timer_handle_t esp_timer_handle1;
+static esp_timer_handle_t esp_timer_handle2;
 
 /* Reboot mode index */
 #define AP_mode 0
@@ -76,6 +77,8 @@ static esp_timer_handle_t esp_timer_handle;
 // have to send a struct inseade of void
 static bool AP_restart = false;  // Restart once
 static bool STA_restart = false; // Restart once
+static bool pattern = 0;
+static uint8_t combination = 0;
 
 void RESTART_WIFI(uint8_t mode)
 {
@@ -106,8 +109,6 @@ void RESTART_WIFI(uint8_t mode)
         else
             ESP_LOGE("REBOOT_TAG", "AP Restarted ? ... %s", (AP_restart ? "Already restarted once" : "not restarted"));
         break;
-    default:
-        break;
     }
     status_val = 1;
 
@@ -119,7 +120,7 @@ void RESTART_WIFI(uint8_t mode)
     ESP_ERROR_CHECK(nvs_commit(reset));
     nvs_close(reset);
 }
-esp_err_t inspect_login_data(auth_t *Data, nvs_handle *login, const char *KEY, uint8_t index)
+static esp_err_t inspect_login_data(auth_t *Data, nvs_handle *login, const char *KEY, uint8_t index)
 {
     esp_err_t err = ESP_FAIL; // ESP_FAIL -> NVS_EMPTY -> ADMIN
     size_t required_size;
@@ -129,24 +130,23 @@ esp_err_t inspect_login_data(auth_t *Data, nvs_handle *login, const char *KEY, u
     switch (nvs_get_str(*login, KEY, sample, &required_size)) // extracted the 'username / password' into 'sample' variable
     {
     case ESP_ERR_NVS_NOT_FOUND:
-        ESP_LOGE("LOGIN_TAG", "%s not set yet.... Default %s : ADMIN", KEY, KEY);
-        err = ESP_FAIL;                                     // [data doesn't exist] ---> use :- name & pass => ADMIN & ADMIN
-        ESP_ERROR_CHECK(nvs_set_str(*login, KEY, "ADMIN")); // storing "ADMIN", if nvs is empty.
+        ESP_LOGE("LOGIN_TAG", "%s not set yet.... Default %s : %s", KEY, KEY, ((index) ? default_password : default_username)); // [data doesn't exist] ---> use :- name & pass => ADMIN & ADMIN
+        err = 1;
+        ESP_ERROR_CHECK(nvs_set_str(*login, KEY, ((index) ? default_password : default_username))); // storing [index:0->default_username] & [index:1->default_password], if nvs is empty.
         break;
     case ESP_OK:
-        err = ESP_OK; // [data exists] ----> correct logins ----> [response.approve = true;]
+        err = ESP_OK; // [data exists] ----> correct logins ----> [response.approve = true;
         ESP_LOGW("LOGIN_TAG", "NVS_stored : %s is = %s", KEY, sample);
         if ((index == 0))
         {
             if (strcmp(Data->username, sample) == 0)
             {
                 ESP_LOGW("LOGIN_TAG", "USERNAME ........ Approved");
-                response.approve = true;
             }
             else
             {
                 ESP_LOGE("LOGIN_TAG", "WRONG USERNAME ENTRY ........ Not Approved");
-                response.approve = false;
+                err = ESP_FAIL;
             }
         }
         else if ((index == 1))
@@ -154,18 +154,13 @@ esp_err_t inspect_login_data(auth_t *Data, nvs_handle *login, const char *KEY, u
             if (strcmp(Data->password, sample) == 0)
             {
                 ESP_LOGW("LOGIN_TAG", "PASSWORD ........ Approved");
-                response.approve = true;
             }
             else
             {
                 ESP_LOGE("LOGIN_TAG", "WRONG PASSWORD ENTRY ........ Not Approved");
-                response.approve = false;
+                err = ESP_FAIL;
             }
         }
-        break;
-    default:
-        err = ESP_FAIL;
-        ESP_ERROR_CHECK(nvs_set_str(*login, KEY, "ADMIN")); // Storing "ADMIN" in NVS , if data extraction error occurs.
         break;
     }
     ESP_ERROR_CHECK(nvs_commit(*login));
@@ -173,7 +168,7 @@ esp_err_t inspect_login_data(auth_t *Data, nvs_handle *login, const char *KEY, u
         free(sample);
     return err;
 }
-esp_err_t inspect_wifiCred_data(ap_config_t *local_config, nvs_handle *handle, const char *KEY, uint8_t index)
+static esp_err_t inspect_wifiCred_data(ap_config_t *local_config, nvs_handle *handle, const char *KEY, uint8_t index)
 {
     esp_err_t err = ESP_FAIL;
     size_t req_size;
@@ -197,8 +192,6 @@ esp_err_t inspect_wifiCred_data(ap_config_t *local_config, nvs_handle *handle, c
         }
         err = ESP_OK; // reads from the local_config structure if [data exist]
         break;
-    default:
-        break;
     }
     ESP_ERROR_CHECK(nvs_commit(*handle));
     if (sample != NULL)
@@ -214,10 +207,22 @@ esp_err_t login_cred(auth_t *Data) // compares the internal login creds with giv
     err1 = inspect_login_data(Data, &login, "username", username_index);
     err2 = inspect_login_data(Data, &login, "password", password_index);
     nvs_close(login);
-    if ((err1 == err2) == ESP_OK)
+
+    if ((err1 == 1) && (err2 == 1))
+    {
+        ESP_LOGE("Login_cred_change", ".... RETURNS '1'[i.e. no creds; storing default] ....");
+        return 1;
+    }
+    else if ((err1 == ESP_OK) && (err2 == ESP_OK))
+    {
+        ESP_LOGE("Login_cred_change", ".... RETURNS 'ESP_0K'[i.e. cred matched] ....");
         return ESP_OK;
+    }
     else
+    {
+        ESP_LOGE("Login_cred_change", ".... RETURNS 'ESP_FAIL'[i.e. cred not matched] ....");
         return ESP_FAIL;
+    }
 }
 esp_err_t initialize_nvs(ap_config_t *local_config)
 {
@@ -228,7 +233,6 @@ esp_err_t initialize_nvs(ap_config_t *local_config)
         ESP_ERROR_CHECK(nvs_flash_erase());
         err = nvs_flash_init();
     }
-
     nvs_handle handle;                                              // nvs_handle_t = nvs_handle
     ESP_ERROR_CHECK(nvs_open("wifiCreds", NVS_READWRITE, &handle)); // namespace => loginCreds
     err = inspect_wifiCred_data(local_config, &handle, "store_ssid", local_ssid_index);
@@ -260,7 +264,7 @@ void Boot_count(void)
 
 static void Serial_Timer_Callback(void *params) // service routine for rtos-timer
 {
-    static int position = 0;
+    static uint8_t position = 0;
     if ((position > 1) && (position < 16))
     {
         gpio_set_level(relay_pins[position - 2], r_OFF);
@@ -279,17 +283,27 @@ static void Serial_Timer_Callback(void *params) // service routine for rtos-time
     if (position > 16)
         position = 0;
 }
-
-void init_gpio_timer()
+static void Random_Timer_Callback(void *params) // service routine for rtos-timer
 {
-    for (int i = 0; i < 16; i++) // 0-15
+    static uint32_t random_seconds = 0;
+    static uint32_t patt_arr[4][2][16] = {{{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}},
+                                          {{1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0}, {0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1}},
+                                          {{1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0}, {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1}},
+                                          {{1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}}};
+
+    // toggle the gpio according to [combination & pattern]
+    pattern = ((random_seconds <= 3) || (random_seconds >= 8 && random_seconds <= 11)) ? 0 : 1; // the timer instants determine, which patther [A or B] is to be selected.
+    for (uint8_t i = 0; i <= 15; i++)
     {
-        gpio_pad_select_gpio(relay_pins[i]);
-        gpio_set_direction(relay_pins[i], GPIO_MODE_OUTPUT);
+        gpio_set_level(relay_pins[i], (patt_arr[combination][pattern][i]));
     }
+
+    random_seconds++;
+    if (random_seconds > 15)
+        random_seconds = 0;
 }
 
-void Serial_Patttern_task(void *params) // receiver
+static void Serial_Patttern_task(void *params) // receiver
 {
     uint32_t state;
     static esp_err_t isOn = ESP_FAIL;
@@ -301,13 +315,13 @@ void Serial_Patttern_task(void *params) // receiver
         {
         case 1:
             // Start the timer
-            isOn = esp_timer_start_periodic(esp_timer_handle, 1000000); // 1sec
+            isOn = esp_timer_start_periodic(esp_timer_handle1, 1000000); // 1sec
             ESP_LOGI("SERIAL_TIMER", "STARTED : state - ON");
             break;
         case 0:
             if (isOn == ESP_OK)
             {
-                esp_timer_stop(esp_timer_handle);
+                esp_timer_stop(esp_timer_handle1);
                 isOn = ESP_FAIL;
                 ESP_LOGI("SERIAL_TIMER", "STOPPED : state - OFF");
             }
@@ -317,52 +331,77 @@ void Serial_Patttern_task(void *params) // receiver
     vTaskDelete(NULL);
 }
 
-void Random_Pattern_generation(uint8_t comb)
+static void Random_Pattern_generator(uint8_t comb)
 {
+    static esp_err_t isOn = ESP_FAIL;
     if (comb != 0)
     {
-        int lower = 0, upper = 15, arr_size = 0, count = 0, Asize = 0, temp = 0;
-        int *append_num;
-        time_t t;
-        // decide the combinations pattern
-        count = 16 - (int)comb;
-        arr_size = sizeof(int) * count;
-        append_num = (int *)malloc(arr_size);
-        srand((unsigned)time(&t));
+        //     int lower = 0, upper = 15, arr_size = 0, count = 0, Asize = 0, temp = 0;
+        //     int *append_num;
+        //     time_t t;
+        //     // decide the combinations pattern
+        //     count = 16 - (int)comb;
+        //     arr_size = sizeof(int) * count;
+        //     append_num = (int *)malloc(arr_size);
+        //     srand((unsigned)time(&t));
+        //     // generate no of. 'count' => random values from [0-15]
+        //     for (int i = 0; i < count; i++)
+        //     {
+        //         append_num[i] = (rand() % (upper - lower + 1)) + lower;
+        //     }
+        //     // remove duplicate from append_num if any
+        //     Asize = arr_size / sizeof(int);
+        //     for (int i = 0; i < (Asize - 1); i++)
+        //     {
+        //         for (int j = i + 1; j < Asize; j++)
+        //         {
+        //             if (*(append_num + i) == *(append_num + j))
+        //             {
+        //                 temp = *(append_num + j);
+        //                 *(append_num + j) = *(append_num + Asize - 1);
+        //                 *(append_num + Asize - 1) = temp;
+        //                 Asize--;
+        //             }
+        //         }
+        //     }
+        //     // now apply relay ON/OFF
+        //     for (int i = 0; i < Asize; i++)
+        //     {
+        //         // may need to invert the gpio_set_level
+        //         Relay_Update_Success[append_num[i]] = (gpio_set_level(relay_pins[append_num[i]], (uint32_t)r_ON) == ESP_OK) ? 1 : 0; // set relay_update_success = '1', if the gpio_set is successful
+        //     }
 
-        // generate no of. 'count' => random values from [0-15]
-        for (int i = 0; i < count; i++)
+        // determine the combination
+        combination = comb - 1;
+        // stop timer
+        if (isOn == ESP_OK)
         {
-            append_num[i] = (rand() % (upper - lower + 1)) + lower;
+            esp_timer_stop(esp_timer_handle2);
+            isOn = ESP_FAIL;
+            ESP_LOGI("RANDOM_TIMER", "STOPPED : state - %d", comb);
         }
-
-        // remove duplicate from append_num if any
-        Asize = arr_size / sizeof(int);
-        for (int i = 0; i < (Asize - 1); i++)
+        // Start timer
+        isOn = esp_timer_start_periodic(esp_timer_handle2, 1000000); // 1sec
+        ESP_LOGI("RANDOM_TIMER", "STARTED : state - %d", comb);
+    }
+    else
+    {
+        if (isOn == ESP_OK)
         {
-            for (int j = i + 1; j < Asize; j++)
-            {
-                if (*(append_num + i) == *(append_num + j))
-                {
-                    temp = *(append_num + j);
-                    *(append_num + j) = *(append_num + Asize - 1);
-                    *(append_num + Asize - 1) = temp;
-                    Asize--;
-                }
-            }
-        }
-        // now apply relay ON/OFF
-        for (int i = 0; i < Asize; i++)
-        {
-            // may need to invert the gpio_set_level
-            Relay_Update_Success[append_num[i]] = (gpio_set_level(relay_pins[append_num[i]], (uint32_t)r_ON) == ESP_OK) ? 1 : 0; // set relay_update_success = '1', if the gpio_set is successful
+            esp_timer_stop(esp_timer_handle2);
+            isOn = ESP_FAIL;
+            ESP_LOGI("RANDOM_TIMER", "STOPPED : state - %d", comb);
         }
     }
 }
 
-void Relay_switch_update(void *params) // sender
+static void Relay_switch_update(void *params) // sender
 {
-    init_gpio_timer();
+    for (int i = 0; i < 16; i++) // 0-15
+    {
+        gpio_pad_select_gpio(relay_pins[i]);
+        gpio_set_direction(relay_pins[i], GPIO_MODE_OUTPUT);
+    }
     while (1)
     {
         if (xSema != NULL)
@@ -399,16 +438,15 @@ void Relay_switch_update(void *params) // sender
                     // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %s ", str, (Relay_Status_Value[i]) ? "r_OFF" : "r_ON");
                     free(str);
                 }
-                nvs_close(update);
+                nvs_close(update); // no commits to avoid changes
 
                 /****************************************************************************************************************************/
                 // Generate the "update_success_status" for each button
                 if (Relay_Status_Value[SERIAL_UPDATE] == 0 && Relay_Status_Value[RANDOM_UPDATE] == 0)
                 {
                     ESP_LOGI("Activate", " --> BTNS ONLY");
-                    // stop serial first if active
                     xTaskNotify(receiveHandler, (0 << 0), eSetValueWithOverwrite);
-
+                    Random_Pattern_generator(0);
                     for (int i = 0; i < 16; i++)
                     { // set relay_update_success = '1', if the gpio_set is successful // may need to invert the gpio_set_level
                         Relay_Update_Success[i + 1] = (gpio_set_level(relay_pins[i], (uint32_t)Relay_Status_Value[i + 1]) == ESP_OK) ? 1 : 0;
@@ -418,7 +456,7 @@ void Relay_switch_update(void *params) // sender
                 }
                 else
                 {
-                    xTaskNotify(receiveHandler, (0 << 0), eSetValueWithOverwrite); // first check & deactivate serial timer
+                    memset(Relay_Update_Success, 0, sizeof(Relay_Update_Success)); // Except for 'Serial' ; set all reply status as false
                     for (int i = 0; i < 16; i++)                                   // clear out all the relays to activate serial or random phase
                     {
                         gpio_set_level(relay_pins[i], (uint32_t)r_OFF);
@@ -426,16 +464,22 @@ void Relay_switch_update(void *params) // sender
                     if (Relay_Status_Value[SERIAL_UPDATE] == 1 && Relay_Status_Value[RANDOM_UPDATE] == 0)
                     {
                         ESP_LOGI("Activate", " --> SERIAL PATTERN");
-                        memset(Relay_Update_Success, 0, sizeof(Relay_Update_Success)); // Except for 'Serial' ; set all reply status as false
                         Relay_Update_Success[SERIAL_UPDATE] = 1;
+                        Random_Pattern_generator(0);
                         xTaskNotify(receiveHandler, (1 << 0), eSetValueWithOverwrite); // give 'activation notification' to serial task
                     }
-                    else if (Relay_Status_Value[RANDOM_UPDATE] != 0 && Relay_Status_Value[SERIAL_UPDATE] == 0)
+                    else if (Relay_Status_Value[RANDOM_UPDATE] > 0 && Relay_Status_Value[SERIAL_UPDATE] == 0)
                     {
                         ESP_LOGI("Activate", " --> RANDOM PATTERN : %d", Relay_Status_Value[RANDOM_UPDATE]);
-                        memset(Relay_Update_Success, 0, sizeof(Relay_Update_Success)); // Except for 'Serial' ; set all reply status as false
                         Relay_Update_Success[RANDOM_UPDATE] = 1;
-                        Random_Pattern_generation(Relay_Status_Value[RANDOM_UPDATE]); // call a function to generate random patterns
+                        xTaskNotify(receiveHandler, (0 << 0), eSetValueWithOverwrite); // first check & deactivate serial timer
+                        Random_Pattern_generator(Relay_Status_Value[RANDOM_UPDATE]); // call a function to generate random patterns
+                    }
+                    else
+                    {
+                        xTaskNotify(receiveHandler, (0 << 0), eSetValueWithOverwrite); // first check & deactivate serial timer
+                        Random_Pattern_generator(0);                                   // call a function to generate random patterns
+                        ESP_LOGE("REALY_STATE_ERROR_NVS", "!! RANDOM [%d] and SERIAL [%d] button are in invalid state !!", Relay_Status_Value[RANDOM_UPDATE], Relay_Status_Value[SERIAL_UPDATE]);
                     }
                 }
                 /******************************************************************************************************************/
@@ -447,11 +491,19 @@ void Relay_switch_update(void *params) // sender
 
 void app_main(void)
 {
+    /***************************************************************/
     // initialize serial timer
-    const esp_timer_create_args_t esp_timer_create_args = {
+    const esp_timer_create_args_t esp_timer_create_args1 = {
         .callback = Serial_Timer_Callback,
         .name = "Serial timer"};
-    esp_timer_create(&esp_timer_create_args, &esp_timer_handle);
+    esp_timer_create(&esp_timer_create_args1, &esp_timer_handle1);
+    /***************************************************************/
+    // initialize Random timer
+    const esp_timer_create_args_t esp_timer_create_args2 = {
+        .callback = Random_Timer_Callback,
+        .name = "Random timer"};
+    esp_timer_create(&esp_timer_create_args2, &esp_timer_handle2);
+    /***************************************************************/
 
     ap_config_t local_config; // ssid store sample
     wifi_init();
@@ -465,7 +517,6 @@ void app_main(void)
             RESTART_WIFI(STA_mode);
             if (!STA_restart)
                 esp_restart();
-
             xSema = xSemaphoreCreateBinary();
             xTaskCreate(Serial_Patttern_task, "Serial Pattern Generator", 4096, NULL, 5, &receiveHandler); // receiver
             xTaskCreate(Relay_switch_update, "Relay_switch_update", 4096, NULL, 6, NULL);                  // sender // higher priority

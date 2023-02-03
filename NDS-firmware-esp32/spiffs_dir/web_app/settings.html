@@ -2,57 +2,78 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Settings</title>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings</title>
 
-    <link rel="stylesheet" href="assets/settings.css" />
+  <link rel="stylesheet" href="assets/settings.css" />
 </head>
 
 <body>
-    <button class="home"><strong>&#11013;</strong></button>
-    <div class="center">
-        <h1><img src="./image/nds.png" alt="NDS" /></h1>
-        <form action="/AP_STA_post" class="form" method="post">
-            <div class="curPass">
-                Current Password:
-                <input type="password" class="inpcurPass currpass" required />
-                <img class="showPass0" src="./image/ey.png" alt="no" />
-            </div>
-            <br /><br />
+  <button class="home">&#10140;</button>
+  <div class="center">
+    <h1><img src="./image/nds.png" alt="NDS" /></h1>
+    <form action="/AP_STA_post" class="form" method="post">
+      <div class="curPass">
+        Current Password:
+        <input type="password" class="inpcurPass currpass" required />
+        <span class="showPass0">&#x1f441;</span>
+      </div>
+      <br /><br />
 
-            <div class="newPass">
-                New Password:
-                <input type="password" class="inpnewPass newpass" required />
-                <img class="showPass1" src="./image/ey.png" alt="no" />
-            </div>
+      <div class="newPass">
+        New Password:
+        <input type="password" class="inpnewPass newpass" required />
+        <span class="showPass1">&#x1f441;</span>
+      </div>
 
-            <br /><br />
-            <div class="cpwd">
-                Confirm Password:
-                <input type="password" class="conPass conpass" required />
-                <img class="showPass2" src="./image/ey.png" alt="no" />
-            </div>
-            <br /><br /><br />
-            <div class="uinp">
-                Change username: <input class="cb" type="checkbox" />
-            </div>
-            <br /><br />
-            <div class="uname newPass hidden">
-                New Username: <input type="text" class="inpnewPass newuser" />
-            </div>
-            <br /><br />
-            <input type="submit" value="Confirm" class="btn confirm" />
-        </form>
-    </div>
-    <script src="assets/settings.js"></script>
+      <br />
+      <br />
+      <div class="cpwd">
+        Confirm Password:
+        <input type="password" class="conPass conpass" required />
+        <span class="showPass2">&#x1f441;</span>
+      </div>
+      <br /><br /><br />
+      <div class="incpw hidden">
+        <p>
+          &nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;Your
+          new password and current password doesnot<br />
+          &nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+          match.Try again
+        </p>
+      </div>
+
+      <div class="uinp">
+        Change username: <input class="cb" type="checkbox" /><span><small>
+            &nbsp;&nbsp;&nbsp;&nbsp;(Click on this box to change
+            username.)</small></span>
+      </div>
+      <br />
+      <div class="uname newPass hidden">
+        New Username:
+        <input type="text" class="inpnewPass newuser" />
+        <br />
+      </div>
+      <div class="info hidden">
+        <p>
+          <small><em>To change the 'username' without changing <br />the password,
+              all password fields must be<br />
+              filled with the current password.</em></small>
+        </p>
+      </div>
+      <br />
+      <input type="submit" value="Confirm" class="btn confirm" />
+    </form>
+  </div>
+  <script src="assets/settings.js"></script>
 </body>
 <footer>
-    <p>
-        © Copyright 2018-2023 <span> Nepal Digital Systems Pvt. Ltd.</span> All
-        Rights Reserved
-    </p>
+  <p>
+    © Copyright 2018-2023 <span> Nepal Digital Systems Pvt. Ltd.</span> All
+    Rights Reserved
+  </p>
 </footer>
 
 </html>

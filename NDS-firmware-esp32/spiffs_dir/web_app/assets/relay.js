@@ -21,7 +21,8 @@ let serial = document.querySelector('.srl');
 let home = document.querySelector('.home');
 let reload_relay_flag = 0;
 let random_value = 0;
-
+var btn_req = 0;
+let data;
 let json_data = {
     Relay1: 0,
     Relay2: 0,
@@ -42,110 +43,111 @@ let json_data = {
     random: 0,
     serial: 0,
 };
-let data;
-home.addEventListener('click', function () {
-    window.location.replace('/dashboard');
-});
+random.innerHTML = `Random [${random_value === 0 ? 'OFF' : random_value}]`;
 
 const fun = function (recv_data) {
     json_data.Relay1 = recv_data.Relay1;
-    if (json_data.Relay1 == 1) {
-        Relay1.style.backgroundColor = 'rgb(9, 247, 116)';
+    json_data.Relay2 = recv_data.Relay2;
+    json_data.Relay3 = recv_data.Relay3;
+    json_data.Relay4 = recv_data.Relay4;
+    json_data.Relay5 = recv_data.Relay5;
+    json_data.Relay6 = recv_data.Relay6;
+    json_data.Relay7 = recv_data.Relay7;
+    json_data.Relay8 = recv_data.Relay8;
+    json_data.Relay9 = recv_data.Relay9;
+    json_data.Relay10 = recv_data.Relay10;
+    json_data.Relay11 = recv_data.Relay11;
+    json_data.Relay12 = recv_data.Relay12;
+    json_data.Relay13 = recv_data.Relay13;
+    json_data.Relay14 = recv_data.Relay14;
+    json_data.Relay15 = recv_data.Relay15;
+    json_data.Relay16 = recv_data.Relay16;
+    json_data.random = recv_data.random;
+    json_data.serial = recv_data.serial;
+    random_value = recv_data.random;
+    random.innerHTML = `Random [${random_value === 0 ? 'OFF' : random_value}]`;
+    if (recv_data.random == 0 && recv_data.serial == 0) {
+
+        //disable the 'disable click effect' for random and serial
+        for (const bt of btn) {
+            if (bt.disabled == true) {
+                bt.disabled = false;
+                bt.classList.remove('disabled');
+                bt.style.backgroundColor = '#273e68';
+            }
+        }
+        serial.style.backgroundColor = 'purple';
+        random.style.backgroundColor = 'orange';
+        (recv_data.Relay1) ? Relay1.style.backgroundColor = 'rgb(9, 247, 116)' : Relay1.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay2) ? Relay2.style.backgroundColor = 'rgb(9, 247, 116)' : Relay3.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay3) ? Relay3.style.backgroundColor = 'rgb(9, 247, 116)' : Relay3.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay4) ? Relay4.style.backgroundColor = 'rgb(9, 247, 116)' : Relay4.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay5) ? Relay5.style.backgroundColor = 'rgb(9, 247, 116)' : Relay5.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay6) ? Relay6.style.backgroundColor = 'rgb(9, 247, 116)' : Relay6.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay7) ? Relay7.style.backgroundColor = 'rgb(9, 247, 116)' : Relay7.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay8) ? Relay8.style.backgroundColor = 'rgb(9, 247, 116)' : Relay8.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay9) ? Relay9.style.backgroundColor = 'rgb(9, 247, 116)' : Relay9.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay10) ? Relay10.style.backgroundColor = 'rgb(9, 247, 116)' : Relay10.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay11) ? Relay11.style.backgroundColor = 'rgb(9, 247, 116)' : Relay11.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay12) ? Relay12.style.backgroundColor = 'rgb(9, 247, 116)' : Relay12.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay13) ? Relay13.style.backgroundColor = 'rgb(9, 247, 116)' : Relay13.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay14) ? Relay14.style.backgroundColor = 'rgb(9, 247, 116)' : Relay14.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay15) ? Relay15.style.backgroundColor = 'rgb(9, 247, 116)' : Relay15.style.backgroundColor = 'rgb(39, 62, 104)';
+        (recv_data.Relay16) ? Relay16.style.backgroundColor = 'rgb(9, 247, 116)' : Relay16.style.backgroundColor = 'rgb(39, 62, 104)';
+
     }
     else {
-        Relay1.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay2 = recv_data.Relay2;
-    if (json_data.Relay2 == 1) {
-        Relay2.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay2.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay3 = recv_data.Relay3;
-    if (json_data.Relay3 == 1) {
-        Relay3.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay3.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay4 = recv_data.Relay4;
-    if (json_data.Relay4 == 1) {
-        Relay4.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay4.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay5 = recv_data.Relay5;
-    if (json_data.Relay5 == 1) {
-        Relay5.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay5.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay6 = recv_data.Relay6;
-    if (json_data.Relay6 == 1) {
-        Relay6.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay6.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay7 = recv_data.Relay7;
-    if (json_data.Relay7 == 1) {
-        Relay7.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay7.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay8 = recv_data.Relay8;
-    if (json_data.Relay8 == 1) {
-        Relay8.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay8.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay9 = recv_data.Relay9;
-    if (json_data.Relay9 == 1) {
-        Relay9.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay9.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay10 = recv_data.Relay10;
-    if (json_data.Relay10 == 1) {
-        Relay10.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay10.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay11 = recv_data.Relay11;
-    if (json_data.Relay11 == 1) {
-        Relay11.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay11.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay12 = recv_data.Relay12;
-    if (json_data.Relay12 == 1) {
-        Relay12.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay12.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay13 = recv_data.Relay13;
-    if (json_data.Relay13 == 1) {
-        Relay13.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay13.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay14 = recv_data.Relay14;
-    if (json_data.Relay14 == 1) {
-        Relay14.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay14.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay15 = recv_data.Relay15;
-    if (json_data.Relay15 == 1) {
-        Relay15.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay15.style.backgroundColor = 'rgb(39, 62, 104)';
-    }
-    json_data.Relay16 = recv_data.Relay16;
-    if (json_data.Relay16 == 1) {
-        Relay16.style.backgroundColor = 'rgb(9, 247, 116)';
-    } else {
-        Relay16.style.backgroundColor = 'rgb(39, 62, 104)';
+        //Enable the 'disable click effect'
+        if (recv_data.random > 0 && recv_data.serial === 0) {
+            for (const bt of btn) {
+                if (bt.value !== 'r') {
+                    bt.disabled = true;
+                    bt.classList.add('disabled');
+                    bt.style.backgroundColor = '#273e68';
+                    if (bt.value === 's') {
+                        bt.style.backgroundColor = 'purple';
+                    }
+                }
+            }
+        }
+        else if (recv_data.serial === 1 && recv_data.random === 0) {
+            serial.style.backgroundColor = 'rgb(9, 247, 116)';
+            for (const bt of btn) {
+                if (bt.value !== 's') {
+                    bt.disabled = true;
+                    bt.classList.add('disabled');
+                    bt.style.backgroundColor = '#273e68';
+                    if (bt.value === 'r') {
+                        bt.style.backgroundColor = 'orange';
+                    }
+                }
+            }
+        }
     }
 };
+const ref_fun = async function () {
+    const data = {
+        InfoReq: 1,
+    };
+    const options = {
+        method: 'POST',
+        body: JSON.stringify(data),
+    };
+    const response = await fetch('/relay_btn_refresh', options);
+    if (response.status == 200) {
+        const refresh_onload_data = await response.json();
+        fun(refresh_onload_data);
+    }
+};
+
+home.addEventListener('click', function () {
+    window.location.replace('/dashboard');
+});
+window.addEventListener('load', async function (e) {
+    btn_req = 1;
+    e.preventDefault();
+    ref_fun();
+});
 
 Relay1.addEventListener('click', async function (e) {
     e.preventDefault();
@@ -164,14 +166,11 @@ Relay1.addEventListener('click', async function (e) {
         console.log('Relay1_Task_Completed : ', recv_data.Relay1_update_success);
         if (recv_data.Relay1_update_success === 1) {
             if (Relay1.style.backgroundColor === 'rgb(9, 247, 116)') {
-                Relay1.style.color = 'rgb(255,255,255)';
                 Relay1.style.backgroundColor = 'rgb(39, 62, 104)';
             } else {
                 Relay1.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay1.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data); // inspect the button states
     }
 });
 Relay2.addEventListener('click', async function (e) {
@@ -192,13 +191,10 @@ Relay2.addEventListener('click', async function (e) {
         if (recv_data.Relay2_update_success === 1) {
             if (Relay2.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay2.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay2.style.color = 'rgb(255,255,255)';
             } else {
                 Relay2.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay2.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
 });
 Relay3.addEventListener('click', async function (e) {
@@ -218,13 +214,10 @@ Relay3.addEventListener('click', async function (e) {
         if (recv_data.Relay3_update_success === 1) {
             if (Relay3.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay3.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay3.style.color = 'rgb(255,255,255)';
             } else {
                 Relay3.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay3.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
     console.log(json_data);
 });
@@ -246,13 +239,10 @@ Relay4.addEventListener('click', async function (e) {
         if (recv_data.Relay4_update_success === 1) {
             if (Relay4.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay4.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay4.style.color = 'rgb(255,255,255)';
             } else {
                 Relay4.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay4.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
 });
 Relay5.addEventListener('click', async function (e) {
@@ -273,13 +263,10 @@ Relay5.addEventListener('click', async function (e) {
         if (recv_data.Relay5_update_success === 1) {
             if (Relay5.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay5.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay5.style.color = 'rgb(255,255,255)';
             } else {
                 Relay5.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay5.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
 });
 Relay6.addEventListener('click', async function (e) {
@@ -300,13 +287,10 @@ Relay6.addEventListener('click', async function (e) {
         if (recv_data.Relay6_update_success === 1) {
             if (Relay6.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay6.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay6.style.color = 'rgb(255,255,255)';
             } else {
                 Relay6.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay6.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
 });
 Relay7.addEventListener('click', async function (e) {
@@ -327,13 +311,10 @@ Relay7.addEventListener('click', async function (e) {
         if (recv_data.Relay7_update_success === 1) {
             if (Relay7.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay7.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay7.style.color = 'rgb(255,255,255)';
             } else {
                 Relay7.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay7.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
 });
 Relay8.addEventListener('click', async function (e) {
@@ -354,13 +335,10 @@ Relay8.addEventListener('click', async function (e) {
         if (recv_data.Relay8_update_success === 1) {
             if (Relay8.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay8.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay8.style.color = 'rgb(255,255,255)';
             } else {
                 Relay8.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay8.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
 });
 Relay9.addEventListener('click', async function (e) {
@@ -381,13 +359,10 @@ Relay9.addEventListener('click', async function (e) {
         if (recv_data.Relay9_update_success === 1) {
             if (Relay9.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay9.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay9.style.color = 'rgb(255,255,255)';
             } else {
                 Relay9.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay9.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
 });
 Relay10.addEventListener('click', async function (e) {
@@ -408,13 +383,10 @@ Relay10.addEventListener('click', async function (e) {
         if (recv_data.Relay10_update_success === 1) {
             if (Relay10.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay10.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay10.style.color = 'rgb(255,255,255)';
             } else {
                 Relay10.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay10.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
 });
 Relay11.addEventListener('click', async function (e) {
@@ -435,13 +407,10 @@ Relay11.addEventListener('click', async function (e) {
         if (recv_data.Relay11_update_success === 1) {
             if (Relay11.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay11.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay11.style.color = 'rgb(255,255,255)';
             } else {
                 Relay11.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay11.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
 });
 Relay12.addEventListener('click', async function (e) {
@@ -462,13 +431,10 @@ Relay12.addEventListener('click', async function (e) {
         if (recv_data.Relay12_update_success === 1) {
             if (Relay12.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay12.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay12.style.color = 'rgb(255,255,255)';
             } else {
                 Relay12.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay12.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
     }
 });
 Relay13.addEventListener('click', async function (e) {
@@ -489,13 +455,13 @@ Relay13.addEventListener('click', async function (e) {
         if (recv_data.Relay13_update_success === 1) {
             if (Relay13.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay13.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay13.style.color = 'rgb(255,255,255)';
+
             } else {
                 Relay13.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay13.style.color = 'rgb(255,255,255)';
+
             }
         }
-        fun(recv_data);
+
     }
 });
 Relay14.addEventListener('click', async function (e) {
@@ -516,13 +482,13 @@ Relay14.addEventListener('click', async function (e) {
         if (recv_data.Relay14_update_success === 1) {
             if (Relay14.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay14.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay14.style.color = 'rgb(255,255,255)';
+
             } else {
                 Relay14.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay14.style.color = 'rgb(255,255,255)';
+
             }
         }
-        fun(recv_data);
+
     }
 });
 Relay15.addEventListener('click', async function (e) {
@@ -543,13 +509,11 @@ Relay15.addEventListener('click', async function (e) {
         if (recv_data.Relay15_update_success === 1) {
             if (Relay15.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay15.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay15.style.color = 'rgb(255,255,255)';
             } else {
                 Relay15.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay15.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
+
     }
 });
 Relay16.addEventListener('click', async function (e) {
@@ -570,16 +534,13 @@ Relay16.addEventListener('click', async function (e) {
         if (recv_data.Relay16_update_success === 1) {
             if (Relay16.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay16.style.backgroundColor = 'rgb(39, 62, 104)';
-                Relay16.style.color = 'rgb(255,255,255)';
             } else {
                 Relay16.style.backgroundColor = 'rgb(9, 247, 116)';
-                Relay16.style.color = 'rgb(255,255,255)';
             }
         }
-        fun(recv_data);
+
     }
 });
-random.innerHTML = `Random [${random_value === 0 ? 'OFF' : random_value}]`;
 random.addEventListener('click', async function (e) {
     e.preventDefault();
     random_value++;
@@ -587,37 +548,10 @@ random.addEventListener('click', async function (e) {
         random_value = 0;
     }
     random.innerHTML = `Random [${random_value === 0 ? 'OFF' : random_value}]`;
-    console.log(random.innerHTML);
-    for (const bt of btn) {
-        if (random_value !== 0 && bt.value !== 'r') {
-            bt.disabled = true;
-            bt.classList.add('disabled');
-            bt.style.backgroundColor = '#273e68';
-            bt.style.color = '#fff';
-            if (bt.value === 's') {
-                bt.style.backgroundColor = 'purple';
-                bt.style.color = '#fff';
-            }
-        } else if (random_value === 0) {
-            bt.disabled = false;
-            bt.classList.remove('disabled');
-            bt.style.backgroundColor = '#273e68';
-            bt.style.color = '#fff';
-            if (bt.value === 's') {
-                bt.style.backgroundColor = 'purple';
-                bt.style.color = '#fff';
-            }
-            if (bt.value === 'r') {
-                bt.style.backgroundColor = 'orange';
-                bt.style.color = '#fff';
-            }
-        }
-    }
     data = {
         random: random_value,
     };
     json_data.random = data.random;
-    console.log(json_data);
     const options = {
         method: 'POST',
         body: JSON.stringify(json_data),
@@ -625,47 +559,41 @@ random.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log(
-            'random_update_success_Status : ',
-            recv_data.random_update_success
-        );
+        console.log('random_update_success_Status : ', recv_data.random_update_success);
+        if (recv_data.random_update_success === 1) {
+            console.log('a.', random_value);
+            console.log('b.', random.innerHTML);
+            for (const bt of btn) {
+                if (random_value !== 0 && bt.value !== 'r') {
+                    bt.disabled = true;
+                    bt.classList.add('disabled');
+                    bt.style.backgroundColor = '#273e68';
+                    if (bt.value === 's') {
+                        bt.style.backgroundColor = 'purple';
+                    }
+                } else if (random_value === 0 && bt.value !== 'r') {
+                    bt.disabled = false;
+                    bt.classList.remove('disabled');
+                    bt.style.backgroundColor = '#273e68';
+                    if (bt.value === 's') {
+                        bt.style.backgroundColor = 'purple';
+                    }
+                }
+            }
+            console.log('c.', json_data);
+        }
     }
 });
 serial.addEventListener('click', async function (e) {
     e.preventDefault();
     data = {
-        serial: serial.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
+        serial: serial.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,    // purple -> 1
     };
-    for (const bt of btn) {
-        if (bt.value !== 's' && data.serial === 1) {
-            bt.disabled = true;
-            bt.classList.add('disabled');
-            bt.style.backgroundColor = '#273e68';
-            bt.style.color = '#fff';
-            if (bt.value === 'r') {
-                bt.style.backgroundColor = 'orange';
-                bt.style.color = '#fff';
-            }
-        } else if (bt.value === 's' && data.serial === 1) {
-            bt.style.backgroundColor = 'rgb(9, 247, 116)';
-            bt.style.color = '#fff';
-        } else {
-            bt.disabled = false;
-            bt.classList.remove('disabled');
-            bt.style.backgroundColor = '#273e68';
-            bt.style.color = '#fff';
-            if (bt.value === 'r') {
-                bt.style.backgroundColor = 'orange';
-                bt.style.color = '#fff';
-            }
-            if (bt.value === 's') {
-                bt.style.backgroundColor = 'rgb(128, 0, 128)';
-                bt.style.color = '#fff';
-            }
-        }
-    }
     json_data.serial = data.serial;
-    console.log(json_data);
+    if (data.serial === 1)
+        serial.style.backgroundColor = 'rgb(9, 247, 116)';
+    else
+        serial.style.backgroundColor = 'rgb(128, 0, 128)';
     const options = {
         method: 'POST',
         body: JSON.stringify(json_data),
@@ -673,43 +601,44 @@ serial.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log(
-            'serial_update_success_Status : ',
-            recv_data.serial_update_success
-        );
+        console.log('serial_update_success_Status : ', recv_data.serial_update_success);
         if (recv_data.serial_update_success === 1) {
+            for (const bt of btn) {
+                if (data.serial === 1) {
+                    if (bt.value !== 's') {
+                        bt.disabled = true;
+                        bt.classList.add('disabled');
+                        bt.style.backgroundColor = '#273e68';
+                        if (bt.value === 'r') {
+                            bt.style.backgroundColor = 'orange';
+                        }
+                    }
+                }
+                else if (data.serial === 0) {
+                    bt.disabled = false;
+                    bt.classList.remove('disabled');
+                    bt.style.backgroundColor = '#273e68';
+                    if (bt.value === 'r') {
+                        bt.style.backgroundColor = 'orange';
+                    }
+                    // if (bt.value === 's') {
+                    //     bt.style.backgroundColor = 'rgb(128, 0, 128)';
+                    // }
+                }
+            }
+            console.log(json_data);
             if (serial.style.backgroundColor === 'rgb(9, 247, 116)') {
                 serial.style.backgroundColor = 'rgb(9, 247, 116)';
-                serial.style.color = 'rgb(255, 255, 255)';
             } else {
                 serial.style.backgroundColor = 'rgb(128, 0, 128)';
-                serial.style.color = 'rgb(255, 255, 255)';
             }
         }
     }
+
 });
 
+setInterval(() => {
+    ref_fun();
+}, 4100);
 
-
-
-
-// window.addEventListener('load', () => {
-//   // setTimeout(() => {
-//   //   reload_relay_flag = 1;
-//   // }, 2000);
-//   setTimeout(() => {
-//     alert(
-//       'Warning! Session Timeout due to inactivity..... \n Reload to redirect into login page. '
-//     );
-//   }, 175000);
-// });
-// window.onload;
-// window.addEventListener('beforeunload', async function () {
-//   if (reload_relay_flag == 1) {
-//     const response = fetch('/refresh_relay', options);
-//     console.log(response.status);
-//     console.log(response.statusText);
-//     alert('Refreshing Relay_Page...');
-//     reload_flag = 0;
-//   }
-// });
+// setTimeout(() => { window.location.reload(); }, 120000);

@@ -12,7 +12,7 @@
 
 // variable to avoid connection fail loop when changing wifi modes
 static uint8_t reconnect_count = 0;
-static uint32_t sta_addr3 = 0;
+uint32_t sta_addr3 = 0;
 // just creating a global reference to station network interface
 esp_netif_t *esp_netif = NULL;
 // [encapsulate within this file only] ; create event groups for wifi_events
@@ -132,7 +132,7 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
         }
         const char *err = get_error(wifi_event_sta_disconnected->reason);
         ESP_LOGW("STA_EVENT", "DISCONNECTED : %s", err);
-        if (reconnect_count < 4)// 3 tries
+        if (reconnect_count < 4) // 3 tries
         {
             reconnect_count++;
             ESP_LOGI("RECONNECT_TAG", "System restart in => %d", reconnect_count);
@@ -240,7 +240,6 @@ esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
         IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
         esp_netif_set_ip_info(esp_netif, &ip_info);
     }
-
     // start the esp32 wifi
     esp_wifi_set_mode(WIFI_MODE_STA);                   // setting the mode of wifi (AP / STA)
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config); // pass the wifi_config ; if set as station

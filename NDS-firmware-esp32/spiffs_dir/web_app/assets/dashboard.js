@@ -5,8 +5,13 @@ const info = document.querySelector('.info');
 const settings = document.querySelector('.settings');
 const restart = document.querySelector('.restart');
 const table = document.querySelector('table');
+const home = document.querySelector('.home');
 let reload_dashboard_flag = 0;
 let reload_relay_flag = 0;
+home.addEventListener('click', function () {
+  alert('Signing out....');
+  window.location.replace('/');
+});
 // Enter relay page
 relay.addEventListener('click', function () {
   fetch('/dashboard')
@@ -47,8 +52,7 @@ restart.addEventListener('click', async function (e) {
     console.log(json_data);
     console.log('Restart_success_Status : ', json_data.restart_successful);
     if (json_data.restart_successful == 1) {
-      location.replace('/');
-      alert('Restart successful');
+      alert(`Restart successful.... Reload the browser.http://192.168.${json_data.IP_addr3}.100/`);
     }
   }
 });
@@ -63,25 +67,3 @@ settings.addEventListener('click', function () {
       console.error(error);
     });
 });
-
-//window onload function
-// window.addEventListener('load', () => {
-//   // setTimeout(() => {
-//   //   reload_dashboard_flag = 1;
-//   // }, 5000);
-//   setTimeout(() => {
-//     alert(
-//       'Warning! Session Timeout due to inactivity..... \n Reload to redirect into login page. '
-//     );
-//   }, 175000);
-// });
-// window.onload;
-// window.addEventListener('beforeunload', async function () {
-//   if (reload_dashboard_flag == 1) {
-//     const response = await fetch('/refresh_dashboard', options);
-//     console.log(response.status);
-//     console.log(response.statusText);
-//     alert('Refreshing dashboard...');
-//     reload_dashboard_flag = 0;
-//   }
-// });

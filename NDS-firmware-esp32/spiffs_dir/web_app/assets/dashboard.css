@@ -23,7 +23,7 @@
     font-size: 30px;
     border-radius: 20px;
     background-color: #273e68;
-    color: #a0a0a0;
+    color: #fff;
     border: none;
     cursor: pointer;
 }
@@ -35,7 +35,7 @@
 
 .restart {
     background-color: red;
-    color: #a0a0a0;
+    color: #fff;
 }
 
 footer {
@@ -45,7 +45,7 @@ footer {
     height: 15vh;
     text-align: center;
     color: #273e68;
-    background-color: #b9b9b9;
+    background-color: #a0a0a0;
 }
 
 footer p {
