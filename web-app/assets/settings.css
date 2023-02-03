@@ -13,7 +13,7 @@ body {
 .center {
   position: absolute;
   border: 1px solid rgba(0, 0, 0, 0.3);
-  top: 40%;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 500px;
@@ -48,13 +48,13 @@ body {
   position: relative;
   align-items: center;
   margin-right: 0;
-  left: 10%;
+  left: 9.5%;
   font-size: 20px;
 }
 .newPass {
   display: inline;
   position: relative;
-  left: 15%;
+  left: 16%;
   font-size: 20px;
 }
 .cpwd {
@@ -63,25 +63,24 @@ body {
   left: 9%;
   font-size: 20px;
 }
-.curPass .showPass0 {
+.curPass .showPass0,
+.newPass .showPass1,
+.cpwd .showPass2 {
   position: relative;
-  left: -8%;
-  top: 13px;
-  height: 26px;
-  width: 20px;
-  background-color: #fff;
+  right: 7%;
   cursor: pointer;
 }
 .home {
   position: fixed;
   top: 1%;
-  left: 1%;
-  width: 5%;
-  height: 5%;
+  left: 5%;
+  width: 7%;
+  height: 7%;
   font-size: 250%;
   text-align: center;
   color: #273e68;
   border: none;
+  rotate: 180deg;
   background-color: #fff;
   cursor: pointer;
   z-index: 1;
@@ -89,27 +88,14 @@ body {
 span {
   color: rgba(0, 0, 0, 0.8);
 }
-.newPass .showPass1 {
-  position: relative;
-  left: -8%;
-  top: 13px;
-  height: 26px;
-  width: 20px;
-  background-color: #fff;
-  cursor: pointer;
-}
-.cpwd .showPass2 {
-  position: relative;
-  left: -8%;
-  top: 13px;
-  height: 26px;
-  width: 20px;
-  background-color: #fff;
-  cursor: pointer;
-}
+
 .uinp {
   margin-left: 10%;
   z-index: 1;
+}
+.info {
+  color: #a0a0a0;
+  text-align: center;
 }
 .btn {
   position: relative;
@@ -134,15 +120,7 @@ form .conPass {
 .incpw {
   color: red;
 }
-.newPass .showPass {
-  position: relative;
-  left: -8%;
-  top: 13px;
-  height: 26px;
-  width: 20px;
-  background-color: #fff;
-  cursor: pointer;
-}
+
 footer {
   position: fixed;
   bottom: 0;
@@ -161,24 +139,39 @@ footer p {
 footer p span {
   font-weight: bold;
 }
+.hidden {
+  display: none;
+}
 
-@media screen and (max-width: 650px) {
+@media screen and (max-width: 640px) {
   .center {
     position: absolute;
     border-radius: 10px;
-    top: 50%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 400px;
+    width: 350px;
     background: #fff;
 
     box-shadow: 10px 15px 15px 15px rgba(0, 0, 0, 0.1);
   }
-  form .inpssid,
-  form .inpPass {
-    width: 200px;
+  form .inpcurPass,
+  form .inpnewPass,
+  form .conPass {
+    border: 1px solid #000;
+    height: 30px;
+    width: 30%;
+    outline: none;
   }
-}
-.hidden {
-  display: none;
+  .newPass {
+    position: relative;
+    left: 18%;
+  }
+  .curPass .showPass0,
+  .newPass .showPass1,
+  .cpwd .showPass2 {
+    position: relative;
+    right: 11%;
+    cursor: pointer;
+  }
 }

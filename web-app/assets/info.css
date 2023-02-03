@@ -10,12 +10,13 @@ body {
   position: fixed;
   top: 1%;
   left: 1%;
-  width: 5%;
-  height: 5%;
+  width: 7%;
+  height: 7%;
   font-size: 250%;
   text-align: center;
   color: #273e68;
   border: none;
+  rotate: 180deg;
   background-color: #fff;
   cursor: pointer;
   z-index: 1;
@@ -36,7 +37,7 @@ table {
 }
 
 table th {
-  /* border: 1px solid #000; */
+ 
   border: none;
   margin: 10px;
   padding: 10px;
@@ -49,7 +50,6 @@ table tr {
   text-align: center;
 }
 table td {
-  
   border-top: hidden;
   padding: 5px;
   text-align: center;
@@ -60,9 +60,8 @@ table td {
   font-size: 15px;
   font-family: sans-serif;
 }
-.bl
-{
-  border-left:2px solid #000;
+.bl {
+  border-left: 2px solid #000;
 }
 
 .b {
@@ -90,7 +89,6 @@ footer p span {
   font-weight: bold;
 }
 @media screen and (max-width: 480px) {
- 
   .home {
     position: fixed;
     top: 1%;
@@ -105,5 +103,4 @@ footer p span {
     cursor: pointer;
     z-index: 1;
   }
-
- }
+}

@@ -7,10 +7,8 @@ let showPass = document.querySelector('.showPass');
 showPass.addEventListener('click', function () {
   if (textFieldpwdEl.type === 'password') {
     textFieldpwdEl.type = 'text';
-    showPass.src = './image/ey.png';
   } else {
     textFieldpwdEl.type = 'password';
-    showPass.src = './image/ey.png';
   }
 });
 textFieldunameEl.maxLength = '31';

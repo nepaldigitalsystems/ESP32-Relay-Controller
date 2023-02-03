@@ -8,10 +8,10 @@ let showPass = document.querySelector('.showPass');
 showPass.addEventListener('click', function () {
   if (pass.type === 'password') {
     pass.type = 'text';
-    showPass.src = './image/ey.png';
+   
   } else {
     pass.type = 'password';
-    showPass.src = './image/ey.png';
+ 
   }
 });
 ssid.maxLength = '31';
@@ -38,15 +38,11 @@ form.addEventListener('submit', async function (e) {
         `Resetting your wifi. Connect your device to "${
           ssid.value
         }" network. \n Your NDS_IP is 192.168.${
-          json_data.IP_addr3==0 ? 'X' : json_data.IP_addr3
+          json_data.IP_addr3 == 0 ? 'X' : json_data.IP_addr3
         }.100`
       );
       window.location.reload;
     }
   }
 });
-// alert(
-//   `Resetting your wifi. Connect your device to "${ssid.value}" network. \n Your NDS_IP is 192.168.${json_data.IP_addr3}.100`
-// );
 
-// location.replace('/');
