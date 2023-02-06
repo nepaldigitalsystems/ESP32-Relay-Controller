@@ -410,28 +410,28 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
 esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     // ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
-    char buffer[20];
+    char buffer[5];
     memset(&buffer, 0, sizeof(buffer));
     httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
     // ESP_LOGI("RELAY_REFRESH_BTN", "Buffer : %s", buffer);
     /********************************************* CREATING JSON ****************************************************************/
     // creating new json packet to send the success_status as reply
     cJSON *JSON_data = cJSON_CreateObject();
-    for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
-    {
-        char *str = (char *)malloc(sizeof("Relay") + 2);
-        memset(str, 0, sizeof("Relay") + 2);
-        sprintf(str, "Relay%u", i);
-        cJSON_AddNumberToObject(JSON_data, str, (Relay_Status_Value[i]) ? 0 : 1); // sending back the inverse to web browser (avoid confusion) ; r_ON => 1 ; r_OFF = 0
-        free(str);
-    }
-
+    if (Relay_Status_Value[RANDOM_UPDATE] == 0 && Relay_Status_Value[SERIAL_UPDATE] == 0)
+        for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
+        {
+            char *str = (char *)malloc(sizeof("Relay") + 2);
+            memset(str, 0, sizeof("Relay") + 2);
+            sprintf(str, "Relay%u", i);
+            cJSON_AddNumberToObject(JSON_data, str, (Relay_Status_Value[i])); // sending back the inverse to web browser (avoid confusion) ; r_ON => 1 ; r_OFF = 0
+            free(str);
+        }
     if (Relay_Status_Value[RANDOM_UPDATE] != 0 && Relay_Status_Value[SERIAL_UPDATE] == 0)
     {
         cJSON_AddNumberToObject(JSON_data, "random", Relay_Status_Value[RANDOM_UPDATE]); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
         cJSON_AddNumberToObject(JSON_data, "serial", 0);                                 // serial => [0/0ff] vs [1/ON]
     }
-    else if (Relay_Status_Value[SERIAL_UPDATE])
+    else if (Relay_Status_Value[SERIAL_UPDATE] == 1 && Relay_Status_Value[RANDOM_UPDATE] == 0)
     {
         cJSON_AddNumberToObject(JSON_data, "random", 0); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
         cJSON_AddNumberToObject(JSON_data, "serial", 1); // serial => [0/0ff] vs [1/ON]

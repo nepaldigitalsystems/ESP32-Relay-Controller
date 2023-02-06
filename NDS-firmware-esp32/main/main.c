@@ -373,20 +373,18 @@ static void Random_Pattern_generator(uint8_t comb)
 
         // determine the combination
         combination = comb - 1;
-        // stop timer
-        if (isOn == ESP_OK)
+        if (isOn == ESP_OK) // stop timer
         {
             esp_timer_stop(esp_timer_handle2);
             isOn = ESP_FAIL;
             ESP_LOGI("RANDOM_TIMER", "STOPPED : state - %d", comb);
         }
-        // Start timer
-        isOn = esp_timer_start_periodic(esp_timer_handle2, 1000000); // 1sec
+        isOn = esp_timer_start_periodic(esp_timer_handle2, 1000000); // 1sec // Start timer
         ESP_LOGI("RANDOM_TIMER", "STARTED : state - %d", comb);
     }
-    else
+    else // 0 => stop timer
     {
-        if (isOn == ESP_OK)
+        if (isOn == ESP_OK) // stop timer
         {
             esp_timer_stop(esp_timer_handle2);
             isOn = ESP_FAIL;
@@ -465,14 +463,14 @@ static void Relay_switch_update(void *params) // sender
                     {
                         ESP_LOGI("Activate", " --> SERIAL PATTERN");
                         Relay_Update_Success[SERIAL_UPDATE] = 1;
-                        Random_Pattern_generator(0);
+                        // Random_Pattern_generator(0);
                         xTaskNotify(receiveHandler, (1 << 0), eSetValueWithOverwrite); // give 'activation notification' to serial task
                     }
                     else if (Relay_Status_Value[RANDOM_UPDATE] > 0 && Relay_Status_Value[SERIAL_UPDATE] == 0)
                     {
                         ESP_LOGI("Activate", " --> RANDOM PATTERN : %d", Relay_Status_Value[RANDOM_UPDATE]);
                         Relay_Update_Success[RANDOM_UPDATE] = 1;
-                        xTaskNotify(receiveHandler, (0 << 0), eSetValueWithOverwrite); // first check & deactivate serial timer
+                        // xTaskNotify(receiveHandler, (0 << 0), eSetValueWithOverwrite); // first check & deactivate serial timer
                         Random_Pattern_generator(Relay_Status_Value[RANDOM_UPDATE]); // call a function to generate random patterns
                     }
                     else
