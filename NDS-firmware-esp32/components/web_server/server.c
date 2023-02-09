@@ -18,7 +18,8 @@
 #include "freertos/semphr.h"
 #include "connect.h"
 #include "dns_hijack_srv.h"
-// #include "mdns.h"
+#include "mdns.h"
+#include "netdb.h"
 
 /*extern variables*/
 extern uint32_t sta_addr3;
@@ -26,8 +27,8 @@ extern xSemaphoreHandle xSema;
 extern uint8_t Relay_Status_Value[RELAY_UPDATE_MAX];
 extern uint8_t Relay_Update_Success[RELAY_UPDATE_MAX];       // 1-18
 static uint8_t Relay_inStatus_Value[RELAY_UPDATE_MAX] = {0}; // 1-18
-// #define AMX_APs 10 // scans max = 10 AP
-// const char *local_server_name = "esp";
+                                                             // #define AMX_APs 10 // scans max = 10 AP
+const char *local_server_name = "nds-esp32";
 httpd_handle_t server = NULL; // for server.c only
 static bool dashboard_inUse = false;
 static bool relay_inUse = false;
@@ -46,6 +47,10 @@ extern esp_err_t login_cred(auth_t *Data);
 
 void http_server_ap_mode(void);
 void http_server_sta_mode(void);
+
+void start_MDNS(void);
+static void query_mdns_hosts_async(const char *);
+// void query_mdns_host(const char *);
 
 // void CountDown_timer(TimerHandle_t xGTimer) // service routine for rtos-timer
 // {
@@ -202,11 +207,12 @@ esp_err_t dashboard_handler(httpd_req_t *req) // generally we dont want other fi
 esp_err_t login_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    ESP_LOGE("DASHBOARD_STATUS", "%s", (dashboard_inUse) ? "DashBoard currently in use! Please login" : "Free to Use!.");
-    ESP_LOGE("RELAY_STATUS", "%s", (relay_inUse) ? "Relay Menu currently in use! Please login" : "Free to Use!.");
+    query_mdns_hosts_async(local_server_name);
     // dashboard_inUse = false;
     // relay_inUse = false;
     response.approve = false;
+    ESP_LOGE("DASHBOARD_STATUS", "%s", (dashboard_inUse) ? "DashBoard currently in use! Please login" : "Free to Use!.");
+    ESP_LOGE("RELAY_STATUS", "%s", (relay_inUse) ? "Relay Menu currently in use! Please login" : "Free to Use!.");
     return file_open("/spiffs/nds.html", req);
 }
 esp_err_t connect_ssid(httpd_req_t *req) // generally we dont want other file to see this
@@ -1061,43 +1067,78 @@ void start_dns_server(void)
     }
 }
 
-// void start_mdns_service(void)
-// {
-//     // mdns_ip_addr_t address_list;
-//     ESP_ERROR_CHECK(mdns_init());
-//     ESP_ERROR_CHECK(mdns_hostname_set(local_server_name));
-//     ESP_ERROR_CHECK(mdns_instance_name_set("local_Server_instance"));
-//     // esp_netif_str_to_ip4("192.168.1.100", &address_list.addr.u_addr.ip4);
-//     // ESP_ERROR_CHECK(mdns_delegate_hostname_add("NDS", &address_list));
-//     mdns_txt_item_t serviceTxtData[3] = {
-//         {"board", "{esp32}"},
-//         {"u", "user"},
-//         {"p", "password"}};
-//     ESP_ERROR_CHECK(mdns_service_add("ESP32-WebSocket-Server", "_wss", "_tcp", 443, serviceTxtData, 3));
-//     ESP_ERROR_CHECK(mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0));
-//     ESP_LOGE("MDNS_TAG", "Server_name [STA-Mode] => '%s.local'", local_server_name);
-// }
-// void resolve_mdns_host(const char *host_name)
-// {
-//     ESP_LOGE("Resolved_TAG", "Query A: %s.local", host_name);
-//     // esp_ip4_addr_t addr = NULL;
-//     struct esp_ip4_addr addr;
-//     addr.addr = 0;
-//     esp_err_t err = mdns_query_a(host_name, 2000, &addr);
-//     if (err)
-//     {
-//         if (err == ESP_ERR_NOT_FOUND)
-//         {
-//             ESP_LOGE("Resolved_TAG", "Host was not found!");
-//             return;
-//         }
-//         ESP_LOGE("Resolved_TAG", "Query Failed: %s", esp_err_to_name(err));
-//         return;
-//     }
-//     ESP_LOGE("Resolved_TAG", "Query A: %s.local resolved to: " IPSTR, host_name, IP2STR(&addr));
-// }
-// void stop_mdns_service(void)
-// {
-//     mdns_free();
-//     ESP_LOGE("MDNS_TAG", "Stopping => '%s.local'", local_server_name);
-// }
+void start_MDNS(void)
+{
+    ESP_ERROR_CHECK(mdns_init());
+    ESP_ERROR_CHECK(mdns_hostname_set(local_server_name));
+    ESP_LOGI("MDNS_TAG", "mdns hostname set to: [%s]", local_server_name);
+    ESP_ERROR_CHECK(mdns_instance_name_set("local_Server_instance"));
+    mdns_txt_item_t serviceTxtData[3] = {
+        {"board", "esp32"},
+        {"u", "user"},
+        {"p", "password"}};
+    ESP_ERROR_CHECK(mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData, 3));
+    ESP_LOGE("MDNS_TAG", "Server_name [STA-Mode] => '%s.local'", local_server_name);
+}
+void stop_mdns_service(void)
+{
+    mdns_free();
+    ESP_LOGE("MDNS_TAG", "Stopping => '%s.local'", local_server_name);
+}
+
+static bool check_and_print_result(mdns_search_once_t *search)
+{
+    // Check if any result is available
+    mdns_result_t *result = NULL;
+    if (!mdns_query_async_get_results(search, 0, &result))
+    {
+        return false;
+    }
+
+    if (!result)
+    { // search timeout, but no result
+        return true;
+    }
+
+    // If yes, print the result
+    mdns_ip_addr_t *a = result->addr;
+    while (a)
+    {
+        if (a->addr.type == ESP_IPADDR_TYPE_V6)
+        {
+            printf("  AAAA: " IPV6STR "\n", IPV62STR(a->addr.u_addr.ip6));
+        }
+        else
+        {
+            printf("  A   : " IPSTR "\n", IP2STR(&(a->addr.u_addr.ip4)));
+        }
+        a = a->next;
+    }
+    // and free the result
+    mdns_query_results_free(result);
+    return true;
+}
+
+static void query_mdns_hosts_async(const char *host_name)
+{
+    ESP_LOGI("MDNS_TAG", "Query both A and AAAA: %s.local", host_name);
+
+    mdns_search_once_t *s_a = mdns_query_async_new(host_name, NULL, NULL, MDNS_TYPE_A, 1000, 1, NULL);
+    mdns_search_once_t *s_aaaa = mdns_query_async_new(host_name, NULL, NULL, MDNS_TYPE_AAAA, 1000, 1, NULL);
+    while (s_a || s_aaaa)
+    {
+        if (s_a && check_and_print_result(s_a))
+        {
+            ESP_LOGI("MDNS_TAG", "Query A %s.local finished", host_name);
+            mdns_query_async_delete(s_a);
+            s_a = NULL;
+        }
+        if (s_aaaa && check_and_print_result(s_aaaa))
+        {
+            ESP_LOGI("MDNS_TAG", "Query AAAA %s.local finished", host_name);
+            mdns_query_async_delete(s_aaaa);
+            s_aaaa = NULL;
+        }
+        vTaskDelay(50 / portTICK_PERIOD_MS);
+    }
+}

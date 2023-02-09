@@ -26,8 +26,8 @@ extern void start_dns_server(void);
 extern void http_server_ap_mode(void);
 extern void http_server_sta_mode(void);
 extern void Connect_Portal();
-
 static void Set_static_ip(esp_netif_t *);
+extern void start_MDNS(void);
 
 // return corresponding error
 const char *get_error(uint8_t code)
@@ -241,6 +241,7 @@ esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
         esp_netif_set_ip_info(esp_netif, &ip_info);
     }
     // start the esp32 wifi
+    start_MDNS();
     esp_wifi_set_mode(WIFI_MODE_STA);                   // setting the mode of wifi (AP / STA)
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config); // pass the wifi_config ; if set as station
     esp_wifi_start();

@@ -50,15 +50,17 @@
  * namespace => Relay_Status ; key = random;
  * namespace => Relay_Status ; key = serial;
  */
-
-/*Relay ON / OFF*/
+/*restart_reset declarations*/
+#define RS_PIN 34
+xSemaphoreHandle xRS_sema = NULL;
+/*Relay ON - OFF*/
 #define r_ON 0
 #define r_OFF 1
 uint8_t Relay_Status_Value[RELAY_UPDATE_MAX] = {0};   // 1-18
 uint8_t Relay_Update_Success[RELAY_UPDATE_MAX] = {0}; // 1-18
 
 /* list of relay_pins [ 0-15 ] */
-gpio_num_t relay_pins[16] = {GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_33, GPIO_NUM_32, GPIO_NUM_2, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_23};
+gpio_num_t relay_pins[16] = {GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_33, GPIO_NUM_32, GPIO_NUM_15, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_23};
 static TaskHandle_t receiveHandler = NULL;
 xSemaphoreHandle xSema = NULL;
 static esp_timer_handle_t esp_timer_handle1;
@@ -395,17 +397,17 @@ static void Random_Pattern_generator(uint8_t comb)
 
 static void Relay_switch_update(void *params) // sender
 {
-    for (int i = 0; i < 16; i++) // 0-15
+    gpio_pad_select_gpio(GPIO_NUM_2);
+    gpio_set_direction(GPIO_NUM_2, GPIO_MODE_OUTPUT); // System ON/OFF-led initialized
+    for (int i = 0; i < 16; i++)                      // 0-15
     {
         gpio_pad_select_gpio(relay_pins[i]);
         gpio_set_direction(relay_pins[i], GPIO_MODE_OUTPUT);
     }
-    while (1)
+    while (true)
     {
         if (xSema != NULL)
-        {
-            // Gate to block from running , if access not given
-            if (xSemaphoreTake(xSema, portMAX_DELAY))
+            if (xSemaphoreTake(xSema, portMAX_DELAY)) // Gate to block from running , if access not given
             {
                 /******************************************************************************************************************/
                 // retrieve the Relay values from internal
@@ -482,9 +484,88 @@ static void Relay_switch_update(void *params) // sender
                 }
                 /******************************************************************************************************************/
             }
-        }
     }
     vTaskDelete(NULL);
+}
+static void IRAM_ATTR restart_reset_isr(void *args)
+{
+    xSemaphoreGiveFromISR(xRS_sema, pdFALSE);
+}
+
+void restart_reset_Task(void *params)
+{
+    while (true)
+    {
+        if (xRS_sema != NULL)
+            if (xSemaphoreTake(xRS_sema, portMAX_DELAY))
+            {
+                gpio_isr_handler_remove(RS_PIN);                       // disable the interrupt
+                unsigned long millis_up = esp_timer_get_time() / 1000; // get the time at [positive edge triggered instant]
+                ESP_LOGE("SYSTEM_LED", "OFF");
+                gpio_set_level(GPIO_NUM_2, 0); // turn-OFF system led
+                do
+                {
+                    vTaskDelay(100 / portTICK_PERIOD_MS); // wait some time while we check for the button to be released
+                } while (gpio_get_level(RS_PIN) == 1);
+                unsigned long millis_down = esp_timer_get_time() / 1000; // get the time at [ logic low ]
+                if ((int)(millis_down - millis_up) >= 5000)
+                {
+                    ESP_LOGE("RESTART_RESET_TAG", "GPIO '%d' was pressed for %d mSec. Reseting....", RS_PIN, (int)(millis_down - millis_up));
+                    nvs_handle_t my_handle;
+                    ESP_ERROR_CHECK(nvs_open("wifiCreds", NVS_READWRITE, &my_handle));
+                    ESP_ERROR_CHECK(nvs_erase_all(my_handle));
+                    ESP_ERROR_CHECK(nvs_commit(my_handle));
+                    ESP_ERROR_CHECK(nvs_open("loginCreds", NVS_READWRITE, &my_handle));
+                    ESP_ERROR_CHECK(nvs_erase_all(my_handle));
+                    ESP_ERROR_CHECK(nvs_commit(my_handle));
+                    ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &my_handle));
+                    ESP_ERROR_CHECK(nvs_erase_all(my_handle));
+                    ESP_ERROR_CHECK(nvs_commit(my_handle));
+                    ESP_ERROR_CHECK(nvs_open("Reboot", NVS_READWRITE, &my_handle));
+                    ESP_ERROR_CHECK(nvs_erase_all(my_handle));
+                    ESP_ERROR_CHECK(nvs_commit(my_handle));
+                    ESP_ERROR_CHECK(nvs_open("bootVal", NVS_READWRITE, &my_handle));
+                    ESP_ERROR_CHECK(nvs_erase_all(my_handle));
+                    ESP_ERROR_CHECK(nvs_commit(my_handle));
+                    ESP_ERROR_CHECK(nvs_open("Relay_Status", NVS_READWRITE, &my_handle));
+                    ESP_ERROR_CHECK(nvs_erase_all(my_handle));
+                    ESP_ERROR_CHECK(nvs_commit(my_handle));
+                    nvs_close(my_handle);
+                    ESP_LOGE("SYSTEM_LED", "ON");
+                    gpio_set_level(GPIO_NUM_2, 1);                         // turn-ON system led
+                    gpio_isr_handler_add(RS_PIN, restart_reset_isr, NULL); // re-enable the interrupt
+                    esp_restart();
+                }
+                else
+                {
+                    ESP_LOGE("RESTART_RESET_TAG", "GPIO '%d' was pressed for %d mSec. Restarting....", RS_PIN, (int)(millis_down - millis_up));
+                    ESP_LOGE("SYSTEM_LED", "ON");
+                    gpio_set_level(GPIO_NUM_2, 1);                         // turn-ON system led
+                    gpio_isr_handler_add(RS_PIN, restart_reset_isr, NULL); // re-enable the interrupt
+                    esp_restart();
+                }
+            }
+    }
+    vTaskDelete(NULL);
+}
+
+static void INIT_RS_PIN(void)
+{
+    gpio_set_level(GPIO_NUM_2, 1); // turn-ON system led
+    ESP_LOGE("SYSTEM_LED", "ON");
+    gpio_set_direction(RS_PIN, GPIO_MODE_INPUT);
+    gpio_pad_select_gpio(RS_PIN);
+    gpio_set_direction(RS_PIN, GPIO_MODE_INPUT);
+    gpio_pulldown_en(RS_PIN);
+    gpio_pullup_dis(RS_PIN);
+    gpio_set_intr_type(RS_PIN, GPIO_INTR_POSEDGE);
+
+    // init restart_reset_task
+    xRS_sema = xSemaphoreCreateBinary();
+    xTaskCreate(restart_reset_Task, "restart_reset_Task", 2048, NULL, 1, NULL);
+
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(RS_PIN, restart_reset_isr, NULL); // activate the isr for RS_pin
 }
 
 void app_main(void)
@@ -502,6 +583,7 @@ void app_main(void)
         .name = "Random timer"};
     esp_timer_create(&esp_timer_create_args2, &esp_timer_handle2);
     /***************************************************************/
+    INIT_RS_PIN(); // initialize the reset button
 
     ap_config_t local_config; // ssid store sample
     wifi_init();
@@ -528,5 +610,6 @@ void app_main(void)
         if (!AP_restart)
             esp_restart();
     }
-    Boot_count();
+
+    Boot_count(); // increase the boot count
 }

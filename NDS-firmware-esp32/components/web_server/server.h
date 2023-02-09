@@ -8,6 +8,7 @@ void http_server_ap_mode(void);
 void http_server_sta_mode(void);
 void Connect_Portal(void);
 void start_dns_server(void);
+void start_MDNS(void);
 
 // esp_err_t login_auth_handler(httpd_req_t *req);
 // esp_err_t AP_TO_STA(httpd_req_t *req);
