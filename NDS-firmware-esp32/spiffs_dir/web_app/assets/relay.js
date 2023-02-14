@@ -21,6 +21,7 @@ let serial = document.querySelector('.srl');
 let home = document.querySelector('.home');
 let reload_relay_flag = 1; //allow the reload
 let random_value = 0;
+let time = 300000;
 let data;
 let json_data = {
     Relay1: 0,
@@ -637,8 +638,25 @@ serial.addEventListener('click', async function (e) {
     reload_relay_flag = 1; // resume the reload after completing this post req
 });
 
-setInterval(() => {
-    ref_fun();
-}, 5000);
 
-//setTimeout(() => { window.location.reload(); }, 90000);
+window.addEventListener('mousemove', function () {
+    if (time <= 10000) {
+        time = 300000;
+    }
+});
+const timer = setInterval(function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, 0);
+    const sec = String(time % 60).padStart(2, 0);
+
+    time = time - 1000;
+
+    if (time === 1000) {
+        clearInterval(timer);
+        alert('Session Timeout...');
+        window.location.replace('/');
+    }
+
+    if (time % 6000 === 0)
+        ref_fun();
+
+}, 1000);

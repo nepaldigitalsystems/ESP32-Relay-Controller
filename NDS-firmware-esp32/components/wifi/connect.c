@@ -27,7 +27,7 @@ extern void http_server_ap_mode(void);
 extern void http_server_sta_mode(void);
 extern void Connect_Portal();
 static void Set_static_ip(esp_netif_t *);
-extern void start_MDNS(void);
+// extern void start_MDNS(void);
 
 // return corresponding error
 const char *get_error(uint8_t code)
@@ -202,7 +202,6 @@ void wifi_init()
 {
     ESP_ERROR_CHECK(esp_netif_init());                // or tcpip_adapter_init();
     ESP_ERROR_CHECK(esp_event_loop_create_default()); // we are going to use an event loop
-
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, event_handler, NULL));
     // ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_FLASH));
@@ -213,17 +212,15 @@ esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config)); // TCP/IP resource
 
-    // create wifi event (connected/disconnected) // action -> state
-    wifi_events = xEventGroupCreate();
+    wifi_events = xEventGroupCreate();               // create wifi event (connected/disconnected) // action -> state
     esp_netif = esp_netif_create_default_wifi_sta(); // just setting up the network interface
 
-    // configuration structure
-    wifi_config_t wifi_config;                                                             // handle
+    wifi_config_t wifi_config;                                                             // configuration structure
     memset(&wifi_config, 0, sizeof(wifi_config));                                          // or you can just pass null in handle
     strncpy((char *)wifi_config.sta.ssid, SSID, sizeof(wifi_config.sta.ssid) - 1);         // [31byte + 1-terminator] // only two types to choose fro (ap / sta)
     strncpy((char *)wifi_config.sta.password, PASS, sizeof(wifi_config.sta.password) - 1); // [31byte + 1-terminator] // only two types to choose fro (ap / sta)
-    // check for internally stored , sta_host_number
-    nvs_handle_t my_handle;
+    //---------------------------------------------------------------------------------------
+    nvs_handle_t my_handle; // check for internally stored , sta_host_number
     ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &my_handle));
     if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u32(my_handle, "no.", &sta_addr3))
     {
@@ -240,15 +237,13 @@ esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
         IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
         esp_netif_set_ip_info(esp_netif, &ip_info);
     }
-    // start the esp32 wifi
-    start_MDNS();
+    //---------------------------------------------------------------------------------------
+    // start_MDNS();                                       // start the mdns_service & esp32-wifi connection
     esp_wifi_set_mode(WIFI_MODE_STA);                   // setting the mode of wifi (AP / STA)
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config); // pass the wifi_config ; if set as station
     esp_wifi_start();
-
     vTaskDelay(pdMS_TO_TICKS(10));
-
-    Connect_Portal(); // open server with port:80
+    Connect_Portal();
     http_server_sta_mode();
 
     EventBits_t result = xEventGroupWaitBits(wifi_events, CONNECTED_GOT_IP | DISCONNECTED_GOT_IP, true, false, pdMS_TO_TICKS(timeout));

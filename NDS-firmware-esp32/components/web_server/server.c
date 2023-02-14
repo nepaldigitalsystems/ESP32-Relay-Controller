@@ -30,15 +30,6 @@ static uint8_t Relay_inStatus_Value[RELAY_UPDATE_MAX] = {0}; // 1-18
                                                              // #define AMX_APs 10 // scans max = 10 AP
 const char *local_server_name = "nds-esp32";
 httpd_handle_t server = NULL; // for server.c only
-static bool dashboard_inUse = false;
-static bool relay_inUse = false;
-
-/*countdown variable*/
-// #define Unlock_duration 180 // sec
-// uint8_t count_sec = Unlock_duration;
-// StaticTimer_t static_timer;
-// static TimerHandle_t xGTimer = NULL;
-// static BaseType_t timer_status = pdFAIL;
 
 /*extern functions*/
 extern esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout);
@@ -48,26 +39,8 @@ extern esp_err_t login_cred(auth_t *Data);
 void http_server_ap_mode(void);
 void http_server_sta_mode(void);
 
-void start_MDNS(void);
-static void query_mdns_hosts_async(const char *);
-// void query_mdns_host(const char *);
-
-// void CountDown_timer(TimerHandle_t xGTimer) // service routine for rtos-timer
-// {
-//     ESP_LOGW("Login_Timeout", "\t.....Time left = %d sec", count_sec);
-//     if (count_sec > 0)
-//     {
-//         count_sec--;
-//     }
-//     else
-//     {
-//         count_sec = Unlock_duration; // refresh the minute counter
-//         response.approve = false;
-//         dashboard_inUse = false;
-//         timer_status = pdFAIL;
-//         xTimerStop(xGTimer, 0);
-//     }
-// }
+// void start_MDNS(void);
+// static void query_mdns_hosts_async(const char *);
 
 static esp_err_t file_open(char path[], httpd_req_t *req)
 {
@@ -134,24 +107,12 @@ esp_err_t info_handler(httpd_req_t *req) // generally we dont want other file to
     }
     return ESP_OK;
 }
-// esp_err_t refresh_relay_handler(httpd_req_t *req) // generally we dont want other file to see this
-// {
-//     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
-//     //relay_inUse = false;
-//     ESP_LOGE("RELAY_STATUS", "%s", (relay_inUse) ? "InUse" : "Not InUse");
-//     file_open("/spiffs/refresh_relay.html", req);
-//     httpd_resp_send(req, NULL, 0);
-//     return ESP_OK;
-// }
 esp_err_t relay_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
     ESP_LOGW("Login_Timeout", "Login_status : %s ....", (response.approve) ? "Unlocked" : "Locked");
-
-    ESP_LOGE("RELAY_STATUS", "%s", (relay_inUse) ? "InUse" : "Not InUse");
     if (response.approve) // && (relay_inUse == false)) // approve = 1 -> Login_timeout = False
     {
-        // relay_inUse = true;
         httpd_resp_set_type(req, "text/html");
         file_open("/spiffs/relay.html", req); // Also, can send other response values from here
     }
@@ -164,55 +125,28 @@ esp_err_t relay_handler(httpd_req_t *req) // generally we dont want other file t
     httpd_resp_send(req, NULL, 0);
     return ESP_OK;
 }
-// esp_err_t refresh_dashboard_handler(httpd_req_t *req) // generally we dont want other file to see this
-// {
-//     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
-//     dashboard_inUse = false;
-//     ESP_LOGE("DASHBOARD_STATUS", "%s", (dashboard_inUse) ? "InUse" : "Not InUse");
-//     file_open("/spiffs/refresh_dashboard.html", req);
-//     httpd_resp_send(req, NULL, 0);
-//     return ESP_OK;
-// }
 esp_err_t dashboard_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    // ESP_LOGW("Login_Timeout", "Login_status : %s ....", (response.approve) ? "Unlocked" : "Locked");
-    // ESP_LOGW("Login_Timeout", "\t\t\t.....Time left = %d sec", count_sec);
-    // if (xGTimer == NULL)
-    //     xGTimer = xTimerCreateStatic("MY_Countdown_timer", pdMS_TO_TICKS(1000), pdTRUE, NULL, CountDown_timer, &static_timer);
-    ESP_LOGE("DASHBOARD_STATUS", "%s", (dashboard_inUse) ? "InUse" : "Not InUse");
-
-    if (response.approve) //&& (dashboard_inUse == false)) // approve = 1 -> Login_timeout = False
+    if (response.approve)                         // approve = 1 -> Login_timeout = False
     {
-        // dashboard_inUse = true;
-        //  count_sec = Unlock_duration;
-        //  if (timer_status != pdTRUE)
-        //   {
-        //       timer_status = xTimerStart(xGTimer, 0); // timer_status => pdTrue
-        //   }
         file_open("/spiffs/dashboard.html", req); // Also, can send other response values from here
         httpd_resp_send(req, NULL, 0);
     }
     else
     {
-        /*generate an alert from "dashboard.js" when reloading in locked status (response => 302)*/
         httpd_resp_set_status(req, "302 FOUND");
         httpd_resp_set_hdr(req, "location", "/");
         file_open("/spiffs/nds.html", req);
         httpd_resp_send(req, NULL, 0);
     }
-    ESP_LOGE("DASHBOARD_STATUS", "%s", (dashboard_inUse) ? "InUse" : "Not InUse");
     return ESP_OK;
 }
 esp_err_t login_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    query_mdns_hosts_async(local_server_name);
-    // dashboard_inUse = false;
-    // relay_inUse = false;
+    // query_mdns_hosts_async(local_server_name);
     response.approve = false;
-    ESP_LOGE("DASHBOARD_STATUS", "%s", (dashboard_inUse) ? "DashBoard currently in use! Please login" : "Free to Use!.");
-    ESP_LOGE("RELAY_STATUS", "%s", (relay_inUse) ? "Relay Menu currently in use! Please login" : "Free to Use!.");
     return file_open("/spiffs/nds.html", req);
 }
 esp_err_t connect_ssid(httpd_req_t *req) // generally we dont want other file to see this
@@ -432,6 +366,7 @@ esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post
             cJSON_AddNumberToObject(JSON_data, str, (Relay_Status_Value[i])); // sending back the inverse to web browser (avoid confusion) ; r_ON => 1 ; r_OFF = 0
             free(str);
         }
+
     if (Relay_Status_Value[RANDOM_UPDATE] != 0 && Relay_Status_Value[SERIAL_UPDATE] == 0)
     {
         cJSON_AddNumberToObject(JSON_data, "random", Relay_Status_Value[RANDOM_UPDATE]); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
@@ -491,7 +426,7 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
         nvs_handle_t nvs_relay;
         nvs_open("Relay_Status", NVS_READWRITE, &nvs_relay);
         if (Relay_inStatus_Value[RANDOM_UPDATE] == 0 && Relay_inStatus_Value[SERIAL_UPDATE] == 0)
-            for (uint8_t i = 1; i <= 16; i++) // Default state
+            for (uint8_t i = 1; i <= 16; i++)
             {
                 char *str = (char *)malloc(sizeof("Relay") + 2);
                 memset(str, 0, sizeof("Relay") + 2);
@@ -500,7 +435,6 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
                 nvs_commit(nvs_relay);
                 free(str);
             }
-        // namespace => Relay_Status [creates ]
         if (Relay_inStatus_Value[RANDOM_UPDATE] != 0 && Relay_inStatus_Value[SERIAL_UPDATE] == 0)
         {
             nvs_set_u8(nvs_relay, "random", Relay_inStatus_Value[RANDOM_UPDATE]); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
@@ -527,10 +461,9 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
         }
 
         vTaskDelay(pdMS_TO_TICKS(10));
-
         /******************************************** TURN ON/OFF GPIO_PINS *****************************************************************/
         xSemaphoreGive(xSema); // retrieve the stored data, Invoke the relay switches and generate "update_success_status" values
-        vTaskDelay(150 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
         /********************************************* CREATING JSON ****************************************************************/
         // creating new json packet to send the success_status as reply
         cJSON *JSON_data = cJSON_CreateObject();
@@ -592,7 +525,6 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
-
     if (Esp.receive)
     {
         for (int i = 3; i > 0; i--)
@@ -851,7 +783,7 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
     cJSON_Delete(payload);
 
     cJSON *JSON_data = cJSON_CreateObject();
-    cJSON_AddNumberToObject(JSON_data, "IP_addr3", 0); // INTERNAL STORAGE
+    cJSON_AddNumberToObject(JSON_data, "IP_addr3", (sta_addr3) ? sta_addr3 : 0); // INTERNAL STORAGE
     char *string_json = cJSON_Print(JSON_data);
     ESP_LOGE("JSON_REPLY", "%s", string_json);
     httpd_resp_set_type(req, "application/json"); // sending json data as response
@@ -939,10 +871,8 @@ void http_server_ap_mode(void)
     httpd_unregister_uri_handler(server, "/", HTTP_GET);
     httpd_unregister_uri_handler(server, "/info", HTTP_GET);
     httpd_unregister_uri_handler(server, "/dashboard", HTTP_GET);
-    // httpd_unregister_uri_handler(server, "/refresh_dashboard", HTTP_GET);
     httpd_unregister_uri_handler(server, "/relay", HTTP_GET);
     httpd_unregister_uri_handler(server, "/settings", HTTP_GET);
-    // httpd_unregister_uri_handler(server, "/refresh_relay", HTTP_GET);
     httpd_unregister_uri_handler(server, "/info_post", HTTP_POST);
     httpd_unregister_uri_handler(server, "/settings_post", HTTP_POST);
     httpd_unregister_uri_handler(server, "/restart", HTTP_POST);
@@ -984,41 +914,25 @@ void http_server_sta_mode(void)
         .uri = "/info",
         .method = HTTP_GET,
         .handler = info_handler};
-    //.handler = (dashboard_inUse) ? login_handler : info_handler};
     httpd_register_uri_handler(server, &get_info_url);
 
     httpd_uri_t dashboard_url = {
         .uri = "/dashboard",
         .method = HTTP_GET,
         .handler = dashboard_handler};
-    //.handler = (dashboard_inUse) ? login_handler : dashboard_handler};
     httpd_register_uri_handler(server, &dashboard_url);
-
-    // httpd_uri_t refresh_dashboard_url = {
-    //     .uri = "/refresh_dashboard",
-    //     .method = HTTP_GET,
-    //     .handler = refresh_dashboard_handler};
-    // httpd_register_uri_handler(server, &refresh_dashboard_url);
 
     httpd_uri_t relay_url = {
         .uri = "/relay",
         .method = HTTP_GET,
         .handler = relay_handler};
-    // .handler = (relay_inUse) ? login_handler : relay_handler};
     httpd_register_uri_handler(server, &relay_url);
 
     httpd_uri_t settings_url = {
         .uri = "/settings",
         .method = HTTP_GET,
         .handler = settings_handler};
-    // .handler = (dashboard_inUse) ? login_handler : settings_handler};
     httpd_register_uri_handler(server, &settings_url);
-
-    // httpd_uri_t refresh_relay_url = {
-    //     .uri = "/refresh_relay",
-    //     .method = HTTP_GET,
-    //     .handler = refresh_relay_handler};
-    // httpd_register_uri_handler(server, &refresh_relay_url);
 
     httpd_uri_t auth_post = {
         .uri = "/login_auth_post",
@@ -1067,78 +981,69 @@ void start_dns_server(void)
     }
 }
 
-void start_MDNS(void)
-{
-    ESP_ERROR_CHECK(mdns_init());
-    ESP_ERROR_CHECK(mdns_hostname_set(local_server_name));
-    ESP_LOGI("MDNS_TAG", "mdns hostname set to: [%s]", local_server_name);
-    ESP_ERROR_CHECK(mdns_instance_name_set("local_Server_instance"));
-    mdns_txt_item_t serviceTxtData[3] = {
-        {"board", "esp32"},
-        {"u", "user"},
-        {"p", "password"}};
-    ESP_ERROR_CHECK(mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData, 3));
-    ESP_LOGE("MDNS_TAG", "Server_name [STA-Mode] => '%s.local'", local_server_name);
-}
-void stop_mdns_service(void)
-{
-    mdns_free();
-    ESP_LOGE("MDNS_TAG", "Stopping => '%s.local'", local_server_name);
-}
-
-static bool check_and_print_result(mdns_search_once_t *search)
-{
-    // Check if any result is available
-    mdns_result_t *result = NULL;
-    if (!mdns_query_async_get_results(search, 0, &result))
-    {
-        return false;
-    }
-
-    if (!result)
-    { // search timeout, but no result
-        return true;
-    }
-
-    // If yes, print the result
-    mdns_ip_addr_t *a = result->addr;
-    while (a)
-    {
-        if (a->addr.type == ESP_IPADDR_TYPE_V6)
-        {
-            printf("  AAAA: " IPV6STR "\n", IPV62STR(a->addr.u_addr.ip6));
-        }
-        else
-        {
-            printf("  A   : " IPSTR "\n", IP2STR(&(a->addr.u_addr.ip4)));
-        }
-        a = a->next;
-    }
-    // and free the result
-    mdns_query_results_free(result);
-    return true;
-}
-
-static void query_mdns_hosts_async(const char *host_name)
-{
-    ESP_LOGI("MDNS_TAG", "Query both A and AAAA: %s.local", host_name);
-
-    mdns_search_once_t *s_a = mdns_query_async_new(host_name, NULL, NULL, MDNS_TYPE_A, 1000, 1, NULL);
-    mdns_search_once_t *s_aaaa = mdns_query_async_new(host_name, NULL, NULL, MDNS_TYPE_AAAA, 1000, 1, NULL);
-    while (s_a || s_aaaa)
-    {
-        if (s_a && check_and_print_result(s_a))
-        {
-            ESP_LOGI("MDNS_TAG", "Query A %s.local finished", host_name);
-            mdns_query_async_delete(s_a);
-            s_a = NULL;
-        }
-        if (s_aaaa && check_and_print_result(s_aaaa))
-        {
-            ESP_LOGI("MDNS_TAG", "Query AAAA %s.local finished", host_name);
-            mdns_query_async_delete(s_aaaa);
-            s_aaaa = NULL;
-        }
-        vTaskDelay(50 / portTICK_PERIOD_MS);
-    }
-}
+// void start_MDNS(void)
+// {
+//     ESP_ERROR_CHECK(mdns_init());
+//     ESP_ERROR_CHECK(mdns_hostname_set(local_server_name));
+//     ESP_LOGI("MDNS_TAG", "mdns hostname set to: [%s]", local_server_name);
+//     ESP_ERROR_CHECK(mdns_instance_name_set("local_Server_instance"));
+//     mdns_txt_item_t serviceTxtData[3] = {
+//         {"board", "esp32"},
+//         {"u", "user"},
+//         {"p", "password"}};
+//     ESP_ERROR_CHECK(mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData, 3));
+//     ESP_LOGE("MDNS_TAG", "Server_name [STA-Mode] => '%s.local'", local_server_name);
+// }
+//
+// static bool check_and_print_result(mdns_search_once_t *search)
+// {
+//     // Check if any result is available
+//     mdns_result_t *result = NULL;
+//     if (!mdns_query_async_get_results(search, 0, &result))
+//     {
+//         return false;
+//     }
+//     if (!result)
+//     { // search timeout, but no result
+//         return true;
+//     }
+//     // If yes, print the result
+//     mdns_ip_addr_t *a = result->addr;
+//     while (a)
+//     {
+//         if (a->addr.type == ESP_IPADDR_TYPE_V6)
+//         {
+//             printf("  AAAA: " IPV6STR "\n", IPV62STR(a->addr.u_addr.ip6));
+//         }
+//         else
+//         {
+//             printf("  A   : " IPSTR "\n", IP2STR(&(a->addr.u_addr.ip4)));
+//         }
+//         a = a->next;
+//     }
+//     // and free the result
+//     mdns_query_results_free(result);
+//     return true;
+// }
+// static void query_mdns_hosts_async(const char *host_name)
+// {
+//     ESP_LOGI("MDNS_TAG", "Query both A and AAAA: %s.local", host_name);
+//     mdns_search_once_t *s_a = mdns_query_async_new(host_name, NULL, NULL, MDNS_TYPE_A, 1000, 1, NULL);
+//     mdns_search_once_t *s_aaaa = mdns_query_async_new(host_name, NULL, NULL, MDNS_TYPE_AAAA, 1000, 1, NULL);
+//     while (s_a || s_aaaa)
+//     {
+//         if (s_a && check_and_print_result(s_a))
+//         {
+//             ESP_LOGI("MDNS_TAG", "Query A %s.local finished", host_name);
+//             mdns_query_async_delete(s_a);
+//             s_a = NULL;
+//         }
+//         if (s_aaaa && check_and_print_result(s_aaaa))
+//         {
+//             ESP_LOGI("MDNS_TAG", "Query AAAA %s.local finished", host_name);
+//             mdns_query_async_delete(s_aaaa);
+//             s_aaaa = NULL;
+//         }
+//         vTaskDelay(50 / portTICK_PERIOD_MS);
+//     }
+// }

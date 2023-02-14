@@ -43,3 +43,8 @@ window.addEventListener('load', async function (e) {
     }
 });
 window.onload;
+
+setTimeout(() => {
+    alert('Session Timeout...');
+    window.location.replace('/');
+}, 300000);

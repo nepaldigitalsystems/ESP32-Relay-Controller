@@ -67,3 +67,19 @@ settings.addEventListener('click', function () {
       console.error(error);
     });
 });
+
+window.addEventListener('mousemove', function () {
+  if (time <= 10000) {
+      time = 300000;
+  }
+});
+const timer = setInterval(function () {
+  const min = String(Math.trunc(time / 60)).padStart(2, 0);
+  const sec = String(time % 60).padStart(2, 0);
+  time = time - 1000;
+  if (time === 1000) {
+      clearInterval(timer);
+      alert('Session Timeout...');
+      window.location.replace('/');
+  }
+}, 1000);

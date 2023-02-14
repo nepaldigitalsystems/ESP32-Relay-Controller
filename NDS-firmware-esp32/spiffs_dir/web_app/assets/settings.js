@@ -11,6 +11,7 @@ let check = document.querySelector('.cb');
 let home = document.querySelector('.home');
 let pass_warn = document.querySelector('.incpw');
 let info = document.querySelector('.info');
+let time = 300000;
 newUser.maxLength = '31';
 user_name.maxLength = '31';
 curr.maxLength = '31';
@@ -19,6 +20,7 @@ newUser.minLength = '8';
 user_name.minLength = '8';
 curr.minLength = '8';
 conpass.minLength = '8';
+
 window.addEventListener('load', function () {
     check.checked = false;
 });
@@ -32,7 +34,6 @@ showPass0.addEventListener('click', function () {
         curr.type = 'password';
     }
 });
-
 showPass1.addEventListener('click', function () {
     if (newpass.type === 'password') {
         newpass.type = 'text';
@@ -70,7 +71,6 @@ form.addEventListener('submit', async function (e) {
             method: 'POST',
             body: JSON.stringify(data),
         };
-
         const response = await fetch('/settings_post', options);
         if (response.status == 200) {
             const json_data = await response.json();
@@ -86,3 +86,19 @@ form.addEventListener('submit', async function (e) {
         }
     }
 });
+
+window.addEventListener('mousemove', function () {
+    if (time <= 10000) {
+        time = 300000;
+    }
+});
+const timer = setInterval(function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, 0);
+    const sec = String(time % 60).padStart(2, 0);
+    time = time - 1000;
+    if (time === 1000) {
+        clearInterval(timer);
+        alert('Session Timeout...');
+        window.location.replace('/');
+    }
+}, 1000);

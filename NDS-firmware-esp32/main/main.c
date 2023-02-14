@@ -23,7 +23,6 @@
 
 /* LIST of namespaces and keys
  * namespace => sta_num ; key = no. ;
- * namespace => sta_num ; key = no. ;
  * namespace => wifiCreds ; key = store_ssid  ;
  * namespace => wifiCreds ; key = store_pass  ;
  * namespace => loginCreds ; key = username  ;
@@ -610,6 +609,5 @@ void app_main(void)
         if (!AP_restart)
             esp_restart();
     }
-
     Boot_count(); // increase the boot count
 }
