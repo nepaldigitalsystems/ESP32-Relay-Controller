@@ -8,6 +8,7 @@ const table = document.querySelector('table');
 const home = document.querySelector('.home');
 let reload_dashboard_flag = 0;
 let reload_relay_flag = 0;
+let time = 300000;
 home.addEventListener('click', function () {
   alert('Signing out....');
   window.location.replace('/');
@@ -70,7 +71,7 @@ settings.addEventListener('click', function () {
 
 window.addEventListener('mousemove', function () {
   if (time <= 10000) {
-      time = 300000;
+    time = 300000;
   }
 });
 const timer = setInterval(function () {
@@ -78,8 +79,8 @@ const timer = setInterval(function () {
   const sec = String(time % 60).padStart(2, 0);
   time = time - 1000;
   if (time === 1000) {
-      clearInterval(timer);
-      alert('Session Timeout...');
-      window.location.replace('/');
+    clearInterval(timer);
+    alert('Session Timeout...');
+    window.location.replace('/');
   }
 }, 1000);
