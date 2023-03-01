@@ -1,4 +1,4 @@
-/* * Data converted from D:/Espressif/PROJECTS/HTTP_SERVER_NDS/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 .section .rodata.embedded

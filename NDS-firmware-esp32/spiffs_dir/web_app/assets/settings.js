@@ -9,6 +9,7 @@ let showPass1 = document.querySelector('.showPass1');
 let showPass2 = document.querySelector('.showPass2');
 let check = document.querySelector('.cb');
 let home = document.querySelector('.home');
+let logout = document.querySelector('.logout');
 let pass_warn = document.querySelector('.incpw');
 let info = document.querySelector('.info');
 let time = 300000;
@@ -88,17 +89,20 @@ form.addEventListener('submit', async function (e) {
 });
 
 window.addEventListener('mousemove', function () {
-    if (time <= 10000) {
+    if (time <= 20000) {
         time = 300000;
+        logout.textContent = ``;
     }
 });
 const timer = setInterval(function () {
-    const min = String(Math.trunc(time / 60)).padStart(2, 0);
-    const sec = String(time % 60).padStart(2, 0);
+    const min = String(Math.trunc(time / 60000)).padStart(2, 0);
+    const sec = String((time % 60000) / 1000).padStart(2, 0);
     time = time - 1000;
     if (time === 1000) {
         clearInterval(timer);
         alert('Session Timeout...');
         window.location.replace('/');
     }
+    if (time <= 10000)
+        logout.textContent = `User Inactive!! Timeout in... ${sec}s`;
 }, 1000);

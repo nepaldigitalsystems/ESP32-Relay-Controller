@@ -63,3 +63,9 @@ footer p span {
     background-color: green;
     color: #fff;
 }
+
+.logout {
+    position: absolute;
+    bottom: 15%;
+    right: 5%;
+}

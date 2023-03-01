@@ -1629,7 +1629,7 @@ rule C_STATIC_LIBRARY_LINKER____idf_web_server_
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = D:\Espressif\Esp\tools\cmake\3.23.1\bin\cmake.exe --regenerate-during-build -SD:\Espressif\PROJECTS\HTTP_SERVER_NDS -BD:\Espressif\PROJECTS\HTTP_SERVER_NDS\build
+  command = D:\Espressif\Esp\tools\cmake\3.23.1\bin\cmake.exe --regenerate-during-build -SD:\GIT_NDS_WorkSpace\ESP32-Relay-Controller\NDS-firmware-esp32 -BD:\GIT_NDS_WorkSpace\ESP32-Relay-Controller\NDS-firmware-esp32\build
   description = Re-running CMake...
   generator = 1
 

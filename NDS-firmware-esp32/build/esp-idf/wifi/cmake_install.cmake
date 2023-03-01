@@ -1,4 +1,4 @@
-# Install script for directory: D:/Espressif/PROJECTS/HTTP_SERVER_NDS/components/wifi
+# Install script for directory: D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/components/wifi
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

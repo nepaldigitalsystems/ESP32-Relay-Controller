@@ -4,7 +4,6 @@
 #include "connect.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-#include "toggleled.h"
 #include "cJSON.h"
 #include "driver/timer.h"
 #include "esp_log.h"
@@ -49,8 +48,9 @@
  * namespace => Relay_Status ; key = random;
  * namespace => Relay_Status ; key = serial;
  */
-/*restart_reset declarations*/
+/*restart_reset and system_led pin declarations*/
 #define RS_PIN 34
+#define SYS_LED 2
 xSemaphoreHandle xRS_sema = NULL;
 /*Relay ON - OFF*/
 #define r_ON 0
@@ -396,12 +396,13 @@ static void Random_Pattern_generator(uint8_t comb)
 
 static void Relay_switch_update(void *params) // sender
 {
-    gpio_pad_select_gpio(GPIO_NUM_2);
-    gpio_set_direction(GPIO_NUM_2, GPIO_MODE_OUTPUT); // System ON/OFF-led initialized
-    for (int i = 0; i < 16; i++)                      // 0-15
+    gpio_pad_select_gpio(SYS_LED);
+    gpio_set_direction(SYS_LED, GPIO_MODE_OUTPUT); // System ON/OFF-led initialized
+    for (int i = 0; i < 16; i++)                   // 0-15
     {
         gpio_pad_select_gpio(relay_pins[i]);
         gpio_set_direction(relay_pins[i], GPIO_MODE_OUTPUT);
+        gpio_set_level(relay_pins[i], (uint32_t)r_OFF);
     }
     while (true)
     {
@@ -486,6 +487,7 @@ static void Relay_switch_update(void *params) // sender
     }
     vTaskDelete(NULL);
 }
+
 static void IRAM_ATTR restart_reset_isr(void *args)
 {
     xSemaphoreGiveFromISR(xRS_sema, pdFALSE);
@@ -501,7 +503,7 @@ void restart_reset_Task(void *params)
                 gpio_isr_handler_remove(RS_PIN);                       // disable the interrupt
                 unsigned long millis_up = esp_timer_get_time() / 1000; // get the time at [positive edge triggered instant]
                 ESP_LOGE("SYSTEM_LED", "OFF");
-                gpio_set_level(GPIO_NUM_2, 0); // turn-OFF system led
+                gpio_set_level(SYS_LED, 0); // turn-OFF system led
                 do
                 {
                     vTaskDelay(100 / portTICK_PERIOD_MS); // wait some time while we check for the button to be released
@@ -530,8 +532,12 @@ void restart_reset_Task(void *params)
                     ESP_ERROR_CHECK(nvs_erase_all(my_handle));
                     ESP_ERROR_CHECK(nvs_commit(my_handle));
                     nvs_close(my_handle);
+                    for (int i = 0; i < 16; i++) // clear out all the relays to activate serial or random phase
+                    {
+                        gpio_set_level(relay_pins[i], (uint32_t)r_OFF);
+                    }
                     ESP_LOGE("SYSTEM_LED", "ON");
-                    gpio_set_level(GPIO_NUM_2, 1);                         // turn-ON system led
+                    gpio_set_level(SYS_LED, 1);                            // turn-ON system led
                     gpio_isr_handler_add(RS_PIN, restart_reset_isr, NULL); // re-enable the interrupt
                     esp_restart();
                 }
@@ -539,7 +545,7 @@ void restart_reset_Task(void *params)
                 {
                     ESP_LOGE("RESTART_RESET_TAG", "GPIO '%d' was pressed for %d mSec. Restarting....", RS_PIN, (int)(millis_down - millis_up));
                     ESP_LOGE("SYSTEM_LED", "ON");
-                    gpio_set_level(GPIO_NUM_2, 1);                         // turn-ON system led
+                    gpio_set_level(SYS_LED, 1);                            // turn-ON system led
                     gpio_isr_handler_add(RS_PIN, restart_reset_isr, NULL); // re-enable the interrupt
                     esp_restart();
                 }
@@ -550,7 +556,7 @@ void restart_reset_Task(void *params)
 
 static void INIT_RS_PIN(void)
 {
-    gpio_set_level(GPIO_NUM_2, 1); // turn-ON system led
+    gpio_set_level(SYS_LED, 1); // turn-ON system led
     ESP_LOGE("SYSTEM_LED", "ON");
     gpio_set_direction(RS_PIN, GPIO_MODE_INPUT);
     gpio_pad_select_gpio(RS_PIN);
@@ -561,7 +567,7 @@ static void INIT_RS_PIN(void)
 
     // init restart_reset_task
     xRS_sema = xSemaphoreCreateBinary();
-    xTaskCreate(restart_reset_Task, "restart_reset_Task", 2048, NULL, 1, NULL);
+    xTaskCreate(restart_reset_Task, "restart_reset_Task", 4096, NULL, 1, NULL);
 
     gpio_install_isr_service(0);
     gpio_isr_handler_add(RS_PIN, restart_reset_isr, NULL); // activate the isr for RS_pin

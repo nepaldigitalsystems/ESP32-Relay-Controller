@@ -1,4 +1,4 @@
-# Install script for directory: D:/Espressif/PROJECTS/HTTP_SERVER_NDS/main
+# Install script for directory: D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

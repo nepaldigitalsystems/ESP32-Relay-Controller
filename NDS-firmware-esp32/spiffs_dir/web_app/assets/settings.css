@@ -199,4 +199,16 @@ footer p span {
         top: 1%;
         left: 18%;
     }
+
+    .logout {
+        position: absolute;
+        bottom: 15%;
+        right: 5%;
+    }
+}
+
+.logout {
+    position: absolute;
+    bottom: 15%;
+    right: 5%;
 }

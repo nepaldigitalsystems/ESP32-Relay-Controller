@@ -39,7 +39,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("D:/Espressif/PROJECTS/HTTP_SERVER_NDS/build/esp-idf/esp_hw_support/port/esp32/cmake_install.cmake")
+  include("D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/esp_hw_support/port/esp32/cmake_install.cmake")
 
 endif()
 

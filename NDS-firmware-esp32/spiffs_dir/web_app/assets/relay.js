@@ -19,6 +19,9 @@ let Relay16 = document.querySelector('.btn-16');
 let random = document.querySelector('.rnd');
 let serial = document.querySelector('.srl');
 let home = document.querySelector('.home');
+let logout = document.querySelector('.logout');
+let off = document.querySelector('.off');
+
 let reload_relay_flag = 1; //allow the reload
 let random_value = 0;
 let time = 300000;
@@ -74,6 +77,7 @@ const fun = function (recv_data) {
         }
         serial.style.backgroundColor = 'purple';
         random.style.backgroundColor = 'orange';
+        off.style.backgroundColor = 'red';
         Relay1.style.backgroundColor = (recv_data.Relay1) ? 'rgb(39, 62, 104)' : 'rgb(9, 247, 116)';    // False :- 0 -> green 
         Relay2.style.backgroundColor = (recv_data.Relay2) ? 'rgb(39, 62, 104)' : 'rgb(9, 247, 116)';
         Relay3.style.backgroundColor = (recv_data.Relay3) ? 'rgb(39, 62, 104)' : 'rgb(9, 247, 116)';
@@ -90,27 +94,27 @@ const fun = function (recv_data) {
         Relay14.style.backgroundColor = (recv_data.Relay14) ? 'rgb(39, 62, 104)' : 'rgb(9, 247, 116)';
         Relay15.style.backgroundColor = (recv_data.Relay15) ? 'rgb(39, 62, 104)' : 'rgb(9, 247, 116)';
         Relay16.style.backgroundColor = (recv_data.Relay16) ? 'rgb(39, 62, 104)' : 'rgb(9, 247, 116)';
-
     }
     else {
         //Enable the 'disable click effect'
         if (recv_data.random > 0 && recv_data.serial === 0) {
             random.innerHTML = `Random [${random_value}]`;
             for (const bt of btn) {
-                if (bt.value !== 'r') {
+                if (bt.value !== 'r' && bt.value !== 'off') {
                     bt.disabled = true;
                     bt.classList.add('disabled');
                     bt.style.backgroundColor = '#273e68';
                     if (bt.value === 's') {
                         bt.style.backgroundColor = 'purple';
                     }
+
                 }
             }
         }
         else if (recv_data.serial === 1 && recv_data.random === 0) {
             serial.style.backgroundColor = 'rgb(9, 247, 116)';
             for (const bt of btn) {
-                if (bt.value !== 's') {
+                if (bt.value !== 's' && bt.value !== 'off') {
                     bt.disabled = true;
                     bt.classList.add('disabled');
                     bt.style.backgroundColor = '#273e68';
@@ -148,6 +152,7 @@ window.addEventListener('load', async function (e) {
 });
 Relay1.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay1: Relay1.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -160,7 +165,6 @@ Relay1.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay1_Task_Completed : ', recv_data.Relay1_update_success);
         if (recv_data.Relay1_update_success === 1) {
             if (Relay1.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay1.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -173,6 +177,7 @@ Relay1.addEventListener('click', async function (e) {
 });
 Relay2.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay2: Relay2.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -185,7 +190,6 @@ Relay2.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay2_Task_Completed : ', recv_data.Relay2_update_success);
         if (recv_data.Relay2_update_success === 1) {
             if (Relay2.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay2.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -198,6 +202,7 @@ Relay2.addEventListener('click', async function (e) {
 });
 Relay3.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay3: Relay3.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -210,7 +215,6 @@ Relay3.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay3_Task_Completed : ', recv_data.Relay3_update_success);
         if (recv_data.Relay3_update_success === 1) {
             if (Relay3.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay3.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -223,6 +227,7 @@ Relay3.addEventListener('click', async function (e) {
 });
 Relay4.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay4: Relay4.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -235,7 +240,6 @@ Relay4.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay4_Task_Completed : ', recv_data.Relay4_update_success);
         if (recv_data.Relay4_update_success === 1) {
             if (Relay4.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay4.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -248,6 +252,7 @@ Relay4.addEventListener('click', async function (e) {
 });
 Relay5.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay5: Relay5.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -260,7 +265,6 @@ Relay5.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay5_Task_Completed : ', recv_data.Relay5_update_success);
         if (recv_data.Relay5_update_success === 1) {
             if (Relay5.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay5.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -273,6 +277,7 @@ Relay5.addEventListener('click', async function (e) {
 });
 Relay6.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay6: Relay6.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -285,7 +290,6 @@ Relay6.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay6_Task_Completed : ', recv_data.Relay6_update_success);
         if (recv_data.Relay6_update_success === 1) {
             if (Relay6.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay6.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -298,6 +302,7 @@ Relay6.addEventListener('click', async function (e) {
 });
 Relay7.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay7: Relay7.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -310,7 +315,6 @@ Relay7.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay7_Task_Completed : ', recv_data.Relay7_update_success);
         if (recv_data.Relay7_update_success === 1) {
             if (Relay7.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay7.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -323,6 +327,7 @@ Relay7.addEventListener('click', async function (e) {
 });
 Relay8.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay8: Relay8.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -335,7 +340,6 @@ Relay8.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay8_Task_Completed : ', recv_data.Relay8_update_success);
         if (recv_data.Relay8_update_success === 1) {
             if (Relay8.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay8.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -348,6 +352,7 @@ Relay8.addEventListener('click', async function (e) {
 });
 Relay9.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay9: Relay9.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -360,7 +365,6 @@ Relay9.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay9_Task_Completed : ', recv_data.Relay9_update_success);
         if (recv_data.Relay9_update_success === 1) {
             if (Relay9.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay9.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -373,6 +377,7 @@ Relay9.addEventListener('click', async function (e) {
 });
 Relay10.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay10: Relay10.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -385,7 +390,6 @@ Relay10.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay10_Task_Completed : ', recv_data.Relay10_update_success);
         if (recv_data.Relay10_update_success === 1) {
             if (Relay10.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay10.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -398,6 +402,7 @@ Relay10.addEventListener('click', async function (e) {
 });
 Relay11.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay11: Relay11.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -410,7 +415,6 @@ Relay11.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay11_Task_Completed : ', recv_data.Relay11_update_success);
         if (recv_data.Relay11_update_success === 1) {
             if (Relay11.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay11.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -423,6 +427,7 @@ Relay11.addEventListener('click', async function (e) {
 });
 Relay12.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay12: Relay12.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -435,7 +440,6 @@ Relay12.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay12_Task_Completed : ', recv_data.Relay12_update_success);
         if (recv_data.Relay12_update_success === 1) {
             if (Relay12.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay12.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -447,7 +451,9 @@ Relay12.addEventListener('click', async function (e) {
     reload_relay_flag = 1; // resume the reload after completing this post req
 });
 Relay13.addEventListener('click', async function (e) {
+
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay13: Relay13.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -460,7 +466,6 @@ Relay13.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay13_Task_Completed : ', recv_data.Relay13_update_success);
         if (recv_data.Relay13_update_success === 1) {
             if (Relay13.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay13.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -474,6 +479,7 @@ Relay13.addEventListener('click', async function (e) {
 });
 Relay14.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay14: Relay14.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -486,7 +492,6 @@ Relay14.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay14_Task_Completed : ', recv_data.Relay14_update_success);
         if (recv_data.Relay14_update_success === 1) {
             if (Relay14.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay14.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -500,6 +505,7 @@ Relay14.addEventListener('click', async function (e) {
 });
 Relay15.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay15: Relay15.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -512,7 +518,6 @@ Relay15.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay15_Task_Completed : ', recv_data.Relay15_update_success);
         if (recv_data.Relay15_update_success === 1) {
             if (Relay15.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay15.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -525,6 +530,7 @@ Relay15.addEventListener('click', async function (e) {
 });
 Relay16.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     data = {
         Relay16: Relay16.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,
@@ -537,7 +543,6 @@ Relay16.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('Relay16_Task_Completed : ', recv_data.Relay16_update_success);
         if (recv_data.Relay16_update_success === 1) {
             if (Relay16.style.backgroundColor === 'rgb(9, 247, 116)') {
                 Relay16.style.backgroundColor = 'rgb(39, 62, 104)';
@@ -550,6 +555,7 @@ Relay16.addEventListener('click', async function (e) {
 });
 random.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0; // pause the reload if any generated 
     random_value++;
     if (random_value > 4) {
@@ -567,18 +573,17 @@ random.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('random_update_success_Status : ', recv_data.random_update_success);
         if (recv_data.random_update_success === 1) {
-            console.log('a.', random_value);
             for (const bt of btn) {
-                if (random_value !== 0 && bt.value !== 'r') {
+                if (random_value !== 0 && bt.value !== 'r' && bt.value !== 'off') {
                     bt.disabled = true;
                     bt.classList.add('disabled');
                     bt.style.backgroundColor = '#273e68';
                     if (bt.value === 's') {
                         bt.style.backgroundColor = 'purple';
                     }
-                } else if (random_value === 0 && bt.value !== 'r') {
+                }
+                else if (random_value === 0 && bt.value !== 'r' && bt.value !== 'off') {
                     bt.disabled = false;
                     bt.classList.remove('disabled');
                     bt.style.backgroundColor = '#273e68';
@@ -593,6 +598,7 @@ random.addEventListener('click', async function (e) {
 });
 serial.addEventListener('click', async function (e) {
     e.preventDefault();
+    time = 300000;
     reload_relay_flag = 0;  // pause the reload if any generated 
     data = {
         serial: serial.style.backgroundColor === 'rgb(9, 247, 116)' ? 0 : 1,    // purple -> 1
@@ -606,11 +612,10 @@ serial.addEventListener('click', async function (e) {
     const response = await fetch('/relay_json_post', options);
     if (response.status == 200) {
         const recv_data = await response.json();
-        console.log('serial_update_success_Status : ', recv_data.serial_update_success);
         if (recv_data.serial_update_success === 1) {
             for (const bt of btn) {
                 if (data.serial === 1) {
-                    if (bt.value !== 's') {
+                    if (bt.value !== 's' && bt.value !== 'off') {
                         bt.disabled = true;
                         bt.classList.add('disabled');
                         bt.style.backgroundColor = '#273e68';
@@ -623,39 +628,89 @@ serial.addEventListener('click', async function (e) {
                     bt.disabled = false;
                     bt.classList.remove('disabled');
                     bt.style.backgroundColor = '#273e68';
+                    if (bt.value === 's') {
+                        bt.style.backgroundColor = 'purple';
+                    }
                     if (bt.value === 'r') {
                         bt.style.backgroundColor = 'orange';
                     }
+                    if (bt.value === 'off') {
+                        bt.style.backgroundColor = 'red';
+                    }
                 }
             }
-            // if (serial.style.backgroundColor === 'rgb(9, 247, 116)') {
-            //     serial.style.backgroundColor = 'rgb(9, 247, 116)';
-            // } else {
-            //     serial.style.backgroundColor = 'rgb(128, 0, 128)';
-            // }
         }
     }
     reload_relay_flag = 1; // resume the reload after completing this post req
 });
 
 
+off.addEventListener('click', async function (e) {
+    e.preventDefault();
+    reload_relay_flag = 0;
+    json_data = {
+        Relay1: 0,
+        Relay2: 0,
+        Relay3: 0,
+        Relay4: 0,
+        Relay5: 0,
+        Relay6: 0,
+        Relay7: 0,
+        Relay8: 0,
+        Relay9: 0,
+        Relay10: 0,
+        Relay11: 0,
+        Relay12: 0,
+        Relay13: 0,
+        Relay14: 0,
+        Relay15: 0,
+        Relay16: 0,
+        random: 0,
+        serial: 0,
+    };
+    const options = {
+        method: 'POST',
+        body: JSON.stringify(json_data),
+    };
+    const response = await fetch('/relay_json_post', options);
+    if (response.status == 200) {
+        const recv_data = await response.json();
+        for (const bt of btn) {
+            if (bt.value !== 'off') {
+                bt.disabled = false;
+                bt.classList.remove('disabled');
+                bt.style.backgroundColor = '#273e68';
+                if (bt.value === 'r') {
+                    bt.style.backgroundColor = 'orange';
+                    random_value = 0;
+                    random.innerHTML = "Random [OFF]";
+                }
+                if (bt.value === 's') {
+                    bt.style.backgroundColor = 'purple';
+                }
+            }
+        }
+
+    }
+    reload_relay_flag = 1; // resume the reload after completing this post req
+});
+
 window.addEventListener('mousemove', function () {
-    if (time <= 10000) {
+    if (time <= 20000) {
         time = 300000;
+        logout.textContent = ``;
     }
 });
 const timer = setInterval(function () {
-    const min = String(Math.trunc(time / 60)).padStart(2, 0);
-    const sec = String(time % 60).padStart(2, 0);
-
+    const min = String(Math.trunc(time / 60000)).padStart(2, 0);
+    const sec = String((time % 60000) / 1000).padStart(2, 0);
     time = time - 1000;
-
     if (time === 1000) {
         clearInterval(timer);
-        alert('Session Timeout...');
         window.location.replace('/');
     }
-
+    if (time <= 10000)
+        logout.textContent = `User Inactive!! Timeout in... ${sec}s`;
     if (time % 6000 === 0)
         ref_fun();
 

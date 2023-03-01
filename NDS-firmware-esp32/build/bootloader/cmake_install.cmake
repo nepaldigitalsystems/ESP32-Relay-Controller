@@ -39,7 +39,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("D:/Espressif/PROJECTS/HTTP_SERVER_NDS/build/bootloader/esp-idf/cmake_install.cmake")
+  include("D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/bootloader/esp-idf/cmake_install.cmake")
 
 endif()
 
@@ -51,5 +51,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "D:/Espressif/PROJECTS/HTTP_SERVER_NDS/build/bootloader/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/bootloader/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

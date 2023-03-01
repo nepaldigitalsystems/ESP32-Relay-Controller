@@ -38,7 +38,3 @@ form.addEventListener('submit', async function (e) {
         window.location.reload();
     }
 });
-setTimeout(() => {
-    alert('Session Timeout...');
-    window.location.replace('/');
-}, 300000);
