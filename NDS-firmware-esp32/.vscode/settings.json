@@ -63,7 +63,9 @@
         "portable.h": "c",
         "portmacro.h": "c",
         "spinlock.h": "c",
-        "cpu.h": "c"
+        "cpu.h": "c",
+        "esp_intr_alloc.h": "c",
+        "gpio.h": "c"
     },
     "idf.flashType": "UART"
 }

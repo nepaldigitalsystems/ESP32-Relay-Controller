@@ -127,20 +127,20 @@ const fun = function (recv_data) {
     }
 };
 const ref_fun = async function () {
-    if (reload_relay_flag) {
-        const data = {
-            InfoReq: 1,
-        };
-        const options = {
-            method: 'POST',
-            body: JSON.stringify(data),
-        };
-        const response = await fetch('/relay_btn_refresh', options);
-        if (response.status == 200) {
-            const resfresh_resp_data = await response.json();
-            fun(resfresh_resp_data);
-        }
+
+    const data = {
+        InfoReq: 1,
+    };
+    const options = {
+        method: 'POST',
+        body: JSON.stringify(data),
+    };
+    const response = await fetch('/relay_btn_refresh', options);
+    if (response.status == 200) {
+        const resfresh_resp_data = await response.json();
+        fun(resfresh_resp_data);
     }
+
 };
 
 home.addEventListener('click', function () {
@@ -711,7 +711,23 @@ const timer = setInterval(function () {
     }
     if (time <= 10000)
         logout.textContent = `User Inactive!! Timeout in... ${sec}s`;
-    if (time % 6000 === 0)
-        ref_fun();
+    if (time % 6000 === 0) {
+        if (reload_relay_flag) {
+            // disable all buttons
+            console.log('all buttons disabled');
+            for (const bt of btn) {
+                bt.disabled = true;
+                bt.classList.add('disabled');
+            }
+            ref_fun();
+            // enable all buttons
+            console.log('all buttons enabled');
+            for (const bt of btn) {
+                bt.disabled = false;
+                bt.classList.remove('disabled');
+            }
+
+        }
+    }
 
 }, 1000);

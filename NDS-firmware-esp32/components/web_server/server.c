@@ -8,7 +8,6 @@
 #include "esp_http_server.h"
 #include "esp_spiffs.h"
 #include "esp_system.h"
-#include "toggleled.h"
 #include "cJSON.h"
 #include "esp_wifi.h"
 #include "esp_timer.h"
@@ -18,30 +17,99 @@
 #include "freertos/semphr.h"
 #include "connect.h"
 #include "dns_hijack_srv.h"
-#include "mdns.h"
 #include "netdb.h"
+// #include "mdns.h"
+
+/* login cred index */
+#define username_index 0
+#define password_index 1
+// const char *local_server_name = "nds-esp32";
+static httpd_handle_t server = NULL;                         // for server.c only
+static uint8_t Relay_inStatus_Value[RELAY_UPDATE_MAX] = {0}; // 1-18
 
 /*extern variables*/
-extern uint32_t sta_addr3;
-extern xSemaphoreHandle xSema;
+extern uint32_t STA_ADDR3;
+extern xSemaphoreHandle xSEMA;
 extern uint8_t Relay_Status_Value[RELAY_UPDATE_MAX];
-extern uint8_t Relay_Update_Success[RELAY_UPDATE_MAX];       // 1-18
-static uint8_t Relay_inStatus_Value[RELAY_UPDATE_MAX] = {0}; // 1-18
-                                                             // #define AMX_APs 10 // scans max = 10 AP
-const char *local_server_name = "nds-esp32";
-httpd_handle_t server = NULL; // for server.c only
+extern uint8_t Relay_Update_Success[RELAY_UPDATE_MAX]; // 1-18
 
 /*extern functions*/
 extern esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout);
 extern void wifi_connect_ap(const char *SSID);
-extern esp_err_t login_cred(auth_t *Data);
 
-void http_server_ap_mode(void);
-void http_server_sta_mode(void);
+static esp_err_t inspect_login_data(auth_t *Data, nvs_handle *login, const char *KEY, uint8_t index)
+{
+    esp_err_t err = ESP_FAIL; // ESP_FAIL -> NVS_EMPTY -> ADMIN
+    size_t required_size;
+    nvs_get_str(*login, KEY, NULL, &required_size); // dynamic allocation and required_size => length required to hold the value.
+    char *sample = malloc(required_size);
 
-// void start_MDNS(void);
-// static void query_mdns_hosts_async(const char *);
+    switch (nvs_get_str(*login, KEY, sample, &required_size)) // extracted the 'username / password' into 'sample' variable
+    {
+    case ESP_ERR_NVS_NOT_FOUND:
+        ESP_LOGE("LOGIN_TAG", "%s not set yet.... Default %s : %s", KEY, KEY, ((index) ? default_password : default_username)); // [data doesn't exist] ---> use :- name & pass => ADMIN & ADMIN
+        err = 1;
+        ESP_ERROR_CHECK(nvs_set_str(*login, KEY, ((index) ? default_password : default_username))); // storing [index:0->default_username] & [index:1->default_password], if nvs is empty.
+        break;
+    case ESP_OK:
+        err = ESP_OK; // [data exists] ----> correct logins ----> [response.approve = true;
+        ESP_LOGW("LOGIN_TAG", "NVS_stored : %s is = %s", KEY, sample);
+        if ((index == 0))
+        {
+            if (strcmp(Data->username, sample) == 0)
+            {
+                ESP_LOGW("LOGIN_TAG", "USERNAME ........ Approved");
+            }
+            else
+            {
+                ESP_LOGE("LOGIN_TAG", "WRONG USERNAME ENTRY ........ Not Approved");
+                err = ESP_FAIL;
+            }
+        }
+        else if ((index == 1))
+        {
+            if (strcmp(Data->password, sample) == 0)
+            {
+                ESP_LOGW("LOGIN_TAG", "PASSWORD ........ Approved");
+            }
+            else
+            {
+                ESP_LOGE("LOGIN_TAG", "WRONG PASSWORD ENTRY ........ Not Approved");
+                err = ESP_FAIL;
+            }
+        }
+        break;
+    }
+    ESP_ERROR_CHECK(nvs_commit(*login));
+    // if (sample != NULL)
+    free(sample);
+    return err;
+}
+static esp_err_t login_cred(auth_t *Data) // compares the internal login creds with given "Data" arg
+{
+    nvs_handle login;
+    esp_err_t err1, err2;
+    ESP_ERROR_CHECK(nvs_open("loginCreds", NVS_READWRITE, &login)); // namespace => loginCreds
+    err1 = inspect_login_data(Data, &login, "username", username_index);
+    err2 = inspect_login_data(Data, &login, "password", password_index);
+    nvs_close(login);
 
+    if ((err1 == 1) && (err2 == 1))
+    {
+        ESP_LOGE("Login_cred_change", ".... RETURNS '1'[i.e. no creds; storing default] ....");
+        return 1;
+    }
+    else if ((err1 == ESP_OK) && (err2 == ESP_OK))
+    {
+        ESP_LOGE("Login_cred_change", ".... RETURNS 'ESP_0K'[i.e. cred matched] ....");
+        return ESP_OK;
+    }
+    else
+    {
+        ESP_LOGE("Login_cred_change", ".... RETURNS 'ESP_FAIL'[i.e. cred not matched] ....");
+        return ESP_FAIL;
+    }
+}
 static esp_err_t file_open(char path[], httpd_req_t *req)
 {
     esp_vfs_spiffs_conf_t esp_vfs_spiffs_conf = {
@@ -122,6 +190,15 @@ esp_err_t relay_handler(httpd_req_t *req) // generally we dont want other file t
         httpd_resp_set_hdr(req, "location", "/");
         file_open("/spiffs/nds.html", req);
     }
+    // dram inspection
+    int FreeHeap = esp_get_free_heap_size();
+    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     httpd_resp_send(req, NULL, 0);
     return ESP_OK;
 }
@@ -140,6 +217,15 @@ esp_err_t dashboard_handler(httpd_req_t *req) // generally we dont want other fi
         file_open("/spiffs/nds.html", req);
         httpd_resp_send(req, NULL, 0);
     }
+    // dram inspection
+    int FreeHeap = esp_get_free_heap_size();
+    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return ESP_OK;
 }
 esp_err_t login_handler(httpd_req_t *req) // generally we dont want other file to see this
@@ -147,11 +233,29 @@ esp_err_t login_handler(httpd_req_t *req) // generally we dont want other file t
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
     // query_mdns_hosts_async(local_server_name);
     response.approve = false;
+    // dram inspection
+    int FreeHeap = esp_get_free_heap_size();
+    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return file_open("/spiffs/nds.html", req);
 }
 esp_err_t connect_ssid(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
+    // dram inspection
+    int FreeHeap = esp_get_free_heap_size();
+    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return file_open("/spiffs/wifi_connect.html", req);
 }
 esp_err_t captive_handler(httpd_req_t *req) // generally we dont want other file to see this
@@ -176,6 +280,15 @@ esp_err_t captive_handler(httpd_req_t *req) // generally we dont want other file
     {
         ESP_LOGE("HOST_TAG", "Error getting Host header (%s): (%s)", esp_err_to_name(ret), host);
     }
+    // dram inspection
+    int FreeHeap = esp_get_free_heap_size();
+    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return ESP_OK;
 }
 
@@ -184,7 +297,7 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
     static settings_pass_name_t set_pass_name;
-    static set_t ESP;
+    bool ESP_receive;
     char buffer[250];
     memset(&buffer, 0, sizeof(buffer));
     httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
@@ -198,7 +311,7 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
 
     if (strcmp(set_pass_name.new_password, set_pass_name.confirm_password) == 0)
     {
-        ESP.receive = true;
+        ESP_receive = true;
         // read the internal password and compare with current
         nvs_handle_t set_pass_handle;
         ESP_ERROR_CHECK(nvs_open("loginCreds", NVS_READWRITE, &set_pass_handle));
@@ -208,13 +321,13 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
         switch (nvs_get_str(set_pass_handle, "password", sample, &required_size))
         {
         case ESP_ERR_NVS_NOT_FOUND:
-            ESP.receive = false;
+            ESP_receive = false;
             ESP_LOGE("Setting_New_User_Pass_TAG", "Prev-password [To-be replaced] => not found...., Retry with Default pass :- '%s' ", default_password);
             ESP_ERROR_CHECK(nvs_set_str(set_pass_handle, "password", default_password));
             ESP_ERROR_CHECK(nvs_commit(set_pass_handle));
             break;
         case ESP_OK:
-            ESP.receive = true;
+            ESP_receive = true;
             ESP_LOGW("Setting_New_User_Pass_TAG", "NVS_stored : Prev-password is => '%s' [To-be replaced] by New-password => '%s' ", sample, set_pass_name.confirm_password);
             if (strcmp(set_pass_name.current_password, sample) == 0)
             { // the prev-password matches
@@ -230,26 +343,26 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
             }
             else
             { // the prev-password doesn't  match
-                ESP.receive = false;
+                ESP_receive = false;
                 ESP_LOGE("Setting_New_User_Pass_TAG", "WRONG current-password.... Please try again!!.");
             }
             break;
         default:
-            ESP.receive = false;
+            ESP_receive = false;
             break;
         }
-        if (sample != NULL)
-            free(sample);
+        // if (sample != NULL)
+        free(sample);
         nvs_close(set_pass_handle);
     }
     else
     {
         ESP_LOGE("Setting_New_User_Pass_TAG", "New Pass: '%s' & Confirm Pass: '%s', Doesn't match", set_pass_name.new_password, set_pass_name.confirm_password);
-        ESP.receive = false;
+        ESP_receive = false;
     }
     // Preparing json data
     cJSON *JSON_data = cJSON_CreateObject();
-    (ESP.receive) ? (cJSON_AddNumberToObject(JSON_data, "password_set_success", 1)) : (cJSON_AddNumberToObject(JSON_data, "password_set_success", 0));
+    (ESP_receive) ? (cJSON_AddNumberToObject(JSON_data, "password_set_success", 1)) : (cJSON_AddNumberToObject(JSON_data, "password_set_success", 0));
     char *string_json = cJSON_Print(JSON_data);
     ESP_LOGE("JSON_REPLY", "%s", string_json);
     httpd_resp_set_type(req, "application/json"); // sending json data as response
@@ -257,23 +370,32 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
+
+    // dram inspection
+    int FreeHeap = esp_get_free_heap_size();
+    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return ESP_OK;
 }
-
 esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    static set_t esp;
+    bool ESP_receive;
     char buffer[5];
     memset(&buffer, 0, sizeof(buffer));
     httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
     // ESP_LOGW("Info_post", "Buffer : %s", buffer);
 
     cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
-    esp.receive = cJSON_GetObjectItem(payload, "InfoReq")->valueint;
-    ESP_LOGI("PARSE_TAG", "Info Requested => %s", (esp.receive) ? "True" : "False");
+    ESP_receive = cJSON_GetObjectItem(payload, "InfoReq")->valueint;
+    ESP_LOGI("PARSE_TAG", "Info Requested => %s", (ESP_receive) ? "True" : "False");
     cJSON_Delete(payload);
-    if (esp.receive)
+    if (ESP_receive)
     {
         // Preparing json data
         uint16_t val = 0;
@@ -343,10 +465,15 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         cJSON_free(JSON_data);
         free(MAC);
         free(Uptime);
+
+        // dram inspection
+        ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+        ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+        ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+        ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     }
     return ESP_OK;
 }
-
 esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     // ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
@@ -363,10 +490,9 @@ esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post
             char *str = (char *)malloc(sizeof("Relay") + 2);
             memset(str, 0, sizeof("Relay") + 2);
             sprintf(str, "Relay%u", i);
-            cJSON_AddNumberToObject(JSON_data, str, (Relay_Status_Value[i])); // sending back the inverse to web browser (avoid confusion) ; r_ON => 1 ; r_OFF = 0
+            cJSON_AddNumberToObject(JSON_data, str, (Relay_Status_Value[i])); // sending back the inverse to web browser (avoid confusion) ; R_ON => 1 ; R_OFF = 0
             free(str);
         }
-
     if (Relay_Status_Value[RANDOM_UPDATE] != 0 && Relay_Status_Value[SERIAL_UPDATE] == 0)
     {
         cJSON_AddNumberToObject(JSON_data, "random", Relay_Status_Value[RANDOM_UPDATE]); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
@@ -390,9 +516,18 @@ esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
+
+    // dram inspection
+    int FreeHeap = esp_get_free_heap_size();
+    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return ESP_OK;
 }
-
 esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
@@ -462,7 +597,7 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
 
         vTaskDelay(pdMS_TO_TICKS(10));
         /******************************************** TURN ON/OFF GPIO_PINS *****************************************************************/
-        xSemaphoreGive(xSema); // retrieve the stored data, Invoke the relay switches and generate "update_success_status" values
+        xSemaphoreGive(xSEMA); // retrieve the stored data, Invoke the relay switches and generate "update_success_status" values
         vTaskDelay(100 / portTICK_PERIOD_MS);
         /********************************************* CREATING JSON ****************************************************************/
         // creating new json packet to send the success_status as reply
@@ -489,6 +624,15 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
         httpd_resp_send(req, NULL, 0);
         free(string_json);
         cJSON_free(JSON_data);
+
+        int FreeHeap = esp_get_free_heap_size();
+        int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+        int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
+        int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+        ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+        ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+        ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+        ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     }
     /***********************************************************************************************************************************************/
     else
@@ -499,25 +643,24 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
     }
     return ESP_OK;
 }
-
 esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    static set_t Esp;
+    bool Esp_receive;
     char buffer[5]; // this stores username and password into buffer //
     memset(&buffer, 0, sizeof(buffer));
     httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
     // ESP_LOGW("restart_post", "Buffer : %s", buffer);
 
     cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
-    Esp.receive = cJSON_GetObjectItem(payload, "restart")->valueint;
-    ESP_LOGI("PARSE_TAG", "Restart Requested => %s", (Esp.receive) ? "True" : "False");
+    Esp_receive = cJSON_GetObjectItem(payload, "restart")->valueint;
+    ESP_LOGI("PARSE_TAG", "Restart Requested => %s", (Esp_receive) ? "True" : "False");
     cJSON_Delete(payload);
 
     // Preparing json data
     cJSON *JSON_data = cJSON_CreateObject();
-    (Esp.receive) ? cJSON_AddNumberToObject(JSON_data, "restart_successful", 1) : cJSON_AddNumberToObject(JSON_data, "restart_successful", 0); // approve -> 'restart'
-    cJSON_AddNumberToObject(JSON_data, "IP_addr3", (sta_addr3) ? sta_addr3 : 0);                                                               // INTERNAL STORAGE
+    (Esp_receive) ? cJSON_AddNumberToObject(JSON_data, "restart_successful", 1) : cJSON_AddNumberToObject(JSON_data, "restart_successful", 0); // approve -> 'restart'
+    cJSON_AddNumberToObject(JSON_data, "IP_addr3", (STA_ADDR3) ? STA_ADDR3 : 0);                                                               // INTERNAL STORAGE
     char *string_json = cJSON_Print(JSON_data);
     ESP_LOGE("JSON_REPLY_RESTART", "%s", string_json);
     httpd_resp_set_type(req, "application/json"); // sending json data as response
@@ -525,7 +668,17 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
-    if (Esp.receive)
+
+    // dram inspection
+    int FreeHeap = esp_get_free_heap_size();
+    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
+    if (Esp_receive)
     {
         for (int i = 3; i > 0; i--)
         {
@@ -536,9 +689,9 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
         vTaskDelay(pdMS_TO_TICKS(10));
         esp_restart();
     }
+
     return ESP_OK;
 }
-
 esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -612,9 +765,19 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
+
+    // dram inspection
+    int FreeHeap = esp_get_free_heap_size();
+    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
+    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
+    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
+    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
+
     return ESP_OK;
 }
-
 esp_err_t assets_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -659,7 +822,6 @@ esp_err_t assets_handler(httpd_req_t *req) // generally we dont want other file 
     esp_vfs_spiffs_unregister(NULL); // unmount
     return ESP_OK;
 }
-
 esp_err_t img_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -783,7 +945,7 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
     cJSON_Delete(payload);
 
     cJSON *JSON_data = cJSON_CreateObject();
-    cJSON_AddNumberToObject(JSON_data, "IP_addr3", (sta_addr3) ? sta_addr3 : 0); // INTERNAL STORAGE
+    cJSON_AddNumberToObject(JSON_data, "IP_addr3", (STA_ADDR3) ? STA_ADDR3 : 0); // INTERNAL STORAGE
     char *string_json = cJSON_Print(JSON_data);
     ESP_LOGE("JSON_REPLY", "%s", string_json);
     httpd_resp_set_type(req, "application/json"); // sending json data as response
@@ -970,7 +1132,6 @@ void http_server_sta_mode(void)
         .handler = relay_json_post_handler};
     httpd_register_uri_handler(server, &relay_json_post_url);
 }
-
 void start_dns_server(void)
 {
     ip4_addr_t resolve_ip;

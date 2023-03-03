@@ -13,6 +13,7 @@
   text-align: center;
   background: #fff;
   column-count: 2;
+  overflow-y: scroll;
 }
 
 .home {
@@ -60,6 +61,10 @@
 .srl {
   background-color: purple;
   color: #fff;
+}
+
+.stop {
+  background-color: orangered;
 }
 
 .off {
