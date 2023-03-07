@@ -1,3 +1,6 @@
+/*******************************************************************************
+ *                          Include Files
+ *******************************************************************************/
 #include "stdio.h"
 #include "nvs_flash.h"
 #include "nvs.h"
@@ -10,17 +13,17 @@
 #include "esp_netif.h"
 #include "esp_wifi.h"
 
-// variable to avoid connection fail loop when changing wifi modes
-static uint8_t RECONNECT_COUNT = 0;
-uint32_t STA_ADDR3 = 0;
-// just creating a global reference to station network interface
-static esp_netif_t *ESP_NETIF = NULL;
-// [encapsulate within this file only] ; create event groups for WIFI_EVENTS
-static EventGroupHandle_t WIFI_EVENTS;
+/*******************************************************************************
+ *                          Static Data Definitions
+ *******************************************************************************/
 
-// just to indicate IP state 0/1
-static const int CONNECTED_GOT_IP = BIT0;
-static const int DISCONNECTED_GOT_IP = BIT1;
+static uint8_t RECONNECT_COUNT = 0;    // variable to count no. of failed tries during STA connection.
+uint32_t STA_ADDR3 = 0;                // variable to store the host no. generated from STA mode
+static esp_netif_t *ESP_NETIF = NULL;  // creating a global reference to network interface
+static EventGroupHandle_t WIFI_EVENTS; // create event groups for WIFI_EVENTS
+
+static const int CONNECTED_GOT_IP = BIT0;    // indicator for device connection.
+static const int DISCONNECTED_GOT_IP = BIT1; // indicator for device disconnection.
 
 extern void start_dns_server(void);
 extern void http_server_ap_mode(void);
@@ -28,7 +31,14 @@ extern void http_server_sta_mode(void);
 extern void Connect_Portal();
 // extern void start_MDNS(void);
 
-// function to return corresponding error
+/*******************************************************************************
+ *                          Static Function Definitions
+ *******************************************************************************/
+/**
+ * @brief function to return corresponding error
+ *
+ * @param mode the index to determine current operating mode [AP => 0 | STA => 1]
+ */
 const char *get_error(uint8_t code)
 {
     switch (code)
@@ -103,7 +113,12 @@ const char *get_error(uint8_t code)
         return "WIFI_REASON_UNSPECIFIED";
     }
 }
-// function to set static_ip
+
+/**
+ * @brief function to set static_ip
+ *
+ * @param netif Pointer to the nte
+ */
 static void Set_static_ip(esp_netif_t *netif)
 {
     esp_netif_ip_info_t if_info = {0};
@@ -123,20 +138,26 @@ static void Set_static_ip(esp_netif_t *netif)
     ESP_LOGE("DNS_TAG", "ESP32 DNS_MAIN:" IPSTR, IP2STR(&dns_info.ip.u_addr.ip4));
     ESP_ERROR_CHECK(esp_netif_dhcps_start(netif));
 }
-// broker that responds to whats happening between our idf and code
+
+/**
+ * @brief broker that responds to whats happening between our idf and code
+ *
+ * @param event_handler_arg data, aside from event data, that is passed to the handler when it is called
+ * @param event_base unique pointer to a subsystem that exposes events
+ * @param event_id corresponding ID indicating the type of event triggered
+ * @param event_data arguments being passed, when events are being triggered
+ */
 void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     switch (event_id)
     {
     case SYSTEM_EVENT_STA_START:
-        // inidicate the start of wifi
-        ESP_LOGW("STA_EVENT", "CONNECTING...");
+        ESP_LOGW("STA_EVENT", "CONNECTING..."); // inidicate the start of wifi
         esp_wifi_connect();
         RECONNECT_COUNT = 0;
         break;
     case SYSTEM_EVENT_STA_CONNECTED:
-
-        ESP_LOGW("STA_EVENT", "CONNECTED...");
+        ESP_LOGW("STA_EVENT", "CONNECTED..."); // inidicate the connection of wifi
         RECONNECT_COUNT = 0;
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED: // cannot declare a structure within a scope of switch statement ; so isolate it {}
@@ -150,7 +171,7 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
         }
         const char *err = get_error(wifi_event_sta_disconnected->reason);
         ESP_LOGW("STA_EVENT", "DISCONNECTED : %s", err);
-        if (RECONNECT_COUNT < 4) // 3 tries
+        if (RECONNECT_COUNT < 4)
         {
             RECONNECT_COUNT++;
             ESP_LOGI("RECONNECT_TAG", "System restart in => %d", RECONNECT_COUNT);
@@ -216,6 +237,9 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
     }
 }
 
+/**
+ * @brief Function to initialize the wifi_interface ; TCP_IP stack
+ */
 void wifi_init()
 {
     ESP_ERROR_CHECK(esp_netif_init());                // or tcpip_adapter_init();
@@ -225,6 +249,16 @@ void wifi_init()
     // ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_FLASH));
 }
 
+/**
+ * @brief function to configure wifi and setup connection for ESP32 in STA mode.
+ *
+ * @param SSID Arguement for ssid_name [allowed 8-31 character]
+ * @param PASS Arguement for ssid_password [allowed 8-31 character]
+ * @param timeout corresponding timeout period in ms
+ *
+ * @return - ESP_OK: Got static_IP; i.e. Device successfully connected.
+ * @return - ESP_FAIL: No IP received. Device disconnected.
+ */
 esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
 {
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
@@ -273,6 +307,12 @@ esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
     return ESP_FAIL;
 }
 
+/**
+ * @brief function to configure wifi and setup connection for ESP32 in AP mode.
+ *
+ * @param SSID Arguement for ssid_name [allowed 8-31 character]
+ *
+ */
 void wifi_connect_ap(const char *SSID)
 {
     wifi_config_t wifi_config;
@@ -299,6 +339,9 @@ void wifi_connect_ap(const char *SSID)
     http_server_ap_mode();
 }
 
+/**
+ * @brief function to stop wifi for ESP32 and destroy the network interface [IP-stack].
+ */
 void wifi_disconnect()
 {
     ESP_LOGI("ESP_TAG", "**********DISCONNECTING*********");
@@ -312,3 +355,7 @@ void wifi_disconnect()
     esp_wifi_deinit();
     ESP_LOGI("ESP_TAG", "***********DISCONNECTING COMPLETE*********");
 }
+
+/*******************************************************************************
+ *                          End of File
+ *******************************************************************************/

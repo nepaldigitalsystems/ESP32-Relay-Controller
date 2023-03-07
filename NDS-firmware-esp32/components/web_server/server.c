@@ -1,3 +1,6 @@
+/*******************************************************************************
+ *                          Include Files
+ *******************************************************************************/
 #include <stdio.h>
 #include "DATA_FIELD.h"
 #include <string.h>
@@ -20,6 +23,9 @@
 #include "netdb.h"
 // #include "mdns.h"
 
+/*******************************************************************************
+ *                          Static Data Definitions
+ *******************************************************************************/
 /* login cred index */
 #define username_index 0
 #define password_index 1
@@ -37,6 +43,20 @@ extern uint8_t Relay_Update_Success[RELAY_UPDATE_MAX]; // 1-18
 extern esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout);
 extern void wifi_connect_ap(const char *SSID);
 
+/*******************************************************************************
+ *                          Static Function Definitions
+ *******************************************************************************/
+/**
+ * @brief function to inspect the user_login_data within NVS_storage.
+ *
+ * @param Data Array to store the retieved login_cred data from NVS_storage
+ * @param login Storage Handle obtained from nvs_open function [to read/write]
+ * @param KEY Name of the KEY corresponding to [user_name | user_pass]
+ * @param index Index to determine what to select [user_name => 0 | user_pass => 1]
+ *
+ * @return - ESP_OK: user_name and user_pass exist in NVS_Storage.
+ * @return - ESP_FAIL: user_name and user_pass doesn't exist in NVS_Storage or login_creds recieved is not authorized.
+ */
 static esp_err_t inspect_login_data(auth_t *Data, nvs_handle *login, const char *KEY, uint8_t index)
 {
     esp_err_t err = ESP_FAIL; // ESP_FAIL -> NVS_EMPTY -> ADMIN
@@ -81,10 +101,19 @@ static esp_err_t inspect_login_data(auth_t *Data, nvs_handle *login, const char 
         break;
     }
     ESP_ERROR_CHECK(nvs_commit(*login));
-    // if (sample != NULL)
-    free(sample);
+    if (sample != NULL)
+        free(sample);
     return err;
 }
+
+/**
+ * @brief function to inspect the user_login_data within NVS_storage.
+ *
+ * @param Data array to store the retieved login_cred data from NVS_storage
+ *
+ * @return - ESP_OK: user_name and user_pass exist in NVS_Storage.
+ * @return - ESP_FAIL: user_name and user_pass doesn't exist in NVS_Storage or login_creds recieved is not authorized.
+ */
 static esp_err_t login_cred(auth_t *Data) // compares the internal login creds with given "Data" arg
 {
     nvs_handle login;
@@ -110,6 +139,15 @@ static esp_err_t login_cred(auth_t *Data) // compares the internal login creds w
         return ESP_FAIL;
     }
 }
+
+/**
+ * @brief function to Open a file.
+ *
+ * @param path Pointer that points to file path
+ * @param req Pointer to the request being responded.
+ *
+ * @return - ESP_OK: Compeleted file opening operation.
+ */
 static esp_err_t file_open(char path[], httpd_req_t *req)
 {
     esp_vfs_spiffs_conf_t esp_vfs_spiffs_conf = {
@@ -137,8 +175,12 @@ static esp_err_t file_open(char path[], httpd_req_t *req)
 }
 
 /***************** AUTH POST HANDLE  *************************************/
-// 3. write the handler for the registered URL
 /*get*/
+/**
+ * @brief Get Request Handler for settings_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t settings_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
@@ -157,6 +199,12 @@ esp_err_t settings_handler(httpd_req_t *req) // generally we dont want other fil
     }
     return ESP_OK;
 }
+
+/**
+ * @brief Get Request Handler for info_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t info_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
@@ -175,6 +223,12 @@ esp_err_t info_handler(httpd_req_t *req) // generally we dont want other file to
     }
     return ESP_OK;
 }
+
+/**
+ * @brief Get Request Handler for relay_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t relay_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -202,6 +256,12 @@ esp_err_t relay_handler(httpd_req_t *req) // generally we dont want other file t
     httpd_resp_send(req, NULL, 0);
     return ESP_OK;
 }
+
+/**
+ * @brief Get Request Handler for dashboard_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t dashboard_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -228,6 +288,12 @@ esp_err_t dashboard_handler(httpd_req_t *req) // generally we dont want other fi
     ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return ESP_OK;
 }
+
+/**
+ * @brief Get Request Handler for login_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t login_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -244,6 +310,12 @@ esp_err_t login_handler(httpd_req_t *req) // generally we dont want other file t
     ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return file_open("/spiffs/nds.html", req);
 }
+
+/**
+ * @brief Get Request Handler to redirect user to captive_portal on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t connect_ssid(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
@@ -258,6 +330,12 @@ esp_err_t connect_ssid(httpd_req_t *req) // generally we dont want other file to
     ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return file_open("/spiffs/wifi_connect.html", req);
 }
+
+/**
+ * @brief Get Request Handler for captive_portal_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t captive_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
@@ -293,6 +371,11 @@ esp_err_t captive_handler(httpd_req_t *req) // generally we dont want other file
 }
 
 /*post*/
+/**
+ * @brief Post Request Handler for settings_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -382,6 +465,12 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
     ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return ESP_OK;
 }
+
+/**
+ * @brief Post Request Handler for info_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -474,9 +563,14 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
     }
     return ESP_OK;
 }
+
+/**
+ * @brief Post Request Handler for relay_btn_status_refresh on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post is activated
 {
-    // ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
     char buffer[5];
     memset(&buffer, 0, sizeof(buffer));
     httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
@@ -528,6 +622,12 @@ esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post
     ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return ESP_OK;
 }
+
+/**
+ * @brief Post Request Handler for relay_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
@@ -643,6 +743,12 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
     }
     return ESP_OK;
 }
+
+/**
+ * @brief Post Request Handler for restart_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -692,6 +798,12 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
 
     return ESP_OK;
 }
+
+/**
+ * @brief Post Request Handler for NDS_login_page on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -720,8 +832,8 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
     //     ESP_LOGE("Parse_tag", "%s", cred.password);
 
     // first decide the login_mode // response.approve = true []
-    esp_err_t reslt = (login_cred(&cred));
-    if (reslt > 0) // data not found in nvs
+    esp_err_t res = (login_cred(&cred));
+    if (res > 0) // data not found in nvs
     {
         ESP_LOGI("AUTH_TAG", "....Init_Mode....[ADMIN/ADMIN]");
         if ((strcmp(cred.username, default_username) == 0) && (strcmp(cred.password, default_password) == 0))
@@ -740,12 +852,12 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
     }
     else // data found in nvs
     {
-        if (reslt == ESP_OK) // esp_ok
+        if (res == ESP_OK) // esp_ok
         {
             response.approve = true;
             ESP_LOGW("AUTH_TAG", "USERNAME & PASSWORD........ Approved");
         }
-        else if (reslt == ESP_FAIL) // esp_fail
+        else if (res == ESP_FAIL) // esp_fail
         {
             response.approve = false;
             ESP_LOGE("AUTH_TAG", "Please reload into same IP. Incorrect username/password");
@@ -778,6 +890,12 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
 
     return ESP_OK;
 }
+
+/**
+ * @brief Post Request Handler for assets on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t assets_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -822,6 +940,12 @@ esp_err_t assets_handler(httpd_req_t *req) // generally we dont want other file 
     esp_vfs_spiffs_unregister(NULL); // unmount
     return ESP_OK;
 }
+
+/**
+ * @brief Post Request Handler for image on web.
+ * @param req Pointer to the request being responded.
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t img_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -833,8 +957,8 @@ esp_err_t img_handler(httpd_req_t *req) // generally we dont want other file to 
             .format_if_mount_failed = true};
     esp_vfs_spiffs_register(&esp_vfs_spiffs_conf);
 
-    char path[600];
     // routing the file path
+    char path[600];
     sprintf(path, "/spiffs%s", req->uri); // eg: /spiffs/assets/script.js
     char *ext = strrchr(path, '.');       // extension :-  path/.js,css,png
     // for image extensions
@@ -842,18 +966,15 @@ esp_err_t img_handler(httpd_req_t *req) // generally we dont want other file to 
     {
         httpd_resp_set_type(req, "image/jpeg");
     }
-    // for image extensions
-    if (strcmp(ext, ".jpeg") == 0)
+    if (strcmp(ext, ".jpeg") == 0) // for image extensions
     {
         httpd_resp_set_type(req, "image/jpeg");
     }
-    // for image extensions
-    if (strcmp(ext, ".png") == 0)
+    if (strcmp(ext, ".png") == 0) // for image extensions
     {
         httpd_resp_set_type(req, "image/png");
     }
-    // handle other files
-    FILE *file = fopen(path, "rb"); // binary read
+    FILE *file = fopen(path, "rb"); // binary read // handle other files
     if (file == NULL)
     {
         httpd_resp_send_404(req);
@@ -866,11 +987,14 @@ esp_err_t img_handler(httpd_req_t *req) // generally we dont want other file to 
         httpd_resp_send_chunk(req, lineRead, sizeof(lineRead));
     }
     fclose(file);
-    esp_vfs_spiffs_unregister(NULL); // unmount
+    esp_vfs_spiffs_unregister(NULL); // unmount // avoid memory leaks
     return ESP_OK;
 }
 
 /******************** local_wifi connection function: [ESP => AP TO STA] *******************/
+/**
+ * @brief Task that clear TCP/IP stack and re-initialized the ESP32 in STA_mode.
+ */
 void connect_to_local_AP(void *params)
 {
     // vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -913,6 +1037,12 @@ void connect_to_local_AP(void *params)
     }
     vTaskDelete(NULL);
 }
+
+/**
+ * @brief Function to switch the ESP32 from AP_mode to STA_mode.
+ *
+ * @return - ESP_OK: Compeleted operation.
+ */
 esp_err_t AP_TO_STA(httpd_req_t *req)
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -997,6 +1127,9 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
 */
 /*******************************************************************************************/
 
+/**
+ * @brief Function to configure & initailized Server.
+ */
 void Connect_Portal()
 { // only invoke this config portion if server is reset
 
@@ -1009,7 +1142,7 @@ void Connect_Portal()
         config.send_wait_timeout = 7,
         config.uri_match_fn = httpd_uri_match_wildcard;
         ESP_ERROR_CHECK(httpd_start(&server, &config));
-        ESP_LOGW("Server_TAG", "Server Restart Successful...");
+        ESP_LOGW("Server_TAG", "Server Start Successful...");
 
         // X. assets [jpg/png]
         httpd_uri_t img_url = {
@@ -1028,6 +1161,10 @@ void Connect_Portal()
         httpd_register_uri_handler(server, &assets_url); // register the uri/url handler/
     }
 }
+
+/**
+ * @brief Function to initailized and start Server_AP_mode.
+ */
 void http_server_ap_mode(void)
 {
     httpd_unregister_uri_handler(server, "/", HTTP_GET);
@@ -1061,6 +1198,10 @@ void http_server_ap_mode(void)
         .handler = captive_handler};
     httpd_register_uri_handler(server, &captive_url);
 }
+
+/**
+ * @brief Function to initailized and start Server_STA_mode.
+ */
 void http_server_sta_mode(void)
 {
     httpd_unregister_uri_handler(server, "/*", HTTP_GET);
@@ -1132,6 +1273,10 @@ void http_server_sta_mode(void)
         .handler = relay_json_post_handler};
     httpd_register_uri_handler(server, &relay_json_post_url);
 }
+
+/**
+ * @brief Function to Start DNS Server in AP_mode.
+ */
 void start_dns_server(void)
 {
     ip4_addr_t resolve_ip;
@@ -1208,3 +1353,7 @@ void start_dns_server(void)
 //         vTaskDelay(50 / portTICK_PERIOD_MS);
 //     }
 // }
+
+/*******************************************************************************
+ *                          End of File
+ *******************************************************************************/

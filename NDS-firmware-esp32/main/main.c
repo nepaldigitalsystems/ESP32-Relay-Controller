@@ -1,3 +1,28 @@
+/*******************************************************************************
+ * (C) Copyright 2018-2023 ;  Nepal Digital Systems Pvt. Ltd., Kathmandu, Nepal.
+ * The attached material and the information contained therein is proprietary to
+ * Nepal Digital Systems Pvt. Ltd. and is issued only under strict confidentiality
+ * arrangements.It shall not be used, reproduced, copied in whole or in part,
+ * adapted,modified, or disseminated without a written license of Nepal Digital
+ * Systems Pvt. Ltd.It must be returned to Nepal Digital Systems Pvt. Ltd. upon
+ * its first request.
+ *
+ *  File Name           : ESP32-Realy Controller
+ *
+ *  Description         : Relay control using ESP32.
+ *
+ *  Change history      :
+ *
+ *     Author        Date          Ver                 Description
+ *  ------------    --------       ---   --------------------------------------
+ *  Riken Maharjan  3 Mar 2023     1.0               Initial Creation
+ *  Riken Maharjan  5 Mar 2023     1.1               Code Organiztion
+ *
+ *******************************************************************************/
+
+/*******************************************************************************
+ *                          Include Files
+ *******************************************************************************/
 #include <stdio.h>
 #include "DATA_FIELD.h"
 #include "server.h"
@@ -20,6 +45,9 @@
 #include "driver/gpio.h"
 #include "esp_intr_alloc.h"
 
+/*******************************************************************************
+ *                          Type & Macro Definitions
+ *******************************************************************************/
 /* LIST of namespaces and keys
  * namespace => sta_num ; key = no. ;
  * namespace => wifiCreds ; key = store_ssid  ;
@@ -62,26 +90,38 @@ const uint32_t RAND_PIN = 35;
 #define LOCAL_SSID_INDEX 0
 #define LOCAL_PASS_INDEX 1
 
+/*******************************************************************************
+ *                          Static Data Definitions
+ *******************************************************************************/
+/*Non-Static defination (externed)*/
 xSemaphoreHandle xSEMA = NULL;                                                                                                                                            // global
 uint8_t Relay_Status_Value[RELAY_UPDATE_MAX] = {0, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, R_OFF, 0, 0}; // 0-18
 uint8_t Relay_Update_Success[RELAY_UPDATE_MAX] = {0};                                                                                                                     // 0-18
 
-/* list of REALY_PINS [ 0-15 ] */
+/*Static data defination*/
 static gpio_num_t REALY_PINS[16] = {GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_33, GPIO_NUM_32, GPIO_NUM_15, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_23};
-static TaskHandle_t receiveHandler = NULL;
-static TaskHandle_t rsHandler = NULL;
-static TaskHandle_t randHandler = NULL;
-static esp_timer_handle_t esp_timer_handle1;
-static esp_timer_handle_t esp_timer_handle2;
-static bool AP_RESTART = false;  // a variable that remembers to -> Restart once in AP-mode at initialization stage
-static bool STA_RESTART = false; // a variable that remembers to -> Restart once in STA-mode at initialization stage
-static bool PATTERN = 0;         // a variable for random_state
-static uint8_t COMBINATION = 0;  // a variable for random_state
-static gpio_config_t io_conf;
+static gpio_config_t io_conf;                // for multiple gpio configuration
+static esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
+static esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
+static TaskHandle_t receiveHandler = NULL;   // handler to notify the state of random_pattern currently being activated
+static TaskHandle_t rsHandler = NULL;        // handler to notify, reset_restart interrupt button being pressed
+static TaskHandle_t randHandler = NULL;      // handler to notify, random interrupt button being pressed
+static bool AP_RESTART = false;              // a variable that remembers to -> Restart once in AP-mode at initialization stage
+static bool STA_RESTART = false;             // a variable that remembers to -> Restart once in STA-mode at initialization stage
+static bool PATTERN = 0;                     // a variable for random_state ; default = 0
+static uint8_t COMBINATION = 0;              // a variable for random_state ; default = 0
 
+/*******************************************************************************
+ *                          Static Function Definitions
+ *******************************************************************************/
+/**
+ * @brief Function to inspect the current mode and invoke a restart, if the system hasn't restarted once; at the initialization phase [begining of AP/STA]
+ *
+ * @param mode the index to determine current operating mode [AP => 0 | STA => 1]
+ */
 void RESTART_WIFI(uint8_t mode)
 {
-    // check if AP-reset is ['1' ~ true]
+    // checks if mode: [STA or AP]-reset is ['1' ~ true]
     nvs_handle reset;
     esp_err_t res = 0;
     ESP_ERROR_CHECK(nvs_open("Reboot", NVS_READWRITE, &reset));
@@ -120,6 +160,17 @@ void RESTART_WIFI(uint8_t mode)
     nvs_close(reset);
 }
 
+/**
+ * @brief Function to inspect NVS_storage for Ssid_name/Ssid_pass and read them, if present.
+ *
+ * @param local_config A container to store the found data, Ssid_name and Ssid_pass
+ * @param handle Storage Handle obtained from nvs_open function [to read/write]
+ * @param KEY Name of the KEY corresponding to [Ssid_name | Ssid_pass]
+ * @param index Index to determine what to select [Ssid_name => 0 | Ssid_pass => 1]
+ *
+ * @return - ESP_OK: wifi_creds data exists in nvs_storage.
+ * @return - ESP_FAIL: wifi_creds data does not exist in nvs_storage.
+ */
 static esp_err_t inspect_wifiCred_data(ap_config_t *local_config, nvs_handle *handle, const char *KEY, uint8_t index)
 {
     esp_err_t err = ESP_FAIL;
@@ -142,7 +193,7 @@ static esp_err_t inspect_wifiCred_data(ap_config_t *local_config, nvs_handle *ha
             ESP_LOGI("NVS_TAG", "NVS_stored : Password is = %s", sample);
             strcpy(local_config->local_pass, sample);
         }
-        err = ESP_OK; // reads from the local_config structure if [data exist]
+        err = ESP_OK; // indicating : [data exist]
         break;
     }
     ESP_ERROR_CHECK(nvs_commit(*handle));
@@ -150,6 +201,15 @@ static esp_err_t inspect_wifiCred_data(ap_config_t *local_config, nvs_handle *ha
         free(sample);
     return err;
 }
+
+/**
+ * @brief Function to initialize NVS_storage and retireve wifi credentials if present
+ *
+ * @param local_config A container to store the found data, Ssid_name and Ssid_pas
+ *
+ * @return - ESP_OK: nvs_storage initialized and data read complete.
+ * @return - ESP_FAIL: nvs_storage not initialized or data not found.
+ */
 esp_err_t initialize_nvs(ap_config_t *local_config)
 {
     // initialize the default NVS partition
@@ -159,7 +219,7 @@ esp_err_t initialize_nvs(ap_config_t *local_config)
         ESP_ERROR_CHECK(nvs_flash_erase());
         err = nvs_flash_init();
     }
-    nvs_handle handle;                                              // nvs_handle_t = nvs_handle
+    nvs_handle handle;                                              // deta type -> nvs_handle_t ~ nvs_handle
     ESP_ERROR_CHECK(nvs_open("wifiCreds", NVS_READWRITE, &handle)); // namespace => loginCreds
     err = inspect_wifiCred_data(local_config, &handle, "store_ssid", LOCAL_SSID_INDEX);
     err = inspect_wifiCred_data(local_config, &handle, "store_pass", LOCAL_PASS_INDEX);
@@ -167,6 +227,11 @@ esp_err_t initialize_nvs(ap_config_t *local_config)
     RESTART_WIFI(AP_mode);
     return (err);
 }
+
+/**
+ * @brief Function to increase boot count after every system restart.
+ *
+ */
 void Boot_count(void)
 {
     nvs_handle BOOT;
@@ -186,7 +251,11 @@ void Boot_count(void)
     nvs_close(BOOT);
 }
 
-static void Serial_Timer_Callback(void *params) // service routine for rtos-timer
+/**
+ * @brief Secondary-Task that get activated as a callback for serial_timer within "serial pattern generator" task.
+ *
+ */
+static void Serial_Timer_Callback(void *params)
 {
     static uint8_t position = 0;
     if ((position > 1) && (position < 16))
@@ -207,7 +276,12 @@ static void Serial_Timer_Callback(void *params) // service routine for rtos-time
     if (position > 16)
         position = 0;
 }
-static void Random_Timer_Callback(void *params) // service routine for rtos-timer
+
+/**
+ * @brief Secondary-Task that get activated as a callback for random_timer within "random pattern generator" task.
+ *
+ */
+static void Random_Timer_Callback(void *params)
 {
     static uint32_t random_seconds = 0;
     static uint32_t patt_arr[4][2][16] = {{{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}},
@@ -226,9 +300,14 @@ static void Random_Timer_Callback(void *params) // service routine for rtos-time
     if (random_seconds > 15)
         random_seconds = 0;
 }
+
+/**
+ * @brief Primary-Task that get activated as a callback for serial pattern generator.
+ *
+ */
 static void Serial_Patttern_task(void *params) // receiver
 {
-    uint32_t state;
+    static uint32_t state;
     static esp_err_t isOn1 = ESP_FAIL;
     while (1)
     {
@@ -249,6 +328,12 @@ static void Serial_Patttern_task(void *params) // receiver
     }
     vTaskDelete(NULL);
 }
+
+/**
+ * @brief Primary-Task that get activated as a callback for random pattern generator.
+ *
+ * @param comb 1 Byte value indicating current combination choice for random_pattern
+ */
 static void Random_Pattern_generator(uint8_t comb)
 {
     static esp_err_t isOn2 = ESP_FAIL;
@@ -308,6 +393,11 @@ static void Random_Pattern_generator(uint8_t comb)
         }
     }
 }
+
+/**
+ * @brief Task to update relay_switch_states according to internally stored values.
+ *
+ */
 static void Relay_switch_update(void *params) // -> also a notification sender task
 {
     for (int i = 0; i < 16; i++) // 0-15
@@ -401,6 +491,11 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
     vTaskDelete(NULL);
 }
 
+/**
+ * @brief Task to update relay_switch_states according to internally stored values.
+ *
+ * @param args GPIO_Pin_number passed to invoke corresponding action
+ */
 static void IRAM_ATTR restart_reset_random_isr(void *args)
 {
     uint32_t *pin = (uint32_t *)args;
@@ -415,6 +510,10 @@ static void IRAM_ATTR restart_reset_random_isr(void *args)
     }
 }
 
+/**
+ * @brief Task for restart_reset_button operation.
+ *
+ */
 void restart_reset_Task(void *params)
 {
     while (1)
@@ -472,6 +571,10 @@ void restart_reset_Task(void *params)
     vTaskDelete(NULL);
 }
 
+/**
+ * @brief Task for random_button operation.
+ *
+ */
 void random_activate_Task(void *params)
 {
     while (true)
@@ -515,6 +618,10 @@ void random_activate_Task(void *params)
     vTaskDelete(NULL);
 }
 
+/**
+ * @brief Function to initailized restart_reset interrupt pin.
+ *
+ */
 static void INIT_RS_PIN(void)
 {
     gpio_pad_select_gpio(SYS_LED);                 // SYS_LED turns ON in both AP & STA phase.
@@ -536,6 +643,9 @@ static void INIT_RS_PIN(void)
     xTaskCreate(restart_reset_Task, "restart_reset_Task", 4096, NULL, 1, &rsHandler);
 }
 
+/**
+ * @brief Function to initailized random interrupt pin.
+ */
 static void INIT_RAND_PIN(void)
 {
     io_conf.intr_type = GPIO_INTR_POSEDGE;
@@ -550,6 +660,9 @@ static void INIT_RAND_PIN(void)
     xTaskCreate(random_activate_Task, "random_activate_Task", 4096, NULL, 1, &randHandler);
 }
 
+/*******************************************************************************
+ *                          Main Function
+ *******************************************************************************/
 void app_main(void)
 {
     /***************************************************************/
@@ -613,3 +726,7 @@ void app_main(void)
     ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
     ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
 }
+
+/*******************************************************************************
+ *                          End of File
+ *******************************************************************************/
