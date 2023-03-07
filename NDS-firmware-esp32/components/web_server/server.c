@@ -434,8 +434,8 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
             ESP_receive = false;
             break;
         }
-        // if (sample != NULL)
-        free(sample);
+        if (sample != NULL)
+            free(sample);
         nvs_close(set_pass_handle);
     }
     else

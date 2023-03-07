@@ -115,28 +115,26 @@ static uint8_t COMBINATION = 0;              // a variable for random_state ; de
  *                          Static Function Definitions
  *******************************************************************************/
 /**
- * @brief Function to inspect the current mode and invoke a restart, if the system hasn't restarted once; at the initialization phase [begining of AP/STA]
+ * @brief Function to inspect nvs_storage for restart counts. if the system hasn't restarted once, this funtion generates a flag that will restart the system during initialization phase [begining of AP/STA]
  *
  * @param mode the index to determine current operating mode [AP => 0 | STA => 1]
  */
 void RESTART_WIFI(uint8_t mode)
 {
-    // checks if mode: [STA or AP]-reset is ['1' ~ true]
     nvs_handle reset;
     esp_err_t res = 0;
     ESP_ERROR_CHECK(nvs_open("Reboot", NVS_READWRITE, &reset));
     uint8_t status_val = 0;
     if (mode)
     {
-        res = nvs_get_u8(reset, "statusSTA", &status_val);
+        res = nvs_get_u8(reset, "statusSTA", &status_val); // get the internal value and store in "status_val"
         STA_RESTART = (bool)status_val;
     }
     else
     {
-        res = nvs_get_u8(reset, "statusAP", &status_val);
+        res = nvs_get_u8(reset, "statusAP", &status_val); // get the internal value and store in "status_val"
         AP_RESTART = (bool)status_val;
     }
-
     switch (res)
     {
     case ESP_ERR_NVS_NOT_FOUND:
@@ -149,13 +147,14 @@ void RESTART_WIFI(uint8_t mode)
             ESP_LOGE("REBOOT_TAG", "AP Restarted ? ... %s", (AP_RESTART ? "Already restarted once" : "not restarted"));
         break;
     }
-    status_val = 1;
-
-    if (mode) // STA_mode = 1
-        ESP_ERROR_CHECK(nvs_set_u8(reset, "statusSTA", status_val));
-    else
-        ESP_ERROR_CHECK(nvs_set_u8(reset, "statusAP", status_val));
-
+    if (!status_val)
+    {
+        status_val = 1;
+        if (mode)
+            ESP_ERROR_CHECK(nvs_set_u8(reset, "statusSTA", status_val)); // set the internal value using "status_val"
+        else
+            ESP_ERROR_CHECK(nvs_set_u8(reset, "statusAP", status_val)); // set the internal value using "status_val"
+    }
     ESP_ERROR_CHECK(nvs_commit(reset));
     nvs_close(reset);
 }
@@ -224,7 +223,7 @@ esp_err_t initialize_nvs(ap_config_t *local_config)
     err = inspect_wifiCred_data(local_config, &handle, "store_ssid", LOCAL_SSID_INDEX);
     err = inspect_wifiCred_data(local_config, &handle, "store_pass", LOCAL_PASS_INDEX);
     nvs_close(handle);
-    RESTART_WIFI(AP_mode);
+    RESTART_WIFI(AP_mode); // inspect the AP_mode
     return (err);
 }
 
@@ -271,8 +270,7 @@ static void Serial_Timer_Callback(void *params)
         gpio_set_level(REALY_PINS[position], R_ON);
         gpio_set_level(REALY_PINS[15], R_OFF);
     }
-    // shift the pointer position
-    position++;
+    position++; // increase the pointer position by 1
     if (position > 16)
         position = 0;
 }
@@ -295,7 +293,6 @@ static void Random_Timer_Callback(void *params)
     {
         gpio_set_level(REALY_PINS[i], (patt_arr[COMBINATION][PATTERN][i]));
     }
-
     random_seconds++;
     if (random_seconds > 15)
         random_seconds = 0;
@@ -339,45 +336,8 @@ static void Random_Pattern_generator(uint8_t comb)
     static esp_err_t isOn2 = ESP_FAIL;
     if (comb != 0)
     {
-        /*
-        //     int lower = 0, upper = 15, arr_size = 0, count = 0, Asize = 0, temp = 0;
-        //     int *append_num;
-        //     time_t t;
-        //     // decide the combinations PATTERN
-        //     count = 16 - (int)comb;
-        //     arr_size = sizeof(int) * count;
-        //     append_num = (int *)malloc(arr_size);
-        //     srand((unsigned)time(&t));
-        //     // generate no of. 'count' => random values from [0-15]
-        //     for (int i = 0; i < count; i++)
-        //     {
-        //         append_num[i] = (rand() % (upper - lower + 1)) + lower;
-        //     }
-        //     // remove duplicate from append_num if any
-        //     Asize = arr_size / sizeof(int);
-        //     for (int i = 0; i < (Asize - 1); i++)
-        //     {
-        //         for (int j = i + 1; j < Asize; j++)
-        //         {
-        //             if (*(append_num + i) == *(append_num + j))
-        //             {
-        //                 temp = *(append_num + j);
-        //                 *(append_num + j) = *(append_num + Asize - 1);
-        //                 *(append_num + Asize - 1) = temp;
-        //                 Asize--;
-        //             }
-        //         }
-        //     }
-        //     // now apply relay ON/OFF
-        //     for (int i = 0; i < Asize; i++)
-        //     {
-        //         // may need to invert the gpio_set_level
-        //         Relay_Update_Success[append_num[i]] = (gpio_set_level(REALY_PINS[append_num[i]], (uint32_t)R_ON) == ESP_OK) ? 1 : 0; // set relay_update_success = '1', if the gpio_set is successful
-        //     }
-        */
-        // determine the COMBINATION {0,1,2,3,4}
-        COMBINATION = comb - 1;
-        if (isOn2 == ESP_OK) // stop timer
+        COMBINATION = comb - 1; // determine the COMBINATION {0,1,2,3,4}
+        if (isOn2 == ESP_OK)    // stop timer
         {
             esp_timer_stop(esp_timer_handle2);
             isOn2 = ESP_FAIL;
@@ -406,8 +366,7 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
         gpio_set_direction(REALY_PINS[i], GPIO_MODE_OUTPUT);
         gpio_set_level(REALY_PINS[i], (uint32_t)R_OFF);
     }
-
-    while (true)
+    while (1)
     {
         if (xSEMA != NULL)
             if (xSemaphoreTake(xSEMA, portMAX_DELAY)) // task blocked from running , if access not given
@@ -577,7 +536,7 @@ void restart_reset_Task(void *params)
  */
 void random_activate_Task(void *params)
 {
-    while (true)
+    while (1)
     {
         if (ulTaskNotifyTake(pdTRUE, portMAX_DELAY))
         {
@@ -693,7 +652,7 @@ void app_main(void)
         if (wifi_connect_sta(local_config.local_ssid, local_config.local_pass, 15000) == ESP_OK) // if the local ssid/pass doesn't match
         {
             ESP_LOGW("STA_connect", "CONNECT TO LOCAL_SSID ... Successful.");
-            RESTART_WIFI(STA_mode);
+            RESTART_WIFI(STA_mode); // inspect the STA mode
             if (!STA_RESTART)
                 esp_restart();
             xSemaphoreGive(xSEMA); // activate the 'serial_operation_functionality'
@@ -706,7 +665,7 @@ void app_main(void)
         wifi_connect_ap("ESP-32_local");
         if (!AP_RESTART)
             esp_restart();
-        // activate serial using nvs storage
+        // Activate Serial and update in NVS_storage
         nvs_handle_t nvs_relay;
         nvs_open("Relay_Status", NVS_READWRITE, &nvs_relay);
         nvs_set_u8(nvs_relay, "random", 0); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
