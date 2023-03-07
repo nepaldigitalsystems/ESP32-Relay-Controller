@@ -16,9 +16,8 @@
 /*******************************************************************************
  *                          Static Data Definitions
  *******************************************************************************/
-
+uint32_t STA_ADDR3 = 0;                // variable to store the host_no. from IP-stack when connecting in STA mode
 static uint8_t RECONNECT_COUNT = 0;    // variable to count no. of failed tries during STA connection.
-uint32_t STA_ADDR3 = 0;                // variable to store the host no. generated from STA mode
 static esp_netif_t *ESP_NETIF = NULL;  // creating a global reference to network interface
 static EventGroupHandle_t WIFI_EVENTS; // create event groups for WIFI_EVENTS
 

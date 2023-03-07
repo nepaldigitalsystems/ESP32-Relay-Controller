@@ -16,6 +16,10 @@
   overflow-y: scroll;
 }
 
+.center::-webkit-scrollbar {
+  opacity: 0;
+}
+
 .home {
   position: fixed;
   top: 1%;

@@ -232,7 +232,7 @@ esp_err_t initialize_nvs(ap_config_t *local_config)
  * @brief Function to increase boot count after every system restart.
  *
  */
-void Boot_count(void)
+void Boot_count()
 {
     nvs_handle BOOT;
     ESP_ERROR_CHECK(nvs_open("bootVal", NVS_READWRITE, &BOOT));
@@ -622,7 +622,7 @@ void random_activate_Task(void *params)
  * @brief Function to initailized restart_reset interrupt pin.
  *
  */
-static void INIT_RS_PIN(void)
+static void INIT_RS_PIN()
 {
     gpio_pad_select_gpio(SYS_LED);                 // SYS_LED turns ON in both AP & STA phase.
     gpio_set_direction(SYS_LED, GPIO_MODE_OUTPUT); // System ON/OFF-led initialized
@@ -646,7 +646,7 @@ static void INIT_RS_PIN(void)
 /**
  * @brief Function to initailized random interrupt pin.
  */
-static void INIT_RAND_PIN(void)
+static void INIT_RAND_PIN()
 {
     io_conf.intr_type = GPIO_INTR_POSEDGE;
     io_conf.mode = GPIO_MODE_INPUT;
