@@ -36,21 +36,14 @@ typedef struct auth_tt
     char session[10];
 } auth_t;
 
+/*************** structure of System_login approval *********************************/
 typedef struct resp_tt
 {
     bool approve;
 } resp_t;
 resp_t response; // Use carefully  // only global access for login authentication
 
-/*************** structure of esp state *********************************/
-typedef struct set_tt
-{
-    bool receive; //  client clicks 'post_buttons'
-    bool send;
-} set_t;
-
 /*************** structure of Relay Status *********************************/
-
 typedef enum Relay_Status
 {
     RELAY_UPDATE_1 = 1,

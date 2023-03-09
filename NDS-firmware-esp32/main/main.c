@@ -76,19 +76,23 @@
  * namespace => Relay_Status ; key = random;
  * namespace => Relay_Status ; key = serial;
  */
-/*random_pin, restart_reset and system_led pin declarations*/
-const uint32_t RS_PIN = 34;
-const uint32_t RAND_PIN = 35;
+
+/* System LED ON - OFF */
 #define SYS_LED 2
-/*Relay ON - OFF*/
+#define SYS_LED_OFF 0
+#define SYS_LED_ON 1
+/* Relay ON - OFF */
 #define R_ON 0
 #define R_OFF 1
-/* Reboot mode index */
+/* Reboot_Mode_index */
 #define AP_mode 0
 #define STA_mode 1
 /* local_wifi cred index */
 #define LOCAL_SSID_INDEX 0
 #define LOCAL_PASS_INDEX 1
+/* random_pin, restart_reset and system_led pin declarations */
+const uint32_t RS_PIN = 34;
+const uint32_t RAND_PIN = 35;
 
 /*******************************************************************************
  *                          Static Data Definitions
@@ -123,8 +127,8 @@ void RESTART_WIFI(uint8_t mode)
 {
     nvs_handle reset;
     esp_err_t res = 0;
-    ESP_ERROR_CHECK(nvs_open("Reboot", NVS_READWRITE, &reset));
     uint8_t status_val = 0;
+    ESP_ERROR_CHECK(nvs_open("Reboot", NVS_READWRITE, &reset));
     if (mode)
     {
         res = nvs_get_u8(reset, "statusSTA", &status_val); // get the internal value and store in "status_val"
@@ -482,7 +486,7 @@ void restart_reset_Task(void *params)
             gpio_isr_handler_remove(RS_PIN);                       // disable the interrupt
             unsigned long millis_up = esp_timer_get_time() / 1000; // get the time at [positive edge triggered instant]
             ESP_LOGE("SYSTEM_LED", "OFF");
-            gpio_set_level(SYS_LED, 0); // turn-OFF system led
+            gpio_set_level(SYS_LED, SYS_LED_OFF); // turn-OFF system led
             do
             {
                 vTaskDelay(100 / portTICK_PERIOD_MS); // wait some time while we check for the button to be released
@@ -522,7 +526,7 @@ void restart_reset_Task(void *params)
                 ESP_LOGE("RESTART_RESET_TAG", "GPIO '%d' was pressed for %d mSec. Restarting....", RS_PIN, (int)(millis_down - millis_up));
             }
             ESP_LOGE("SYSTEM_LED", "ON");
-            gpio_set_level(SYS_LED, 1);                                              // turn-ON system led
+            gpio_set_level(SYS_LED, SYS_LED_ON);                                     // turn-ON system led
             gpio_isr_handler_add(RS_PIN, restart_reset_random_isr, (void *)&RS_PIN); // re-enable the interrupt
             esp_restart();
         }
@@ -543,7 +547,7 @@ void random_activate_Task(void *params)
             gpio_isr_handler_remove(RAND_PIN);                     // disable the interrupt
             unsigned long millis_up = esp_timer_get_time() / 1000; // get the time at [positive edge triggered instant]
             ESP_LOGE("SYSTEM_LED", "OFF");
-            gpio_set_level(SYS_LED, 0); // turn-OFF system led
+            gpio_set_level(SYS_LED, SYS_LED_OFF); // turn-OFF system led
             do
             {
                 vTaskDelay(50 / portTICK_PERIOD_MS); // wait some time while we check for the button to be released
@@ -570,7 +574,7 @@ void random_activate_Task(void *params)
                 xSemaphoreGive(xSEMA);
             }
             ESP_LOGE("SYSTEM_LED", "ON");
-            gpio_set_level(SYS_LED, 1);                                                  // turn-ON system led
+            gpio_set_level(SYS_LED, SYS_LED_ON);                                         // turn-ON system led
             gpio_isr_handler_add(RAND_PIN, restart_reset_random_isr, (void *)&RAND_PIN); // re-enable the interrupt
         }
     }
@@ -585,21 +589,17 @@ static void INIT_RS_PIN()
 {
     gpio_pad_select_gpio(SYS_LED);                 // SYS_LED turns ON in both AP & STA phase.
     gpio_set_direction(SYS_LED, GPIO_MODE_OUTPUT); // System ON/OFF-led initialized
-    gpio_set_level(SYS_LED, 1);                    // turn-ON system led
-    ESP_LOGE("SYSTEM_LED", "ON");
-
-    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    gpio_set_level(SYS_LED, SYS_LED_ON);           // turn-ON system led
+    ESP_LOGE("SYSTEM_LED", "ON");                  // comment
+    io_conf.intr_type = GPIO_INTR_POSEDGE;         // initialize the interrupt button for restart and reset
     io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pull_down_en = true;
     io_conf.pull_up_en = false;
     io_conf.pin_bit_mask = (1ULL << RS_PIN);
     gpio_config(&io_conf);
-
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(RS_PIN, restart_reset_random_isr, (void *)&RS_PIN); // activate the isr for RS_pin
-
-    // init restart_reset_task
-    xTaskCreate(restart_reset_Task, "restart_reset_Task", 4096, NULL, 1, &rsHandler);
+    gpio_isr_handler_add(RS_PIN, restart_reset_random_isr, (void *)&RS_PIN);          // activate the isr for RS_pin
+    xTaskCreate(restart_reset_Task, "restart_reset_Task", 4096, NULL, 1, &rsHandler); // init restart_reset_task
 }
 
 /**
@@ -613,10 +613,8 @@ static void INIT_RAND_PIN()
     io_conf.pull_up_en = false;
     io_conf.pin_bit_mask = (1ULL << RAND_PIN);
     gpio_config(&io_conf);
-    gpio_isr_handler_add(RAND_PIN, restart_reset_random_isr, (void *)&RAND_PIN); // activate the isr for RS_pin
-
-    // init random_activate_task
-    xTaskCreate(random_activate_Task, "random_activate_Task", 4096, NULL, 1, &randHandler);
+    gpio_isr_handler_add(RAND_PIN, restart_reset_random_isr, (void *)&RAND_PIN);            // activate the isr for RS_pin
+    xTaskCreate(random_activate_Task, "random_activate_Task", 4096, NULL, 1, &randHandler); // init random_activate_task
 }
 
 /*******************************************************************************
@@ -625,26 +623,24 @@ static void INIT_RAND_PIN()
 void app_main(void)
 {
     /***************************************************************/
-    // initialize serial timer
+    ap_config_t local_config; // ssid store sample
+    // Create & initialize serial timer
     const esp_timer_create_args_t esp_timer_create_args1 = {
         .callback = Serial_Timer_Callback,
         .name = "Serial timer"};
     esp_timer_create(&esp_timer_create_args1, &esp_timer_handle1);
     /***************************************************************/
-    // initialize Random timer
+    // Create & initialize Random timer
     const esp_timer_create_args_t esp_timer_create_args2 = {
         .callback = Random_Timer_Callback,
         .name = "Random timer"};
     esp_timer_create(&esp_timer_create_args2, &esp_timer_handle2);
     /***************************************************************/
-    INIT_RS_PIN(); // initialize the reset button
-
-    ap_config_t local_config; // ssid store sample
-    wifi_init();
+    INIT_RS_PIN();                                                                                 // initialize the reset button
+    wifi_init();                                                                                   // wifi_initializtion
     xSEMA = xSemaphoreCreateBinary();                                                              // semaphore for Relay_switch_update task
     xTaskCreate(Serial_Patttern_task, "Serial Pattern Generator", 4096, NULL, 5, &receiveHandler); // receiver
     xTaskCreate(Relay_switch_update, "Relay_switch_update", 4096, NULL, 6, NULL);                  // sender // higher priority
-
     if (initialize_nvs(&local_config) == ESP_OK)
     {
         ESP_LOGE("LOCAL_SSID", "%s", local_config.local_ssid);
@@ -685,7 +681,6 @@ void app_main(void)
     ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
     ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
 }
-
 /*******************************************************************************
  *                          End of File
  *******************************************************************************/

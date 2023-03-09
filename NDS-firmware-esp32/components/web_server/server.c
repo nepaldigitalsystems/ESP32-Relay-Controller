@@ -1132,7 +1132,6 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
  */
 void Connect_Portal()
 { // only invoke this config portion if server is reset
-
     if (NULL == server)
     {
         httpd_config_t config = HTTPD_DEFAULT_CONFIG();

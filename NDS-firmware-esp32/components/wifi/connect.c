@@ -16,11 +16,17 @@
 /*******************************************************************************
  *                          Static Data Definitions
  *******************************************************************************/
-uint32_t STA_ADDR3 = 0;                // variable to store the host_no. from IP-stack when connecting in STA mode
-static uint8_t RECONNECT_COUNT = 0;    // variable to count no. of failed tries during STA connection.
-static esp_netif_t *ESP_NETIF = NULL;  // creating a global reference to network interface
-static EventGroupHandle_t WIFI_EVENTS; // create event groups for WIFI_EVENTS
+// The IP address that we want our device to have.
+#define AP_DEVICE_IP "192.168.1.1"
+// The Gateway address where we wish to send packets.
+#define AP_DEVICE_GW "192.168.1.1"
+// The netmask specification.
+#define AP_DEVICE_NETMASK "255.255.255.0"
 
+uint32_t STA_ADDR3 = 0;                      // variable to store the host_no. from IP-stack when connecting in STA mode
+static uint8_t RECONNECT_COUNT = 0;          // variable to count no. of failed tries during STA connection.
+static esp_netif_t *ESP_NETIF = NULL;        // creating a global reference to network interface
+static EventGroupHandle_t WIFI_EVENTS;       // create event groups for WIFI_EVENTS
 static const int CONNECTED_GOT_IP = BIT0;    // indicator for device connection.
 static const int DISCONNECTED_GOT_IP = BIT1; // indicator for device disconnection.
 
@@ -124,9 +130,12 @@ static void Set_static_ip(esp_netif_t *netif)
     esp_netif_dns_info_t dns_info = {0};
 
     ESP_ERROR_CHECK(esp_netif_dhcps_stop(netif));
-    IP4_ADDR(&if_info.gw, 192, 168, 1, 1);
-    IP4_ADDR(&if_info.ip, 192, 168, 1, 1);
-    IP4_ADDR(&if_info.netmask, 255, 255, 255, 0);
+    if_info.ip.addr = ipaddr_addr(AP_DEVICE_IP);
+    if_info.netmask.addr = ipaddr_addr(AP_DEVICE_NETMASK);
+    if_info.gw.addr = ipaddr_addr(AP_DEVICE_GW);
+    // IP4_ADDR(&if_info.gw, 192, 168, 1, 1);
+    // IP4_ADDR(&if_info.ip, 192, 168, 1, 1);
+    // IP4_ADDR(&if_info.netmask, 255, 255, 255, 0);
     ESP_ERROR_CHECK(esp_netif_set_ip_info(netif, &if_info));
     ESP_ERROR_CHECK(esp_netif_get_ip_info(netif, &if_info));
     ESP_LOGE("AP_IP_TAG", "ESP32 IP:" IPSTR, IP2STR(&if_info.ip));
