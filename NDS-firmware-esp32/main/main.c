@@ -31,6 +31,7 @@
 #include "nvs_flash.h"
 #include "cJSON.h"
 #include "driver/timer.h"
+#include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_spiffs.h"
@@ -42,7 +43,6 @@
 #include "esp_spi_flash.h"
 #include "esp_system.h"
 #include "lwip/sockets.h"
-#include "driver/gpio.h"
 #include "esp_intr_alloc.h"
 
 /*******************************************************************************
@@ -82,6 +82,7 @@
 #define SYS_LED_OFF 0
 #define SYS_LED_ON 1
 /* Relay ON - OFF */
+#define NUM_OF_RELAY 16
 #define R_ON 0
 #define R_OFF 1
 /* Reboot_Mode_index */
@@ -103,7 +104,7 @@ uint8_t Relay_Status_Value[RELAY_UPDATE_MAX] = {0, R_OFF, R_OFF, R_OFF, R_OFF, R
 uint8_t Relay_Update_Success[RELAY_UPDATE_MAX] = {0};                                                                                                                     // 0-18
 
 /*Static data defination*/
-static gpio_num_t REALY_PINS[16] = {GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_33, GPIO_NUM_32, GPIO_NUM_15, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_23};
+static gpio_num_t REALY_PINS[NUM_OF_RELAY] = {GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_33, GPIO_NUM_32, GPIO_NUM_15, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_23};
 static gpio_config_t io_conf;                // for multiple gpio configuration
 static esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
 static esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
@@ -258,24 +259,24 @@ void Boot_count()
  * @brief Secondary-Task that get activated as a callback for serial_timer within "serial pattern generator" task.
  *
  */
-static void Serial_Timer_Callback(void *params)
+static void Serial_Timer_Callback(void *params) // Callback triggered every 1000mS -> 1s
 {
     static uint8_t position = 0;
-    if ((position > 1) && (position < 16))
+    if ((position > 1) && (position < NUM_OF_RELAY))
     {
         gpio_set_level(REALY_PINS[position - 2], R_OFF);
         gpio_set_level(REALY_PINS[position - 1], R_ON);
         gpio_set_level(REALY_PINS[position], R_ON);
     }
-    else if (position == 16)
+    else if (position == NUM_OF_RELAY)
         gpio_set_level(REALY_PINS[position - 2], R_OFF);
     else
     {
         gpio_set_level(REALY_PINS[position], R_ON);
-        gpio_set_level(REALY_PINS[15], R_OFF);
+        gpio_set_level(REALY_PINS[NUM_OF_RELAY - 1], R_OFF);
     }
-    position++; // increase the pointer position by 1
-    if (position > 16)
+    position++; // increases the pointer position by 1 every second
+    if (position > NUM_OF_RELAY)
         position = 0;
 }
 
@@ -283,20 +284,29 @@ static void Serial_Timer_Callback(void *params)
  * @brief Secondary-Task that get activated as a callback for random_timer within "random pattern generator" task.
  *
  */
-static void Random_Timer_Callback(void *params)
+static void Random_Timer_Callback(void *params) // Callback triggered every 1000mS -> 1s
 {
+    /* The "random_seconds" value ranges from [0-15] choices.
+     * -> Currently, patterns [A/B] alternates at every interval of 4 calues.
+     * i.e.[0-3]= A or 0
+     * i.e.[4-7]= B or 1
+     * i.e.[8-11]= A or 0
+     * i.e.[12-15]= B or 1
+     */
     static uint32_t random_seconds = 0;
-    static uint32_t patt_arr[4][2][16] = {{{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}},
-                                          {{1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0}, {0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1}},
-                                          {{1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0}, {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1}},
-                                          {{1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}}};
+    /* 4->random_combinations ; 2->pattern_type(A/B) ; 16->num_of_relay_components */
+    static uint32_t patt_arr[4][2][NUM_OF_RELAY] = {{{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}},
+                                                    {{1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0}, {0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1}},
+                                                    {{1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0}, {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1}},
+                                                    {{1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}}};
 
     // toggle the gpio according to [COMBINATION & PATTERN]
-    PATTERN = ((random_seconds <= 3) || (random_seconds >= 8 && random_seconds <= 11)) ? 0 : 1; // the timer instants determine, which patther [A or B] is to be selected.
+    PATTERN = ((random_seconds <= 3) || (random_seconds >= 8 && random_seconds <= 11)) ? 0 : 1; // the timer instants determine, which pattern [A or B] is to be selected.
     for (uint8_t i = 0; i <= 15; i++)
     {
         gpio_set_level(REALY_PINS[i], (patt_arr[COMBINATION][PATTERN][i]));
     }
+    /*Every 1 sec the random_seconds value increases by 1*/
     random_seconds++;
     if (random_seconds > 15)
         random_seconds = 0;
@@ -333,7 +343,7 @@ static void Serial_Patttern_task(void *params) // receiver
 /**
  * @brief Primary-Task that get activated as a callback for random pattern generator.
  *
- * @param comb 1 Byte value indicating current combination choice for random_pattern
+ * @param comb 1-Byte value indicating current combination choice for random_pattern
  */
 static void Random_Pattern_generator(uint8_t comb)
 {
@@ -364,7 +374,7 @@ static void Random_Pattern_generator(uint8_t comb)
  */
 static void Relay_switch_update(void *params) // -> also a notification sender task
 {
-    for (int i = 0; i < 16; i++) // 0-15
+    for (int i = 0; i < NUM_OF_RELAY; i++) // 0-15
     {
         gpio_pad_select_gpio(REALY_PINS[i]);
         gpio_set_direction(REALY_PINS[i], GPIO_MODE_OUTPUT);
@@ -413,7 +423,7 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
                     ESP_LOGI("Activate", " --> BTNS ONLY");
                     xTaskNotify(receiveHandler, (0 << 0), eSetValueWithOverwrite);
                     Random_Pattern_generator(0);
-                    for (int i = 0; i < 16; i++)
+                    for (int i = 0; i < NUM_OF_RELAY; i++)
                     { // set relay_update_success = '1', if the gpio_set is successful // may need to invert the gpio_set_level
                         Relay_Update_Success[i + 1] = (gpio_set_level(REALY_PINS[i], (uint32_t)Relay_Status_Value[i + 1]) == ESP_OK) ? 1 : 0;
                     }
@@ -423,7 +433,7 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
                 else
                 {
                     memset(Relay_Update_Success, 0, sizeof(Relay_Update_Success)); // Except for 'Serial' ; set all reply status as false
-                    for (int i = 0; i < 16; i++)                                   // clear out all the relays to activate serial or random phase
+                    for (int i = 0; i < NUM_OF_RELAY; i++)                         // clear out all the relays to activate serial or random phase
                     {
                         gpio_set_level(REALY_PINS[i], (uint32_t)R_OFF);
                     }
@@ -515,7 +525,7 @@ void restart_reset_Task(void *params)
                 ESP_ERROR_CHECK(nvs_erase_all(my_handle));
                 ESP_ERROR_CHECK(nvs_commit(my_handle));
                 nvs_close(my_handle);
-                for (int i = 0; i < 16; i++) // clear out all the relays to activate serial or random phase
+                for (int i = 0; i < NUM_OF_RELAY; i++) // clear out all the relays to activate serial or random phase
                 {
                     gpio_set_level(REALY_PINS[i], (uint32_t)R_OFF);
                     Relay_Status_Value[i + 1] = R_OFF;

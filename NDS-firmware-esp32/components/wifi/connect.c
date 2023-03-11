@@ -182,7 +182,7 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
         if (RECONNECT_COUNT < 4)
         {
             RECONNECT_COUNT++;
-            ESP_LOGI("RECONNECT_TAG", "System restart in => %d", RECONNECT_COUNT);
+            ESP_LOGI("RECONNECT_TAG", "System reconnect tried...%d times", RECONNECT_COUNT);
         }
         else
         {
