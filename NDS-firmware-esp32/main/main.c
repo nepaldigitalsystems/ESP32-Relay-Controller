@@ -83,6 +83,7 @@
 #define SYS_LED_ON 1
 /* Relay ON - OFF */
 #define NUM_OF_RELAY 16
+#define NUM_OF_LED_RELAY 12
 #define R_ON 0
 #define R_OFF 1
 /* Reboot_Mode_index */
@@ -261,23 +262,34 @@ void Boot_count()
  */
 static void Serial_Timer_Callback(void *params) // Callback triggered every 1000mS -> 1s
 {
-    static uint8_t position = 0;
-    if ((position > 1) && (position < NUM_OF_RELAY))
+    static int8_t position = 0;                            // relay position = 1
+    static bool dir = 1;                                   // forward_dir = 1 // reverse_dir = 0;
+    if (position < 0 || position > (NUM_OF_LED_RELAY - 1)) // position > 3) // determine direction
     {
-        gpio_set_level(REALY_PINS[position - 2], R_OFF);
-        gpio_set_level(REALY_PINS[position - 1], R_ON);
-        gpio_set_level(REALY_PINS[position], R_ON);
+        dir = !dir;
+        if (position < 0)
+        {
+            position = 0;
+            for (int i = 1; i < NUM_OF_LED_RELAY; i++) // clear out all LED-relays to activate serial or random phase
+            {
+                gpio_set_level(REALY_PINS[i], (uint32_t)R_OFF);
+            }
+        }
+        else if (position > (NUM_OF_LED_RELAY - 1)) // position > 3)
+        {
+            position = (NUM_OF_LED_RELAY - 1);               // position = 3)
+            for (int i = 0; i < (NUM_OF_LED_RELAY - 1); i++) // clear out all LED-relays to activate serial or random phase
+            {
+                gpio_set_level(REALY_PINS[i], (uint32_t)R_OFF);
+            }
+        }
     }
-    else if (position == NUM_OF_RELAY)
-        gpio_set_level(REALY_PINS[position - 2], R_OFF);
     else
     {
-        gpio_set_level(REALY_PINS[position], R_ON);
-        gpio_set_level(REALY_PINS[NUM_OF_RELAY - 1], R_OFF);
+        gpio_set_level(REALY_PINS[position], R_ON); // [0 -> 3]
+        // ESP_LOGW("Serial_led", "relay:%d [ %s ]", position, ((dir) ? "->" : "<-"));
     }
-    position++; // increases the pointer position by 1 every second
-    if (position > NUM_OF_RELAY)
-        position = 0;
+    (dir) ? position++ : position--; // increases the pointer position by 1 every second
 }
 
 /**
@@ -294,15 +306,15 @@ static void Random_Timer_Callback(void *params) // Callback triggered every 1000
      * i.e.[12-15]= B or 1
      */
     static uint32_t random_seconds = 0;
-    /* 4->random_combinations ; 2->pattern_type(A/B) ; 16->num_of_relay_components */
-    static uint32_t patt_arr[4][2][NUM_OF_RELAY] = {{{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}},
-                                                    {{1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0}, {0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1}},
-                                                    {{1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0}, {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1}},
-                                                    {{1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}}};
+    /* Here, patt_arr[][][] -> [random_combinations] ; [pattern_type(A/B)] ; [num_of_relay_components] */
+    static uint32_t patt_arr[4][2][NUM_OF_LED_RELAY] = {{{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}},
+                                                        {{1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0}, {0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1}},
+                                                        {{1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1}, {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0}},
+                                                        {{1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1}}};
 
     // toggle the gpio according to [COMBINATION & PATTERN]
     PATTERN = ((random_seconds <= 3) || (random_seconds >= 8 && random_seconds <= 11)) ? 0 : 1; // the timer instants determine, which pattern [A or B] is to be selected.
-    for (uint8_t i = 0; i <= 15; i++)
+    for (uint8_t i = 0; i < NUM_OF_LED_RELAY; i++)
     {
         gpio_set_level(REALY_PINS[i], (patt_arr[COMBINATION][PATTERN][i]));
     }
@@ -374,6 +386,7 @@ static void Random_Pattern_generator(uint8_t comb)
  */
 static void Relay_switch_update(void *params) // -> also a notification sender task
 {
+    // all relay state -> OFF
     for (int i = 0; i < NUM_OF_RELAY; i++) // 0-15
     {
         gpio_pad_select_gpio(REALY_PINS[i]);
@@ -433,7 +446,7 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
                 else
                 {
                     memset(Relay_Update_Success, 0, sizeof(Relay_Update_Success)); // Except for 'Serial' ; set all reply status as false
-                    for (int i = 0; i < NUM_OF_RELAY; i++)                         // clear out all the relays to activate serial or random phase
+                    for (int i = 0; i < NUM_OF_LED_RELAY; i++)                     // clear out all LED-relays to activate serial or random phase
                     {
                         gpio_set_level(REALY_PINS[i], (uint32_t)R_OFF);
                     }
@@ -646,11 +659,12 @@ void app_main(void)
         .name = "Random timer"};
     esp_timer_create(&esp_timer_create_args2, &esp_timer_handle2);
     /***************************************************************/
-    INIT_RS_PIN();                                                                                 // initialize the reset button
     wifi_init();                                                                                   // wifi_initializtion
     xSEMA = xSemaphoreCreateBinary();                                                              // semaphore for Relay_switch_update task
     xTaskCreate(Serial_Patttern_task, "Serial Pattern Generator", 4096, NULL, 5, &receiveHandler); // receiver
     xTaskCreate(Relay_switch_update, "Relay_switch_update", 4096, NULL, 6, NULL);                  // sender // higher priority
+    INIT_RS_PIN();
+    INIT_RAND_PIN(); // initialize the random_activate                                                                                 // initialize the reset button
     if (initialize_nvs(&local_config) == ESP_OK)
     {
         ESP_LOGE("LOCAL_SSID", "%s", local_config.local_ssid);
@@ -662,7 +676,7 @@ void app_main(void)
             if (!STA_RESTART)
                 esp_restart();
             xSemaphoreGive(xSEMA); // activate the 'serial_operation_functionality'
-            INIT_RAND_PIN();       // initialize the random_activate
+            // INIT_RAND_PIN();       // initialize the random_activate
         }
     }
     else
@@ -682,14 +696,6 @@ void app_main(void)
         xSemaphoreGive(xSEMA); // activate the 'serial_operation_functionality'
     }
     Boot_count(); // increase the boot count
-    int FreeHeap = esp_get_free_heap_size();
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
 }
 /*******************************************************************************
  *                          End of File

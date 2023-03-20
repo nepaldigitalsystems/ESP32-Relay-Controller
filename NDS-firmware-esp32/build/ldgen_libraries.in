@@ -71,6 +71,5 @@ $<TARGET_FILE:__idf_ulp>
 $<TARGET_FILE:__idf_wifi_provisioning>
 $<TARGET_FILE:__idf_main>
 $<TARGET_FILE:__idf_dns_hijack_srv>
-$<TARGET_FILE:__idf_led>
 $<TARGET_FILE:__idf_wifi>
 $<TARGET_FILE:__idf_web_server>

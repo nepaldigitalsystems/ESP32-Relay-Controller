@@ -244,15 +244,7 @@ esp_err_t relay_handler(httpd_req_t *req) // generally we dont want other file t
         httpd_resp_set_hdr(req, "location", "/");
         file_open("/spiffs/nds.html", req);
     }
-    // dram inspection
-    int FreeHeap = esp_get_free_heap_size();
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
+
     httpd_resp_send(req, NULL, 0);
     return ESP_OK;
 }
@@ -277,15 +269,7 @@ esp_err_t dashboard_handler(httpd_req_t *req) // generally we dont want other fi
         file_open("/spiffs/nds.html", req);
         httpd_resp_send(req, NULL, 0);
     }
-    // dram inspection
-    int FreeHeap = esp_get_free_heap_size();
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
+
     return ESP_OK;
 }
 
@@ -299,15 +283,6 @@ esp_err_t login_handler(httpd_req_t *req) // generally we dont want other file t
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
     // query_mdns_hosts_async(local_server_name);
     response.approve = false;
-    // dram inspection
-    int FreeHeap = esp_get_free_heap_size();
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return file_open("/spiffs/nds.html", req);
 }
 
@@ -319,15 +294,6 @@ esp_err_t login_handler(httpd_req_t *req) // generally we dont want other file t
 esp_err_t connect_ssid(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
-    // dram inspection
-    int FreeHeap = esp_get_free_heap_size();
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return file_open("/spiffs/wifi_connect.html", req);
 }
 
@@ -358,15 +324,6 @@ esp_err_t captive_handler(httpd_req_t *req) // generally we dont want other file
     {
         ESP_LOGE("HOST_TAG", "Error getting Host header (%s): (%s)", esp_err_to_name(ret), host);
     }
-    // dram inspection
-    int FreeHeap = esp_get_free_heap_size();
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return ESP_OK;
 }
 
@@ -453,16 +410,6 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
-
-    // dram inspection
-    int FreeHeap = esp_get_free_heap_size();
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return ESP_OK;
 }
 
@@ -554,12 +501,6 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         cJSON_free(JSON_data);
         free(MAC);
         free(Uptime);
-
-        // dram inspection
-        ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-        ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-        ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-        ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     }
     return ESP_OK;
 }
@@ -610,16 +551,6 @@ esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
-
-    // dram inspection
-    int FreeHeap = esp_get_free_heap_size();
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     return ESP_OK;
 }
 
@@ -724,15 +655,6 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
         httpd_resp_send(req, NULL, 0);
         free(string_json);
         cJSON_free(JSON_data);
-
-        int FreeHeap = esp_get_free_heap_size();
-        int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-        int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-        int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-        ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-        ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-        ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-        ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     }
     /***********************************************************************************************************************************************/
     else
@@ -775,15 +697,6 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
     free(string_json);
     cJSON_free(JSON_data);
 
-    // dram inspection
-    int FreeHeap = esp_get_free_heap_size();
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
     if (Esp_receive)
     {
         for (int i = 3; i > 0; i--)
@@ -795,7 +708,6 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
         vTaskDelay(pdMS_TO_TICKS(10));
         esp_restart();
     }
-
     return ESP_OK;
 }
 
@@ -820,7 +732,6 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
     ESP_LOGI("PARSE_TAG", "USERNAME = %s", cred.username);
     ESP_LOGI("PARSE_TAG", "PASSWORD = %s", cred.password);
     cJSON_Delete(payload);
-
     //     manual parsing
     //     char *U = strtok(buffer, "\r\n");
     //     char *P = strtok(NULL, "\r\n");
@@ -866,7 +777,6 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
             return ESP_OK;
         }
     }
-
     // sending json data
     cJSON *JSON_data = cJSON_CreateObject();
     cJSON_AddNumberToObject(JSON_data, "approve", (uint8_t)response.approve);
@@ -877,17 +787,6 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
-
-    // dram inspection
-    int FreeHeap = esp_get_free_heap_size();
-    int DRam = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int IRam = heap_caps_get_free_size(MALLOC_CAP_32BIT) - heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    int LargestFreeHeap = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-    ESP_LOGI("HEAP_SIZE", "%d", FreeHeap);
-    ESP_LOGI("FREE_DRAM", "%d", DRam / 1024);
-    ESP_LOGI("FREE_IRAM", "%d", IRam / 1024);
-    ESP_LOGI("FREE_HEAP", "%d", LargestFreeHeap);
-
     return ESP_OK;
 }
 
@@ -1087,7 +986,6 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
 
     vTaskDelay(200 / portTICK_PERIOD_MS);
     xTaskCreate(connect_to_local_AP, "connect_to_local_ap", 4096, &ap_config, 1, NULL);
-
     return ESP_OK;
 }
 /****************** to scan URLS when [ esp => AP type ]*****************************/

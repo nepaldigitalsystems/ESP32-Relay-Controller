@@ -686,13 +686,6 @@ D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/dns
 D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/dns_hijack_srv/CMakeFiles/install.dir
 D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/dns_hijack_srv/CMakeFiles/install/local.dir
 D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/dns_hijack_srv/CMakeFiles/install/strip.dir
-D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/led/CMakeFiles/__idf_led.dir
-D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/led/CMakeFiles/edit_cache.dir
-D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/led/CMakeFiles/rebuild_cache.dir
-D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/led/CMakeFiles/list_install_components.dir
-D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/led/CMakeFiles/install.dir
-D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/led/CMakeFiles/install/local.dir
-D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/led/CMakeFiles/install/strip.dir
 D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/wifi/CMakeFiles/__idf_wifi.dir
 D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/wifi/CMakeFiles/edit_cache.dir
 D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/wifi/CMakeFiles/rebuild_cache.dir
