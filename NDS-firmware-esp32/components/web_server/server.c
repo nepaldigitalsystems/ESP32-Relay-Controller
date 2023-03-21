@@ -873,6 +873,7 @@ esp_err_t img_handler(httpd_req_t *req) // generally we dont want other file to 
     {
         httpd_resp_set_type(req, "image/png");
     }
+
     FILE *file = fopen(path, "rb"); // binary read // handle other files
     if (file == NULL)
     {
