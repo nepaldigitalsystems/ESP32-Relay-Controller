@@ -3,6 +3,14 @@
 #include "stdio.h"
 #include "stdbool.h"
 
+/*************** structure of System_login approval *********************************/
+typedef struct resp_tt
+{
+    bool approve;
+} resp_t;
+
+resp_t response; // Use carefully  // only global access for login authentication
+
 /*************** structure of Setting_password *********************************/
 typedef struct settings_username_tt
 {
@@ -36,13 +44,6 @@ typedef struct auth_tt
     char session[10];
 } auth_t;
 
-/*************** structure of System_login approval *********************************/
-typedef struct resp_tt
-{
-    bool approve;
-} resp_t;
-resp_t response; // Use carefully  // only global access for login authentication
-
 /*************** structure of Relay Status *********************************/
 typedef enum Relay_Status
 {
@@ -67,7 +68,18 @@ typedef enum Relay_Status
     RELAY_UPDATE_MAX
 } e_Relay_Status_t;
 
+/* Default values of LoginCreds*/
 #define default_username "adminuser"
 #define default_password "adminpass"
+
+/* System LED ON - OFF */
+#define SYS_LED 2
+#define SYS_LED_OFF 0
+#define SYS_LED_ON 1
+/* Relay ON - OFF */
+#define NUM_OF_RELAY 16
+#define NUM_OF_LED_RELAY 12
+#define R_ON 0
+#define R_OFF 1
 
 #endif

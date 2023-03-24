@@ -3,9 +3,11 @@
  *******************************************************************************/
 #include <stdio.h>
 #include "DATA_FIELD.h"
+#include "relay_pattern.h"
+#include "connect.h"
 #include <string.h>
 #include <stdlib.h>
-#include "nvs.h"
+// #include "nvs.h"
 #include "nvs_flash.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
@@ -18,7 +20,6 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "freertos/semphr.h"
-#include "connect.h"
 #include "dns_hijack_srv.h"
 #include "netdb.h"
 
@@ -28,7 +29,7 @@
 /* login cred index */
 #define username_index 0
 #define password_index 1
-/* threshold memory in KB*/
+/* threshold heap memory in KB*/
 #define THRESHOLD_HEAP 100
 // const char *local_server_name = "nds-esp32";
 static httpd_handle_t server = NULL;                         // for server.c only
@@ -665,7 +666,7 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
 
         vTaskDelay(pdMS_TO_TICKS(10)); // delay for stability
         /******************************************** TURN ON/OFF GPIO_PINS *****************************************************************/
-        xSemaphoreGive(xSEMA);                // retrieve the stored data, Invoke the relay switches and generate "update_success_status" values
+        Activate_Relays();                    // retrieve the stored data, Invoke the relay switches and generate "update_success_status" values
         vTaskDelay(100 / portTICK_PERIOD_MS); // delay for stability
         /********************************************* CREATING JSON ****************************************************************/
         // creating new json packet to send the success_status as reply
