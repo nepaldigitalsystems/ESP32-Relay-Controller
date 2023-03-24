@@ -116,6 +116,7 @@ static bool AP_RESTART = false;              // a variable that remembers to -> 
 static bool STA_RESTART = false;             // a variable that remembers to -> Restart once in STA-mode at initialization stage
 static bool PATTERN = 0;                     // a variable for random_state ; default = 0
 static uint8_t COMBINATION = 0;              // a variable for random_state ; default = 0
+static bool SERIAL_PENDING = false;          // variable to tackle a blocking condition, that occurs when random button [on the remote control], gets pressed during serial pattern operation.
 
 /*******************************************************************************
  *                          Static Function Definitions
@@ -396,6 +397,7 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
     while (1)
     {
         if (xSEMA != NULL)
+        {
             if (xSemaphoreTake(xSEMA, portMAX_DELAY)) // task blocked from running , if access not given
             {
                 /******************************************************************************************************************/
@@ -473,6 +475,7 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
                 }
                 /******************************************************************************************************************/
             }
+        }
     }
     vTaskDelete(NULL);
 }
@@ -515,7 +518,7 @@ void restart_reset_Task(void *params)
                 vTaskDelay(400 / portTICK_PERIOD_MS); // wait some time while we check for the button to be released
             } while (gpio_get_level(RS_PIN) == 1);
             unsigned long millis_down = esp_timer_get_time() / 1000; // get the time at [ logic low ]
-            if ((int)(millis_down - millis_up) > 1000)
+            if ((int)(millis_down - millis_up) > 2000)
             {
                 if ((int)(millis_down - millis_up) >= 5000)
                 {
@@ -587,9 +590,15 @@ void random_activate_Task(void *params)
             } while (gpio_get_level(RAND_PIN) == 1);
             unsigned long millis_down = esp_timer_get_time() / 1000; // get the time at [ logic low ]
 
-            if ((int)(millis_down - millis_up) >= 150)
+            if ((int)(millis_down - millis_up) > 200) // ms
             {
-                Relay_Status_Value[SERIAL_UPDATE] = 0;
+                // first check if condition matches [ random => 'off' and serial => 'ON' ]
+                if ((Relay_Status_Value[SERIAL_UPDATE] != 0) && (Relay_Status_Value[RANDOM_UPDATE] == 0))
+                {
+                    SERIAL_PENDING = true; // this gets activated only once ; [ie when serial=1 and random is activated using interrupt]
+                }
+
+                Relay_Status_Value[SERIAL_UPDATE] = 0; // clearing the serial status to avoid both being activated
                 if (Relay_Status_Value[RANDOM_UPDATE] < 4)
                 {
                     Relay_Status_Value[RANDOM_UPDATE] += 1;
@@ -602,8 +611,17 @@ void random_activate_Task(void *params)
                 nvs_open("Relay_Status", NVS_READWRITE, &nvs_relay);
                 nvs_set_u8(nvs_relay, "random", Relay_Status_Value[RANDOM_UPDATE]); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
                 nvs_commit(nvs_relay);
-                nvs_set_u8(nvs_relay, "serial", 0); // serial => [0/0ff] vs [1/ON]
-                nvs_commit(nvs_relay);
+                if ((SERIAL_PENDING) && (Relay_Status_Value[RANDOM_UPDATE] == 0))
+                {
+                    SERIAL_PENDING = false;
+                    nvs_set_u8(nvs_relay, "serial", 1);
+                    nvs_commit(nvs_relay);
+                }
+                else
+                {
+                    nvs_set_u8(nvs_relay, "serial", 0); // serial => [0/0ff] vs [1/ON]
+                    nvs_commit(nvs_relay);
+                }
                 nvs_close(nvs_relay);
                 xSemaphoreGive(xSEMA);
             }
@@ -652,11 +670,11 @@ static void INIT_RAND_PIN()
  *******************************************************************************/
 void app_main(void)
 {
+    /***************************************************************/
     gpio_pad_select_gpio(SYS_LED);                 // SYS_LED turns ON in both AP & STA phase.
     gpio_set_direction(SYS_LED, GPIO_MODE_OUTPUT); // System ON/OFF-led initialized
     gpio_set_level(SYS_LED, SYS_LED_ON);           // turn-ON system led
     ESP_LOGE("SYSTEM_LED", "ON");                  // comment
-
     /***************************************************************/
     ap_config_t local_config; // ssid store sample
     // Create & initialize serial timer

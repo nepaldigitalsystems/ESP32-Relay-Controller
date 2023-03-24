@@ -21,7 +21,6 @@
 #include "connect.h"
 #include "dns_hijack_srv.h"
 #include "netdb.h"
-// #include "mdns.h"
 
 /*******************************************************************************
  *                          Static Data Definitions
@@ -29,6 +28,8 @@
 /* login cred index */
 #define username_index 0
 #define password_index 1
+/* threshold memory in KB*/
+#define THRESHOLD_HEAP 100
 // const char *local_server_name = "nds-esp32";
 static httpd_handle_t server = NULL;                         // for server.c only
 static uint8_t Relay_inStatus_Value[RELAY_UPDATE_MAX] = {0}; // 1-18
@@ -46,6 +47,21 @@ extern void wifi_connect_ap(const char *SSID);
 /*******************************************************************************
  *                          Static Function Definitions
  *******************************************************************************/
+/**
+ * @brief function to inspect the remaining esp_heap_memory.
+ *
+ * @return - ESP_OK: esp_memory remaining is above required threshold memory size.
+ * @return - ESP_FAIL: esp_memory remaining is below required threshold memory size.
+ */
+static esp_err_t esp_memory_refresh()
+{
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
+    if ((int)esp_get_free_heap_size() <= THRESHOLD_HEAP) // threshold in kB
+        return ESP_FAIL;
+    else
+        return ESP_OK;
+}
+
 /**
  * @brief function to inspect the user_login_data within NVS_storage.
  *
@@ -410,6 +426,15 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
+
+    /*
+    // now check the reamining heap_size ; if lower than threshold , RESTART ESP
+    if (esp_memory_refresh() == ESP_FAIL)
+    {
+        ESP_LOGE("HEAP_MEMORY_LOW ", ".................RESTARTING ESP....................");
+        esp_restart();
+    }
+    */
     return ESP_OK;
 }
 
@@ -501,6 +526,15 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         cJSON_free(JSON_data);
         free(MAC);
         free(Uptime);
+
+        /*
+        // now check the reamining heap_size ; if lower than threshold , RESTART ESP
+        if (esp_memory_refresh() == ESP_FAIL)
+        {
+            ESP_LOGE("HEAP_MEMORY_LOW ", ".................RESTARTING ESP....................");
+            esp_restart();
+        }
+        */
     }
     return ESP_OK;
 }
@@ -592,6 +626,7 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
         nvs_handle_t nvs_relay;
         nvs_open("Relay_Status", NVS_READWRITE, &nvs_relay);
         if (Relay_inStatus_Value[RANDOM_UPDATE] == 0 && Relay_inStatus_Value[SERIAL_UPDATE] == 0)
+        {
             for (uint8_t i = 1; i <= 16; i++)
             {
                 char *str = (char *)malloc(sizeof("Relay") + 2);
@@ -601,6 +636,8 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
                 nvs_commit(nvs_relay);
                 free(str);
             }
+        }
+
         if (Relay_inStatus_Value[RANDOM_UPDATE] != 0 && Relay_inStatus_Value[SERIAL_UPDATE] == 0)
         {
             nvs_set_u8(nvs_relay, "random", Relay_inStatus_Value[RANDOM_UPDATE]); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
@@ -626,10 +663,10 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
             nvs_close(nvs_relay);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(10)); // delay for stability
         /******************************************** TURN ON/OFF GPIO_PINS *****************************************************************/
-        xSemaphoreGive(xSEMA); // retrieve the stored data, Invoke the relay switches and generate "update_success_status" values
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        xSemaphoreGive(xSEMA);                // retrieve the stored data, Invoke the relay switches and generate "update_success_status" values
+        vTaskDelay(100 / portTICK_PERIOD_MS); // delay for stability
         /********************************************* CREATING JSON ****************************************************************/
         // creating new json packet to send the success_status as reply
         cJSON *JSON_data = cJSON_CreateObject();
@@ -646,23 +683,30 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
                 free(str);
             }
         }
+        /****************************************** SENDING json reply packet *******************************************************************/
         char *string_json = cJSON_Print(JSON_data);
         // ESP_LOGE("JSON_REPLY", "%s", string_json);
-        /******************************************  SENDING *******************************************************************/
-        // sending json reply packet
         httpd_resp_set_type(req, "application/json"); // sending json data as response
         httpd_resp_sendstr(req, string_json);         // chunk
         httpd_resp_send(req, NULL, 0);
         free(string_json);
         cJSON_free(JSON_data);
+        /***********************************************************************************************************************/
     }
-    /***********************************************************************************************************************************************/
     else
     {
         ESP_LOGE("RELAY_INPUT", "Incomming JSON_packet not proper!!");
         httpd_resp_set_status(req, "204 NO CONTENT");
         httpd_resp_send(req, NULL, 0);
     }
+    /*
+    // now check the reamining heap_size ; if lower than threshold , RESTART ESP
+    if (esp_memory_refresh() == ESP_FAIL)
+    {
+        ESP_LOGE("HEAP_MEMORY_LOW ", ".................RESTARTING ESP....................");
+        esp_restart();
+    }
+    */
     return ESP_OK;
 }
 
