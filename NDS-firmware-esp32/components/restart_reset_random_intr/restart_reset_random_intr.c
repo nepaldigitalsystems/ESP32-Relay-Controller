@@ -9,6 +9,16 @@
 #include "esp_intr_alloc.h"
 #include "relay_pattern.h"
 
+/* System LED ON - OFF */
+#define SYS_LED 2
+#define SYS_LED_OFF 0
+#define SYS_LED_ON 1
+/* Relay ON - OFF */
+#define NUM_OF_RELAY 16
+// #define NUM_OF_LED_RELAY 12
+#define R_ON 0
+#define R_OFF 1
+
 /*******************************************************************************
  *                          Static Data Definitions
  *******************************************************************************/

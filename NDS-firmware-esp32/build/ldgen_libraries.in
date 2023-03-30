@@ -71,5 +71,8 @@ $<TARGET_FILE:__idf_ulp>
 $<TARGET_FILE:__idf_wifi_provisioning>
 $<TARGET_FILE:__idf_main>
 $<TARGET_FILE:__idf_dns_hijack_srv>
-$<TARGET_FILE:__idf_wifi>
+$<TARGET_FILE:__idf_relay_pattern_generate>
+$<TARGET_FILE:__idf_wifi_internal>
 $<TARGET_FILE:__idf_web_server>
+$<TARGET_FILE:__idf_reboot_counter>
+$<TARGET_FILE:__idf_restart_reset_random_intr>

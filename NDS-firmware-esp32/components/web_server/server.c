@@ -26,6 +26,9 @@
 /*******************************************************************************
  *                          Static Data Definitions
  *******************************************************************************/
+/* Default values of LoginCreds*/
+#define default_username "adminuser"
+#define default_password "adminpass"
 /* login cred index */
 #define username_index 0
 #define password_index 1

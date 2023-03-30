@@ -11,6 +11,13 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 
+
+/* Relay ON - OFF */
+#define NUM_OF_RELAY 16
+#define NUM_OF_LED_RELAY 12
+#define R_ON 0
+#define R_OFF 1
+
 /*******************************************************************************
  *                          Static Data Definitions
  *******************************************************************************/

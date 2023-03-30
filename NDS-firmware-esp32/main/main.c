@@ -80,6 +80,17 @@
  * namespace => Relay_Status ; key = serial;
  */
 
+
+/* System LED ON - OFF */
+#define SYS_LED 2
+#define SYS_LED_OFF 0
+#define SYS_LED_ON 1
+/* Relay ON - OFF */
+#define NUM_OF_RELAY 16
+#define NUM_OF_LED_RELAY 12
+#define R_ON 0
+#define R_OFF 1
+
 /* Reboot_Mode_index */
 #define AP_mode 0
 #define STA_mode 1

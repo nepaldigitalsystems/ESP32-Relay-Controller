@@ -71,5 +71,8 @@ D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/ulp
 D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/wifi_provisioning/libwifi_provisioning.a
 D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/main/libmain.a
 D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/dns_hijack_srv/libdns_hijack_srv.a
-D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/wifi/libwifi.a
+D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/relay_pattern_generate/librelay_pattern_generate.a
+D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/wifi_internal/libwifi_internal.a
 D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/web_server/libweb_server.a
+D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/reboot_counter/libreboot_counter.a
+D:/GIT_NDS_WorkSpace/ESP32-Relay-Controller/NDS-firmware-esp32/build/esp-idf/restart_reset_random_intr/librestart_reset_random_intr.a
