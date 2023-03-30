@@ -4,7 +4,7 @@
 
 void RESTART_WIFI(uint8_t);
 void Boot_count();
-void get_AP_RESTART();
-void get_STA_RESTART();
+bool get_AP_RESTART();
+bool get_STA_RESTART();
 
 #endif

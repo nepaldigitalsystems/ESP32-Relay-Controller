@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+
 #include "DATA_FIELD.h"
 #include "driver/timer.h"
 #include "driver/gpio.h"
@@ -16,8 +18,8 @@ uint8_t Relay_Status_Value[RELAY_UPDATE_MAX] = {0, R_OFF, R_OFF, R_OFF, R_OFF, R
 uint8_t Relay_Update_Success[RELAY_UPDATE_MAX] = {0};                                                                                                                     // 0-18
 gpio_num_t REALY_PINS[NUM_OF_RELAY] = {GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26, GPIO_NUM_25, GPIO_NUM_33, GPIO_NUM_32, GPIO_NUM_15, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_23};
 
-static esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
-static esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
+esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
+esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
 static bool PATTERN = 0;                     // a variable for random_state ; default = 0
 static uint8_t COMBINATION = 0;              // a variable for random_state ; default = 0
 static xSemaphoreHandle xSEMA = NULL;        // global [used by only "relay_pattern.c"]

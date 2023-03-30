@@ -7,6 +7,7 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "esp_intr_alloc.h"
+#include "relay_pattern.h"
 
 /*******************************************************************************
  *                          Static Data Definitions
@@ -15,6 +16,9 @@ static bool SERIAL_PENDING = false;     // variable to tackle a blocking conditi
 static gpio_config_t io_conf;           // for multiple gpio configuration
 static TaskHandle_t rsHandler = NULL;   // handler to notify, reset_restart interrupt button being pressed
 static TaskHandle_t randHandler = NULL; // handler to notify, random interrupt button being pressed
+
+extern uint8_t Relay_Status_Value[RELAY_UPDATE_MAX];
+extern gpio_num_t REALY_PINS[NUM_OF_RELAY];
 
 /* random_pin, restart_reset and system_led pin declarations */
 const uint32_t RS_PIN = 34;
@@ -41,39 +45,6 @@ void IRAM_ATTR restart_reset_random_isr(void *args)
         break;
     }
 }
-
-/**
- * @brief Function to initailized restart_reset interrupt pin.
- *
- */
-void INIT_RS_PIN()
-{
-    io_conf.intr_type = GPIO_INTR_POSEDGE; // initialize the interrupt button for restart and reset
-    io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pull_down_en = true;
-    io_conf.pull_up_en = false;
-    io_conf.pin_bit_mask = (1ULL << RS_PIN);
-    gpio_config(&io_conf);
-    gpio_install_isr_service(0);
-    gpio_isr_handler_add(RS_PIN, restart_reset_random_isr, (void *)&RS_PIN);          // activate the isr for RS_pin
-    xTaskCreate(restart_reset_Task, "restart_reset_Task", 4096, NULL, 1, &rsHandler); // init restart_reset_task
-}
-
-/**
- * @brief Function to initailized random interrupt pin.
- */
-void INIT_RAND_PIN()
-{
-    io_conf.intr_type = GPIO_INTR_POSEDGE;
-    io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pull_down_en = true;
-    io_conf.pull_up_en = false;
-    io_conf.pin_bit_mask = (1ULL << RAND_PIN);
-    gpio_config(&io_conf);
-    gpio_isr_handler_add(RAND_PIN, restart_reset_random_isr, (void *)&RAND_PIN);            // activate the isr for RS_pin
-    xTaskCreate(random_activate_Task, "random_activate_Task", 4096, NULL, 1, &randHandler); // init random_activate_task
-}
-
 /**
  * @brief Task for restart_reset_button operation.
  *
@@ -144,7 +115,6 @@ static void restart_reset_Task(void *params)
     }
     vTaskDelete(NULL);
 }
-
 /**
  * @brief Task for random_button operation.
  *
@@ -206,4 +176,36 @@ static void random_activate_Task(void *params)
         }
     }
     vTaskDelete(NULL);
+}
+
+/**
+ * @brief Function to initailized restart_reset interrupt pin.
+ *
+ */
+void INIT_RS_PIN()
+{
+    io_conf.intr_type = GPIO_INTR_POSEDGE; // initialize the interrupt button for restart and reset
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pull_down_en = true;
+    io_conf.pull_up_en = false;
+    io_conf.pin_bit_mask = (1ULL << RS_PIN);
+    gpio_config(&io_conf);
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(RS_PIN, restart_reset_random_isr, (void *)&RS_PIN);          // activate the isr for RS_pin
+    xTaskCreate(restart_reset_Task, "restart_reset_Task", 4096, NULL, 1, &rsHandler); // init restart_reset_task
+}
+
+/**
+ * @brief Function to initailized random interrupt pin.
+ */
+void INIT_RAND_PIN()
+{
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pull_down_en = true;
+    io_conf.pull_up_en = false;
+    io_conf.pin_bit_mask = (1ULL << RAND_PIN);
+    gpio_config(&io_conf);
+    gpio_isr_handler_add(RAND_PIN, restart_reset_random_isr, (void *)&RAND_PIN);            // activate the isr for RS_pin
+    xTaskCreate(random_activate_Task, "random_activate_Task", 4096, NULL, 1, &randHandler); // init random_activate_task
 }

@@ -20,7 +20,7 @@ static bool STA_RESTART = false; // a variable that remembers to -> Restart once
 /**
  * @brief Function to provide static boolean variable "AP_RESTART" [from reboot_count.c]
  */
-void get_AP_RESTART()
+bool get_AP_RESTART()
 {
     return AP_RESTART;
 }
@@ -28,7 +28,7 @@ void get_AP_RESTART()
 /**
  * @brief Function to provide static boolean variable "STA_RESTART" [from reboot_count.c]
  */
-void get_STA_RESTART()
+bool get_STA_RESTART()
 {
     return STA_RESTART;
 }

@@ -28,8 +28,8 @@
 #include "server.h"
 #include "connect.h"
 #include "relay_pattern.h"
-#include "reboot_counter.h"
-#include "restart_reset_random_INTR.h"
+#include "reboot_count.h"
+#include "restart_reset_random_intr.h"
 // #include "nvs.h"
 #include "nvs_flash.h"
 #include "cJSON.h"
@@ -87,6 +87,10 @@
 /* local_wifi cred index */
 #define LOCAL_SSID_INDEX 0
 #define LOCAL_PASS_INDEX 1
+
+// Extern variables 
+extern esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
+extern esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
 
 /*******************************************************************************
  *                          Static Function Definitions

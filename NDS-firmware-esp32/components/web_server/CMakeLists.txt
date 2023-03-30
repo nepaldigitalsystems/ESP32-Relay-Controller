@@ -1,3 +1,8 @@
 idf_component_register(SRCS "server.c" 
-                    INCLUDE_DIRS "."
-                    REQUIRES wifi esp_http_server nvs_flash spiffs json mdns dns_hijack_srv relay_pattern_generate)
+                    INCLUDE_DIRS "include"
+                    REQUIRES    esp_http_server 
+                                json spiffs 
+                                relay_pattern_generate 
+                                web_server 
+                                wifi_internal 
+                                dns_hijack_srv)
