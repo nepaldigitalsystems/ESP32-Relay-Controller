@@ -22,6 +22,7 @@
 #include "freertos/semphr.h"
 #include "dns_hijack_srv.h"
 #include "netdb.h"
+#include "math.h"
 
 /*******************************************************************************
  *                          Static Data Definitions
@@ -57,13 +58,21 @@ extern void wifi_connect_ap(const char *SSID);
  * @return - ESP_OK: esp_memory remaining is above required threshold memory size.
  * @return - ESP_FAIL: esp_memory remaining is below required threshold memory size.
  */
-static esp_err_t esp_memory_refresh()
+// static esp_err_t esp_memory_refresh()
+// {
+//     ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
+//     if ((int)esp_get_free_heap_size() <= THRESHOLD_HEAP) // threshold in kB
+//         return ESP_FAIL;
+//     else
+//         return ESP_OK;
+// }
+
+/*Return minimum size value between two length*/
+size_t MIN(size_t A, size_t B)
 {
-    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
-    if ((int)esp_get_free_heap_size() <= THRESHOLD_HEAP) // threshold in kB
-        return ESP_FAIL;
-    else
-        return ESP_OK;
+    size_t min_size = 0;
+    (A >= B) ? (min_size = A) : (min_size = B);
+    return min_size;
 }
 
 /**
@@ -290,6 +299,8 @@ esp_err_t dashboard_handler(httpd_req_t *req) // generally we dont want other fi
         httpd_resp_send(req, NULL, 0);
     }
 
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
+
     return ESP_OK;
 }
 
@@ -356,11 +367,15 @@ esp_err_t captive_handler(httpd_req_t *req) // generally we dont want other file
 esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
     static settings_pass_name_t set_pass_name;
     bool ESP_receive;
     char buffer[250];
     memset(&buffer, 0, sizeof(buffer));
-    httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
+    // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
+    /* Truncate if content length larger than the buffer */
+    size_t recv_size = MIN(req->content_len, sizeof(buffer));
+    httpd_req_recv(req, buffer, recv_size);
     // ESP_LOGW("settings_post", "Buffer : %s", buffer);
 
     cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
@@ -450,10 +465,13 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
 esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
     bool ESP_receive;
-    char buffer[5];
+    char buffer[200];
     memset(&buffer, 0, sizeof(buffer));
-    httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
+    /* Truncate if content length larger than the buffer */
+    size_t recv_size = MIN(req->content_len, (size_t)sizeof(buffer));
+    httpd_req_recv(req, buffer, recv_size); // recv_size);
     // ESP_LOGW("Info_post", "Buffer : %s", buffer);
 
     cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
@@ -475,6 +493,8 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         memset(&sysUpTime, 0, sizeof(sysUpTime));
         char *MAC = (char *)malloc(sizeof(chipId) * 6);
         char *Uptime = (char *)malloc(15 + (sizeof(int) * 4));
+
+        // esp_heap_trace_alloc_hook();
 
         /*resource calculation*/
         esp_chip_info(&chip_info);
@@ -552,7 +572,10 @@ esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post
 {
     char buffer[5];
     memset(&buffer, 0, sizeof(buffer));
-    httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
+    /* Truncate if content length larger than the buffer */
+    size_t recv_size = MIN(req->content_len, sizeof(buffer));
+    httpd_req_recv(req, buffer, recv_size);
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
     // ESP_LOGI("RELAY_REFRESH_BTN", "Buffer : %s", buffer);
     /********************************************* CREATING JSON ****************************************************************/
     // creating new json packet to send the success_status as reply
@@ -602,7 +625,11 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
     char buffer[250];
     memset(&buffer, 0, sizeof(buffer));
-    httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
+    // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
+    /* Truncate if content length larger than the buffer */
+    size_t recv_size = MIN(req->content_len, sizeof(buffer));
+    httpd_req_recv(req, buffer, recv_size);
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
     // ESP_LOGW("RELAY_STATE_POST", "Buffer : %s", buffer);
     /********************************************* PARSING INCOMING JSON *********************************************************************************/
     // Parsing json structured credentials
@@ -725,8 +752,11 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
     bool Esp_receive;
     char buffer[5]; // this stores username and password into buffer //
     memset(&buffer, 0, sizeof(buffer));
-    httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
-    // ESP_LOGW("restart_post", "Buffer : %s", buffer);
+    // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
+    /* Truncate if content length larger than the buffer */
+    size_t recv_size = MIN(req->content_len, sizeof(buffer));
+    httpd_req_recv(req, buffer, recv_size);
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
 
     cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
     Esp_receive = cJSON_GetObjectItem(payload, "restart")->valueint;
@@ -770,9 +800,13 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
     static auth_t cred;                           // cred obj // store it into the memory even after this function terminates
     char buffer[100];                             // this stores username and password into buffer //
     memset(&buffer, 0, sizeof(buffer));
-    httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
-    ESP_LOGW("login_data_post", "Buffer : %s", buffer);
+    // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
+    /* Truncate if content length larger than the buffer */
+    size_t recv_size = MIN(req->content_len, sizeof(buffer));
+    httpd_req_recv(req, buffer, recv_size);
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
 
+    ESP_LOGW("login_data_post", "Buffer : %s", buffer);
     // get the json structured credentials
     cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
     strcpy(cred.username, cJSON_GetObjectItem(payload, "username")->valuestring);
@@ -835,6 +869,7 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
     httpd_resp_send(req, NULL, 0);
     free(string_json);
     cJSON_free(JSON_data);
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
     return ESP_OK;
 }
 
@@ -846,6 +881,7 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
 esp_err_t assets_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
     esp_vfs_spiffs_conf_t esp_vfs_spiffs_conf =
         {
             .base_path = "/spiffs",
@@ -896,6 +932,7 @@ esp_err_t assets_handler(httpd_req_t *req) // generally we dont want other file 
 esp_err_t img_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
+    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
     esp_vfs_spiffs_conf_t esp_vfs_spiffs_conf =
         {
             .base_path = "/spiffs",
