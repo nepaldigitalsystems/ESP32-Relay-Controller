@@ -10,7 +10,8 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
-build/
+NDS-firmware-esp32/build
+
 sdkconfig.old
 .vscode
 .devcontainer
