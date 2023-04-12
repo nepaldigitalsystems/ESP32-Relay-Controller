@@ -57,14 +57,14 @@ extern void wifi_connect_ap(const char *SSID);
  * @return - ESP_OK: esp_memory remaining is above required threshold memory size.
  * @return - ESP_FAIL: esp_memory remaining is below required threshold memory size.
  */
-static esp_err_t esp_memory_refresh()
-{
-    ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
-    if ((int)esp_get_free_heap_size() <= THRESHOLD_HEAP) // threshold in kB
-        return ESP_FAIL;
-    else
-        return ESP_OK;
-}
+// static esp_err_t esp_memory_refresh()
+// {
+//     ESP_LOGE("ESP_HEAP_SIZE", "%d", esp_get_free_heap_size());
+//     if ((int)esp_get_free_heap_size() <= THRESHOLD_HEAP) // threshold in kB
+//         return ESP_FAIL;
+//     else
+//         return ESP_OK;
+// }
 
 /**
  * @brief function to inspect the user_login_data within NVS_storage.
@@ -597,112 +597,153 @@ esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post
  * @param req Pointer to the request being responded.
  * @return - ESP_OK: Compeleted operation.
  */
-esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post is activated
+static esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
+    ESP_LOGW("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
     char buffer[250];
     memset(&buffer, 0, sizeof(buffer));
-    httpd_req_recv(req, buffer, req->content_len); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
-    // ESP_LOGW("RELAY_STATE_POST", "Buffer : %s", buffer);
+    size_t recv_size = ((req->content_len) > sizeof(buffer)) ? sizeof(buffer) : (req->content_len);
+    httpd_req_recv(req, buffer, recv_size); // size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
+    buffer[249] = '\0';
+    ESP_LOGW("RELAY_STATE_POST", "Buffer : %s", buffer);
     /********************************************* PARSING INCOMING JSON *********************************************************************************/
     // Parsing json structured credentials
     if (strstr(buffer, ":") != NULL)
     {
-        // parsing json data into Relay_status_array
-        cJSON *payload = cJSON_Parse(buffer);                                                     // returns an object holding respective [ key:value pair data ]
-        Relay_inStatus_Value[SERIAL_UPDATE] = (cJSON_GetObjectItem(payload, "serial")->valueint); // parse serial
-        Relay_inStatus_Value[RANDOM_UPDATE] = (cJSON_GetObjectItem(payload, "random")->valueint); // parse random
-        if (Relay_inStatus_Value[SERIAL_UPDATE] == 0 && Relay_inStatus_Value[RANDOM_UPDATE] == 0) // First, storing the button status [relay1 - to - relay16]
+        //     // parsing json data into Relay_status_array
+        cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
+        if (payload)
         {
-            for (uint8_t i = 1; i <= 16; i++)
-            {
-                char *str = (char *)malloc(sizeof("Relay") + 2);
-                memset(str, 0, sizeof("Relay") + 2);
-                sprintf(str, "Relay%u", i);
-                Relay_inStatus_Value[i] = (cJSON_GetObjectItem(payload, str)->valueint) ? 0 : 1; // invert logic for relay [i.e :- {ON = 0} & {OFF = 1}]
-                free(str);
-            }
+            //         cJSON *cj_serial = cJSON_GetObjectItem(payload, "serial");
+            //         if (cj_serial)
+            //         {
+            //             Relay_inStatus_Value[SERIAL_UPDATE] = cj_serial->valueint; // parse serial
+            //         }
+
+            //         cJSON *cj_random = cJSON_GetObjectItem(payload, "random");
+            //         if (cj_random)
+            //         {
+            //             Relay_inStatus_Value[RANDOM_UPDATE] = cj_random->valueint; // parse random
+            //         }
+
+            //         if ((0 == Relay_inStatus_Value[SERIAL_UPDATE]) &&
+            //             (0 == Relay_inStatus_Value[RANDOM_UPDATE])) // First, storing the button status [relay1 - to - relay16]
+            //         {
+            //             for (uint8_t i = 1; i <= 16; i++)
+            //             {
+            //                 char str[10];
+            //                 memset(str, 0, sizeof(str));
+            //                 sprintf(str, "Relay%u", i);
+            //                 Relay_inStatus_Value[i] = (cJSON_GetObjectItem(payload, str)->valueint) ? 0 : 1; // invert logic for relay [i.e :- {ON = 0} & {OFF = 1}]
+            //             }
+            //         }
+            cJSON_Delete(payload);
         }
-        cJSON_Delete(payload);
-        ESP_LOGW("RELAY_JSON_POST_PARSE", "serial = %d , random = %d", Relay_inStatus_Value[SERIAL_UPDATE], Relay_inStatus_Value[RANDOM_UPDATE]);
-        /******************************************* STORING NEW RELAY STATUS ******************************************************************/
-        // Storing button status in nvs-storage
+
+        //     ESP_LOGW("RELAY_JSON_POST_PARSE", "serial = %d , random = %d", Relay_inStatus_Value[SERIAL_UPDATE], Relay_inStatus_Value[RANDOM_UPDATE]);
+        //     /******************************************* STORING NEW RELAY STATUS ******************************************************************/
+        //     // Storing button status in nvs-storage
         nvs_handle_t nvs_relay;
-        nvs_open("Relay_Status", NVS_READWRITE, &nvs_relay);
-        if (Relay_inStatus_Value[RANDOM_UPDATE] == 0 && Relay_inStatus_Value[SERIAL_UPDATE] == 0)
+
+        if (ESP_OK == nvs_open("Relay_Status", NVS_READWRITE, &nvs_relay))
         {
-            for (uint8_t i = 1; i <= 16; i++)
-            {
-                char *str = (char *)malloc(sizeof("Relay") + 2);
-                memset(str, 0, sizeof("Relay") + 2);
-                sprintf(str, "Relay%u", i);
-                nvs_set_u8(nvs_relay, str, Relay_inStatus_Value[i]);
-                nvs_commit(nvs_relay);
-                free(str);
-            }
+            // if (Relay_inStatus_Value[RANDOM_UPDATE] == 0 && Relay_inStatus_Value[SERIAL_UPDATE] == 0)
+            // {
+            //     for (uint8_t i = 1; i <= 16; i++)
+            //     {
+            //         char str[10];
+            //         memset(str, 0, sizeof(str));
+            //         sprintf(str, "Relay%u", i);
+            //         nvs_set_u8(nvs_relay, str, Relay_inStatus_Value[i]);
+            //         nvs_commit(nvs_relay);
+            //     }
+            // }
+
+            // if (Relay_inStatus_Value[RANDOM_UPDATE] != 0 && Relay_inStatus_Value[SERIAL_UPDATE] == 0)
+            // {
+            //     nvs_set_u8(nvs_relay, "random", Relay_inStatus_Value[RANDOM_UPDATE]); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
+            //     nvs_commit(nvs_relay);
+            //     nvs_set_u8(nvs_relay, "serial", 0); // serial => [0/0ff] vs [1/ON]
+            //     nvs_commit(nvs_relay);
+            // }
+            // else if (Relay_inStatus_Value[SERIAL_UPDATE] == 1 && Relay_inStatus_Value[RANDOM_UPDATE] == 0)
+            // {
+            //     nvs_set_u8(nvs_relay, "random", 0); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
+            //     nvs_commit(nvs_relay);
+            //     nvs_set_u8(nvs_relay, "serial", 1); // serial => [0/0ff] vs [1/ON]
+            //     nvs_commit(nvs_relay);
+            // }
+            // else
+            // {
+            //     nvs_set_u8(nvs_relay, "random", 0); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
+            //     nvs_commit(nvs_relay);
+            //     nvs_set_u8(nvs_relay, "serial", 0); // serial => [0/0ff] vs [1/ON]
+            //     nvs_commit(nvs_relay);
+            // }
+
+            nvs_close(nvs_relay);
         }
 
-        if (Relay_inStatus_Value[RANDOM_UPDATE] != 0 && Relay_inStatus_Value[SERIAL_UPDATE] == 0)
-        {
-            nvs_set_u8(nvs_relay, "random", Relay_inStatus_Value[RANDOM_UPDATE]); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
-            nvs_commit(nvs_relay);
-            nvs_set_u8(nvs_relay, "serial", 0); // serial => [0/0ff] vs [1/ON]
-            nvs_commit(nvs_relay);
-            nvs_close(nvs_relay);
-        }
-        else if (Relay_inStatus_Value[SERIAL_UPDATE] == 1 && Relay_inStatus_Value[RANDOM_UPDATE] == 0)
-        {
-            nvs_set_u8(nvs_relay, "random", 0); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
-            nvs_commit(nvs_relay);
-            nvs_set_u8(nvs_relay, "serial", 1); // serial => [0/0ff] vs [1/ON]
-            nvs_commit(nvs_relay);
-            nvs_close(nvs_relay);
-        }
-        else
-        {
-            nvs_set_u8(nvs_relay, "random", 0); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
-            nvs_commit(nvs_relay);
-            nvs_set_u8(nvs_relay, "serial", 0); // serial => [0/0ff] vs [1/ON]
-            nvs_commit(nvs_relay);
-            nvs_close(nvs_relay);
-        }
+        //     vTaskDelay(pdMS_TO_TICKS(10)); // delay for stability
+        //     /******************************************** TURN ON/OFF GPIO_PINS *****************************************************************/
+        Activate_Relays(); // retrieve the stored data, Invoke the relay switches and generate "update_success_status" values
+                           //     vTaskDelay(100 / portTICK_PERIOD_MS); // delay for stability
+                           //     /********************************************* CREATING JSON ****************************************************************/
+                           //     // creating new json packet to send the success_status as reply
 
-        vTaskDelay(pdMS_TO_TICKS(10)); // delay for stability
-        /******************************************** TURN ON/OFF GPIO_PINS *****************************************************************/
-        Activate_Relays();                    // retrieve the stored data, Invoke the relay switches and generate "update_success_status" values
-        vTaskDelay(100 / portTICK_PERIOD_MS); // delay for stability
-        /********************************************* CREATING JSON ****************************************************************/
-        // creating new json packet to send the success_status as reply
-        cJSON *JSON_data = cJSON_CreateObject();
-        cJSON_AddNumberToObject(JSON_data, "random_update_success", Relay_Update_Success[RANDOM_UPDATE]);
-        cJSON_AddNumberToObject(JSON_data, "serial_update_success", Relay_Update_Success[SERIAL_UPDATE]);
-        if (Relay_inStatus_Value[SERIAL_UPDATE] == 0 && Relay_inStatus_Value[RANDOM_UPDATE] == 0)
+        char tmp_buffer[512];
+        bzero(tmp_buffer, sizeof(tmp_buffer));
+        snprintf(tmp_buffer, sizeof(tmp_buffer), "{\"random_update_success\":%u,\"serial_update_success\":%u",
+                 Relay_Update_Success[RANDOM_UPDATE], Relay_Update_Success[SERIAL_UPDATE]);
+
+        for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
         {
-            for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
-            {
-                char *str = (char *)malloc(sizeof("Relay_update_success") + 2);
-                memset(str, 0, sizeof("Relay_update_success") + 2);
-                sprintf(str, "Relay%u_update_success", i);
-                cJSON_AddNumberToObject(JSON_data, str, Relay_Update_Success[i]);
-                free(str);
-            }
+            snprintf(tmp_buffer + strlen(tmp_buffer), sizeof(tmp_buffer) - strlen(tmp_buffer), ",\"Relay%u_update_success\":%u", i, Relay_Update_Success[i]);
         }
-        /****************************************** SENDING json reply packet *******************************************************************/
-        char *string_json = cJSON_Print(JSON_data);
-        // ESP_LOGE("JSON_REPLY", "%s", string_json);
+        snprintf(tmp_buffer + strlen(tmp_buffer), sizeof(tmp_buffer) - strlen(tmp_buffer), "}");
+
         httpd_resp_set_type(req, "application/json"); // sending json data as response
-        httpd_resp_sendstr(req, string_json);         // chunk
+        httpd_resp_sendstr(req, tmp_buffer);          // chunk
         httpd_resp_send(req, NULL, 0);
-        free(string_json);
-        cJSON_free(JSON_data);
-        /***********************************************************************************************************************/
+
+        // cJSON *JSON_data = cJSON_CreateObject();
+        // if (NULL != JSON_data)
+        // {
+        //     cJSON_AddNumberToObject(JSON_data, "random_update_success", Relay_Update_Success[RANDOM_UPDATE]);
+        //     cJSON_AddNumberToObject(JSON_data, "serial_update_success", Relay_Update_Success[SERIAL_UPDATE]);
+        //     // if (Relay_inStatus_Value[SERIAL_UPDATE] == 0 && Relay_inStatus_Value[RANDOM_UPDATE] == 0)
+        //     // {
+        //     //     for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
+        //     //     {
+        //     //         char str[32];
+        //     //         memset(str, 0, sizeof(str));
+        //     sprintf(str, "Relay%u_update_success", i);
+        //     //         cJSON_AddNumberToObject(JSON_data, str, Relay_Update_Success[i]);
+        //     //     }
+        //     // }
+
+        //     // /****************************************** SENDING json reply packet *******************************************************************/
+        //     // char *string_json = cJSON_Print(JSON_data);
+        //     // if (string_json)
+        //     // {
+        //     //     // ESP_LOGE("JSON_REPLY", "%s", string_json);
+        //     //     httpd_resp_set_type(req, "application/json"); // sending json data as response
+        //     //     httpd_resp_sendstr(req, string_json);         // chunk
+        //     //     httpd_resp_send(req, NULL, 0);
+        //     //     free(string_json);
+        //     // }
+
+        //     cJSON_free(JSON_data);
+        // }
+        //     /***********************************************************************************************************************/
     }
-    else
-    {
-        ESP_LOGE("RELAY_INPUT", "Incomming JSON_packet not proper!!");
-        httpd_resp_set_status(req, "204 NO CONTENT");
-        httpd_resp_send(req, NULL, 0);
-    }
+    // else
+    // {
+    //     ESP_LOGE("RELAY_INPUT", "Incomming JSON_packet not proper!!");
+    //     httpd_resp_set_status(req, "204 NO CONTENT");
+    httpd_resp_send(req, NULL, 0);
+    // }
     /*
     // now check the reamining heap_size ; if lower than threshold , RESTART ESP
     if (esp_memory_refresh() == ESP_FAIL)
@@ -711,6 +752,8 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
         esp_restart();
     }
     */
+
+    ESP_LOGW("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
     return ESP_OK;
 }
 
@@ -854,9 +897,9 @@ esp_err_t assets_handler(httpd_req_t *req) // generally we dont want other file 
             .format_if_mount_failed = true};
     esp_vfs_spiffs_register(&esp_vfs_spiffs_conf);
 
-    char path[600];
+    char path[1024];
     // routing the file path
-    sprintf(path, "/spiffs%s", req->uri); // eg: /spiffs/assets/script.js
+    snprintf(path, sizeof(path), "/spiffs%s", req->uri); // eg: /spiffs/assets/script.js
 
     // now link to , .css , .js , extentions
     char *ext = strrchr(path, '.'); // extension :-  path/.js,css,png

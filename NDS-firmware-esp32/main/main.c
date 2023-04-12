@@ -80,7 +80,6 @@
  * namespace => Relay_Status ; key = serial;
  */
 
-
 /* System LED ON - OFF */
 #define SYS_LED 2
 #define SYS_LED_OFF 0
@@ -99,9 +98,11 @@
 #define LOCAL_SSID_INDEX 0
 #define LOCAL_PASS_INDEX 1
 
-// Extern variables 
+// Extern variables
 extern esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
 extern esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
+
+static void __blinky(void *arg);
 
 /*******************************************************************************
  *                          Static Function Definitions
@@ -233,7 +234,18 @@ void app_main(void)
         Activate_Relays(); // activate the 'serial_operation_functionality'
     }
     Boot_count(); // increase the boot count
+    xTaskCreate(__blinky, "blinky", 2048, NULL, 1, NULL);
 }
+
+static void __blinky(void *arg)
+{
+    while (1)
+    {
+        ESP_LOGW("HEAP-MONITOR", "free heap: %u", xPortGetFreeHeapSize());
+        vTaskDelay(2500);
+    }
+}
+
 /*******************************************************************************
  *                          End of File
  *******************************************************************************/
