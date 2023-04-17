@@ -11,7 +11,6 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 
-
 /* Relay ON - OFF */
 #define NUM_OF_RELAY 16
 #define NUM_OF_LED_RELAY 12
@@ -27,9 +26,9 @@ gpio_num_t REALY_PINS[NUM_OF_RELAY] = {GPIO_NUM_13, GPIO_NUM_12, GPIO_NUM_14, GP
 
 esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
 esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
-static bool PATTERN = 0;                     // a variable for random_state ; default = 0
-static uint8_t COMBINATION = 0;              // a variable for random_state ; default = 0
-static xSemaphoreHandle xSEMA = NULL;        // global [used by only "relay_pattern.c"]
+static bool PATTERN = 0;              // a variable for random_state ; default = 0
+static uint8_t COMBINATION = 0;       // a variable for random_state ; default = 0
+static xSemaphoreHandle xSEMA = NULL; // global [used by only "relay_pattern.c"]
 
 /*******************************************************************************
  *                          Function Definitions
@@ -155,7 +154,7 @@ static void Random_Pattern_generator(uint8_t comb) // Random_timer start or stop
     if (comb != 0)
     {
         COMBINATION = comb - 1; // determine the COMBINATION {0,1,2,3,4}
-        if (isOn2 == ESP_OK)    // Before starting ; stop timer once
+        if (ESP_OK == isOn2)    // Before starting ; stop timer once
         {
             esp_timer_stop(esp_timer_handle2);
             isOn2 = ESP_FAIL;
@@ -164,7 +163,7 @@ static void Random_Pattern_generator(uint8_t comb) // Random_timer start or stop
     }
     else // 0 => stop timer
     {
-        if (isOn2 == ESP_OK) // stop timer
+        if (ESP_OK == isOn2) // stop timer
         {
             esp_timer_stop(esp_timer_handle2);
             isOn2 = ESP_FAIL;
@@ -193,37 +192,38 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
                 /******************************************************************************************************************/
                 // retrieve the Relay values from internal
                 nvs_handle update;
-                ESP_ERROR_CHECK(nvs_open("Relay_Status", NVS_READWRITE, &update));
-                uint8_t val = 0;
-                if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, "random", &val))
-                    Relay_Status_Value[RANDOM_UPDATE] = 0; // random status value must be ->0 (default)
-                else
-                    Relay_Status_Value[RANDOM_UPDATE] = val; // 0,1,2,3,4
-                // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %d : %s", "random", val, (Relay_Status_Value[RANDOM_UPDATE] ? "random_ON" : "random_OFF"));
-
-                if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, "serial", &val))
-                    Relay_Status_Value[SERIAL_UPDATE] = 0; // serial status value must be ->0 (default)
-                else
-                    Relay_Status_Value[SERIAL_UPDATE] = val; // 1,0
-                // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %d : %s", "serial", val, (Relay_Status_Value[SERIAL_UPDATE] ? "serial_ON" : "serial_OFF"));
-
-                for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
+                if (ESP_OK == nvs_open("Relay_Status", NVS_READWRITE, &update))
                 {
-                    char *str = (char *)malloc(sizeof("Relay") + 2);
-                    memset(str, 0, sizeof("Relay") + 2);
-                    sprintf(str, "Relay%u", i);
-                    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, str, &val))
-                        Relay_Status_Value[i] = R_OFF; // need to be inverted
+                    uint8_t val = 0;
+                    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, "random", &val))
+                        Relay_Status_Value[RANDOM_UPDATE] = 0; // random status value must be ->0 (default)
                     else
-                        Relay_Status_Value[i] = val; // 1,0
-                    // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %s ", str, (Relay_Status_Value[i]) ? "R_OFF" : "R_ON");
-                    free(str);
+                        Relay_Status_Value[RANDOM_UPDATE] = val; // 0,1,2,3,4
+                    // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %d : %s", "random", val, (Relay_Status_Value[RANDOM_UPDATE] ? "random_ON" : "random_OFF"));
+
+                    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, "serial", &val))
+                        Relay_Status_Value[SERIAL_UPDATE] = 0; // serial status value must be ->0 (default)
+                    else
+                        Relay_Status_Value[SERIAL_UPDATE] = val; // 1,0
+                    // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %d : %s", "serial", val, (Relay_Status_Value[SERIAL_UPDATE] ? "serial_ON" : "serial_OFF"));
+
+                    for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
+                    {
+                        char str[10];
+                        memset(str, 0, sizeof(str));
+                        sprintf(str, "Relay%u", i);
+                        if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, str, &val))
+                            Relay_Status_Value[i] = R_OFF; // need to be inverted
+                        else
+                            Relay_Status_Value[i] = val; // 1,0
+                                                         // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %s ", str, (Relay_Status_Value[i]) ? "R_OFF" : "R_ON");
+                    }
+                    nvs_close(update); // no commits to avoid changes
                 }
-                nvs_close(update); // no commits to avoid changes
 
                 /****************************************************************************************************************************/
                 // Generate the "update_success_status" for each button
-                if (Relay_Status_Value[SERIAL_UPDATE] == 0 && Relay_Status_Value[RANDOM_UPDATE] == 0)
+                if ((0 == Relay_Status_Value[SERIAL_UPDATE]) && (0 == Relay_Status_Value[RANDOM_UPDATE]))
                 {
                     ESP_LOGI("Activate", " --> BTNS ONLY");
                     Serial_Patttern_generator(0); // de-activate serial pattern
@@ -242,14 +242,14 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
                     {
                         gpio_set_level(REALY_PINS[i], (uint32_t)R_OFF);
                     }
-                    if (Relay_Status_Value[SERIAL_UPDATE] == 1 && Relay_Status_Value[RANDOM_UPDATE] == 0)
+                    if ((1 == Relay_Status_Value[SERIAL_UPDATE]) && (0 == Relay_Status_Value[RANDOM_UPDATE]))
                     {
                         Random_Pattern_generator(0); // de-activate random pattern
                         ESP_LOGI("Activate", " --> SERIAL PATTERN");
                         Relay_Update_Success[SERIAL_UPDATE] = 1;
                         Serial_Patttern_generator(1); // activate serial pattern
                     }
-                    else if (Relay_Status_Value[RANDOM_UPDATE] > 0 && Relay_Status_Value[SERIAL_UPDATE] == 0)
+                    else if ((Relay_Status_Value[RANDOM_UPDATE] > 0) && (0 == Relay_Status_Value[SERIAL_UPDATE]))
                     {
                         Serial_Patttern_generator(0); // de-activate serial pattern
                         ESP_LOGI("Activate", " --> RANDOM PATTERN : %d", Relay_Status_Value[RANDOM_UPDATE]);

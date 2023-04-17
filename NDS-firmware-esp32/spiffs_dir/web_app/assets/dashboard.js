@@ -56,6 +56,9 @@ restart.addEventListener('click', async function (e) {
     if (json_data.restart_successful == 1) {
       alert(`Restart successful.... Reload the browser.http://192.168.${json_data.IP_addr3}.100/`);
     }
+    else {
+      alert(`Restart unsuccessful....`);
+    }
   }
 });
 // Enter settings page

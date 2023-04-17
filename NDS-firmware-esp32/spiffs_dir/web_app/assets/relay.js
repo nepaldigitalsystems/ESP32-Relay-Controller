@@ -128,7 +128,7 @@ const fun = function (recv_data) {
 };
 const ref_fun = async function () {
     const data = {
-        InfoReq: 1,
+        button_ref: 1,
     };
     const options = {
         method: 'POST',

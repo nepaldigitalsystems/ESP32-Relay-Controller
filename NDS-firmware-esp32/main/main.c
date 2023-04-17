@@ -80,7 +80,6 @@
  * namespace => Relay_Status ; key = serial;
  */
 
-
 /* System LED ON - OFF */
 #define SYS_LED 2
 #define SYS_LED_OFF 0
@@ -99,13 +98,21 @@
 #define LOCAL_SSID_INDEX 0
 #define LOCAL_PASS_INDEX 1
 
-// Extern variables 
+// Extern variables
 extern esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
 extern esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
 
 /*******************************************************************************
  *                          Static Function Definitions
  *******************************************************************************/
+static void heapLog(void *arg)
+{
+    for (;;)
+    {
+        ESP_LOGW("HEAP-MONITOR", "free heap: %u", xPortGetFreeHeapSize());
+        vTaskDelay(4000 / portTICK_PERIOD_MS);
+    }
+}
 
 /**
  * @brief Function to inspect NVS_storage for Ssid_name/Ssid_pass and read them, if present.
@@ -130,12 +137,12 @@ static esp_err_t inspect_wifiCred_data(ap_config_t *local_config, nvs_handle *ha
         ESP_LOGE("NVS_TAG", "%s value not set yet", KEY);
         break;
     case ESP_OK:
-        if ((index == 0))
+        if ((0 == index))
         {
             ESP_LOGI("NVS_TAG", "NVS_stored : Ssid is = %s", sample);
             strcpy(local_config->local_ssid, sample); // passing the extrated values
         }
-        else if ((index == 1))
+        else if ((1 == index))
         {
             ESP_LOGI("NVS_TAG", "NVS_stored : Password is = %s", sample);
             strcpy(local_config->local_pass, sample);
@@ -161,7 +168,7 @@ esp_err_t initialize_nvs(ap_config_t *local_config)
 {
     // initialize the default NVS partition
     esp_err_t err = nvs_flash_init();
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    if (ESP_ERR_NVS_NO_FREE_PAGES == err || ESP_ERR_NVS_NEW_VERSION_FOUND == err)
     {
         ESP_ERROR_CHECK(nvs_flash_erase());
         err = nvs_flash_init();
@@ -199,15 +206,15 @@ void app_main(void)
         .name = "Random timer"};
     esp_timer_create(&esp_timer_create_args2, &esp_timer_handle2);
     /***************************************************************/
-    wifi_init();     // wifi_initializtion
-    INIT_RS_PIN();   // initialize the rest_activate
-    INIT_RAND_PIN(); // initialize the random_activate
-    setup_relay_update_task();
-    if (initialize_nvs(&local_config) == ESP_OK)
+    wifi_init();               // wifi_initializtion
+    INIT_RS_PIN();             // initialize the rest_activate
+    INIT_RAND_PIN();           // initialize the random_activate
+    setup_relay_update_task(); // create task to handle the relay activations
+    if (ESP_OK == initialize_nvs(&local_config))
     {
         ESP_LOGE("LOCAL_SSID", "%s", local_config.local_ssid);
         ESP_LOGE("LOCAL_PASS", "%s", local_config.local_pass);
-        if (wifi_connect_sta(local_config.local_ssid, local_config.local_pass, 15000) == ESP_OK) // if the local ssid/pass doesn't match
+        if (ESP_OK == wifi_connect_sta(local_config.local_ssid, local_config.local_pass, 15000)) // if the local ssid/pass doesn't match
         {
             ESP_LOGW("STA_connect", "CONNECT TO LOCAL_SSID ... Successful.");
             RESTART_WIFI(STA_mode); // inspect the STA mode
@@ -233,7 +240,9 @@ void app_main(void)
         Activate_Relays(); // activate the 'serial_operation_functionality'
     }
     Boot_count(); // increase the boot count
+    xTaskCreate(heapLog, "heapLog", 2048, NULL, 1, NULL);
 }
+
 /*******************************************************************************
  *                          End of File
  *******************************************************************************/

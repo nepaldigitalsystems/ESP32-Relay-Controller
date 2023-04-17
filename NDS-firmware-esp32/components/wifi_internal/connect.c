@@ -36,7 +36,6 @@ extern void start_dns_server(void);
 extern void http_server_ap_mode(void);
 extern void http_server_sta_mode(void);
 extern void Connect_Portal();
-// extern void start_MDNS(void);
 
 /*******************************************************************************
  *                          Static Function Definitions
@@ -135,9 +134,6 @@ static void Set_static_ip(esp_netif_t *netif)
     if_info.ip.addr = ipaddr_addr(AP_DEVICE_IP);
     if_info.netmask.addr = ipaddr_addr(AP_DEVICE_NETMASK);
     if_info.gw.addr = ipaddr_addr(AP_DEVICE_GW);
-    // IP4_ADDR(&if_info.gw, 192, 168, 1, 1);
-    // IP4_ADDR(&if_info.ip, 192, 168, 1, 1);
-    // IP4_ADDR(&if_info.netmask, 255, 255, 255, 0);
     ESP_ERROR_CHECK(esp_netif_set_ip_info(netif, &if_info));
     ESP_ERROR_CHECK(esp_netif_get_ip_info(netif, &if_info));
     ESP_LOGE("AP_IP_TAG", "ESP32 IP:" IPSTR, IP2STR(&if_info.ip));
@@ -190,13 +186,15 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
         {
             ESP_LOGI("RECONNECT_TAG", "Wrong creds!!. Erasing ssid & pass from : 'wifiCreds' And Restarting.");
             nvs_handle_t my_handle;
-            ESP_ERROR_CHECK(nvs_open("wifiCreds", NVS_READWRITE, &my_handle));
-            ESP_ERROR_CHECK(nvs_erase_all(my_handle));
-            ESP_ERROR_CHECK(nvs_commit(my_handle));
-            ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &my_handle));
-            ESP_ERROR_CHECK(nvs_erase_all(my_handle));
-            ESP_ERROR_CHECK(nvs_commit(my_handle));
-            nvs_close(my_handle);
+            if (ESP_OK == nvs_open("wifiCreds", NVS_READWRITE, &my_handle))
+            {
+                ESP_ERROR_CHECK(nvs_erase_all(my_handle));
+                ESP_ERROR_CHECK(nvs_commit(my_handle));
+                ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &my_handle));
+                ESP_ERROR_CHECK(nvs_erase_all(my_handle));
+                ESP_ERROR_CHECK(nvs_commit(my_handle));
+                nvs_close(my_handle);
+            }
             esp_restart();
         }
         esp_wifi_connect();
@@ -213,10 +211,12 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
             STA_ADDR3 = (uint32_t)esp_ip4_addr3_16(&event->ip_info.ip);
             ESP_LOGE("STA_IP_TAG", "ESP32_NEW, IP_addr3: %d", STA_ADDR3);
             nvs_handle_t sta_host;
-            ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &sta_host));
-            ESP_ERROR_CHECK(nvs_set_u32(sta_host, "no.", STA_ADDR3));
-            ESP_ERROR_CHECK(nvs_commit(sta_host));
-            nvs_close(sta_host);
+            if (ESP_OK == nvs_open("sta_num", NVS_READWRITE, &sta_host))
+            {
+                ESP_ERROR_CHECK(nvs_set_u32(sta_host, "no.", STA_ADDR3));
+                ESP_ERROR_CHECK(nvs_commit(sta_host));
+                nvs_close(sta_host);
+            }
         }
     }
     break;
@@ -301,7 +301,6 @@ esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
         esp_netif_set_ip_info(ESP_NETIF, &ip_info);
     }
     //---------------------------------------------------------------------------------------
-    // start_MDNS();                                       // start the mdns_service & esp32-wifi connection
     esp_wifi_set_mode(WIFI_MODE_STA);                   // setting the mode of wifi (AP / STA)
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config); // pass the wifi_config ; if set as station
     esp_wifi_start();
