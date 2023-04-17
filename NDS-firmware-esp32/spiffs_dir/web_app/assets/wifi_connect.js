@@ -30,9 +30,6 @@ form.addEventListener('submit', async function (e) {
   const response = await fetch('/AP_STA_post', options);
   if (response.status == 200) {
     const json_data = await response.json();
-    console.log(json_data);
-    console.log('IP_addr3:', json_data.IP_addr3);
-
     if (json_data.IP_addr3 >= 0) {
       alert(
         `Resetting your wifi. Connect your device to "${ssid.value}" network. \n Your NDS_IP is 192.168.${json_data.IP_addr3 == 0 ? 'X' : json_data.IP_addr3}.100`

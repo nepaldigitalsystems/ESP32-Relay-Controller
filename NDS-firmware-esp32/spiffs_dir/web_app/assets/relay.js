@@ -149,7 +149,7 @@ window.addEventListener('load', async function (e) {
     e.preventDefault();
     if (reload_relay_flag) {
         // disable all buttons
-        console.log('all buttons disabled');
+        // console.log('all buttons disabled');
         for (const bt of btn) {
             bt.disabled = true;
             bt.classList.add('disabled');
@@ -157,7 +157,7 @@ window.addEventListener('load', async function (e) {
         //Sync the internal buttons
         ref_fun();
         // enable all buttons
-        console.log('all buttons enabled');
+        // console.log('all buttons enabled');
         for (const bt of btn) {
             bt.disabled = false;
             bt.classList.remove('disabled');
@@ -613,7 +613,7 @@ random.addEventListener('click', async function (e) {
 
     if ((reload_relay_flag === 1) && (random_value === 0)) {// call only when serial is turned off
         // disable all buttons
-        console.log('all buttons disabled');
+        // console.log('all buttons disabled');
         for (const bt of btn) {
             bt.disabled = true;
             bt.classList.add('disabled');
@@ -621,7 +621,7 @@ random.addEventListener('click', async function (e) {
         //Sync the internal buttons
         ref_fun();
         // enable all buttons
-        console.log('all buttons enabled');
+        // console.log('all buttons enabled');
         for (const bt of btn) {
             bt.disabled = false;
             bt.classList.remove('disabled');
@@ -677,7 +677,7 @@ serial.addEventListener('click', async function (e) {
 
     if ((reload_relay_flag === 1) && (data.serial === 0)) {// call only when serial is turned off
         // disable all buttons
-        console.log('all buttons disabled');
+        // console.log('all buttons disabled');
         for (const bt of btn) {
             bt.disabled = true;
             bt.classList.add('disabled');
@@ -685,7 +685,7 @@ serial.addEventListener('click', async function (e) {
         //Sync the internal buttons
         ref_fun();
         // enable all buttons
-        console.log('all buttons enabled');
+        // console.log('all buttons enabled');
         for (const bt of btn) {
             bt.disabled = false;
             bt.classList.remove('disabled');
@@ -749,31 +749,30 @@ window.addEventListener('mousemove', function () {
         logout.textContent = ``;
     }
 });
-// const timer = setInterval(function () {
-//     const min = String(Math.trunc(time / 60000)).padStart(2, 0);
-//     const sec = String((time % 60000) / 1000).padStart(2, 0);
-//     time = time - 1000;
-//     if (time === 1000) {
-//         clearInterval(timer);
-//         window.location.replace('/');
-//     }
-//     if (time <= 10000)
-//         logout.textContent = `User Inactive!! Timeout in... ${sec}s`;
-//     if (time % 6000 === 0) {
-//         if (reload_relay_flag) {
-//             // disable all buttons
-//             console.log('all buttons disabled');
-//             for (const bt of btn) {
-//                 bt.disabled = true;
-//                 bt.classList.add('disabled');
-//             }
-//             ref_fun();
-//             // enable all buttons
-//             console.log('all buttons enabled');
-//             for (const bt of btn) {
-//                 bt.disabled = false;
-//                 bt.classList.remove('disabled');
-//             }
-//         }
-//     }
-// }, 1000);
+const timer = setInterval(function () {
+    const min = String(Math.trunc(time / 60000)).padStart(2, 0);
+    const sec = String((time % 60000) / 1000).padStart(2, 0);
+    time = time - 1000;
+    if (time === 1000) {
+        clearInterval(timer);
+        window.location.replace('/');
+    }
+    if (time <= 10000) { logout.textContent = `User Inactive!! Timeout in... ${sec}s`; }
+    //     if (time % 6000 === 0) {
+    //         if (reload_relay_flag) {
+    //             // disable all buttons
+    //             console.log('all buttons disabled');
+    //             for (const bt of btn) {
+    //                 bt.disabled = true;
+    //                 bt.classList.add('disabled');
+    //             }
+    //             ref_fun();
+    //             // enable all buttons
+    //             console.log('all buttons enabled');
+    //             for (const bt of btn) {
+    //                 bt.disabled = false;
+    //                 bt.classList.remove('disabled');
+    //             }
+    //         }
+    // }
+}, 1000);

@@ -11,7 +11,7 @@ let reload_dashboard_flag = 0;
 let reload_relay_flag = 0;
 let time = 300000;
 home.addEventListener('click', function () {
-  alert('Signing out....');
+  alert('Signing out....Press "ENTER". ');
   window.location.replace('/');
 });
 // Enter relay page
@@ -46,15 +46,13 @@ restart.addEventListener('click', async function (e) {
     method: 'POST',
     body: JSON.stringify(data),
   };
-
-  alert('Restarting ESP32...');
   const response = await fetch('/restart', options);
   if (response.status == 200) {
     const json_data = await response.json();
-    console.log(json_data);
-    console.log('Restart_success_Status : ', json_data.restart_successful);
     if (json_data.restart_successful == 1) {
-      alert(`Restart successful.... Reload the browser.http://192.168.${json_data.IP_addr3}.100/`);
+      window.location.replace('/');
+      time = 3000;
+
     }
     else {
       alert(`Restart unsuccessful....`);
@@ -83,11 +81,10 @@ const timer = setInterval(function () {
   const min = String(Math.trunc(time / 60000)).padStart(2, 0);
   const sec = String((time % 60000) / 1000).padStart(2, 0);
   time = time - 1000;
-  if (time === 1000) {
+  if (time <= 1000) {
     clearInterval(timer);
-    alert('Session Timeout...');
+    alert('Session Timeout......Press "ENTER".');
     window.location.replace('/');
   }
-  if (time <= 10000)
-    logout.textContent = `User Inactive!! Timeout in... ${sec}s`;
+  if (time <= 10000) { logout.textContent = `User Inactive!! Timeout in... ${sec}s`; }
 }, 1000);

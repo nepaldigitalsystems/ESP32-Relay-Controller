@@ -105,14 +105,14 @@ extern esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pa
 /*******************************************************************************
  *                          Static Function Definitions
  *******************************************************************************/
-static void heapLog(void *arg)
-{
-    for (;;)
-    {
-        ESP_LOGW("HEAP-MONITOR", "free heap: %u", xPortGetFreeHeapSize());
-        vTaskDelay(4000 / portTICK_PERIOD_MS);
-    }
-}
+// static void heapLog(void *arg)
+// {
+//     for (;;)
+//     {
+//         ESP_LOGW("HEAP-MONITOR", "free heap: %u", xPortGetFreeHeapSize());
+//         vTaskDelay(4000 / portTICK_PERIOD_MS);
+//     }
+// }
 
 /**
  * @brief Function to inspect NVS_storage for Ssid_name/Ssid_pass and read them, if present.
@@ -240,7 +240,7 @@ void app_main(void)
         Activate_Relays(); // activate the 'serial_operation_functionality'
     }
     Boot_count(); // increase the boot count
-    xTaskCreate(heapLog, "heapLog", 2048, NULL, 1, NULL);
+    // xTaskCreate(heapLog, "heapLog", 2048, NULL, 1, NULL);
 }
 
 /*******************************************************************************

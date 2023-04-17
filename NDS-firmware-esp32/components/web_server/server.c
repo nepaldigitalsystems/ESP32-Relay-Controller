@@ -420,7 +420,6 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
     }
 
     /*Preparing json data*/
-
     // cJSON *JSON_data = cJSON_CreateObject();
     // (ESP_receive) ? (cJSON_AddNumberToObject(JSON_data, "password_set_success", 1)) : (cJSON_AddNumberToObject(JSON_data, "password_set_success", 0));
     // char *string_json = cJSON_Print(JSON_data);
@@ -480,8 +479,14 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         esp_chip_info_t chip_info;
         const char *compile_date2 = __DATE__;
         const char *compile_time2 = __TIME__;
-        char *MAC = (char *)malloc(sizeof(chipId) * 6);
-        char *Uptime = (char *)malloc(15 + (sizeof(int) * 4));
+        char MAC[36];
+        bzero(MAC, sizeof(MAC));
+        MAC[35] = '\0';
+        char Uptime[30];
+        bzero(Uptime, sizeof(Uptime));
+        Uptime[29] = '\0';
+        // char *MAC = (char *)malloc(sizeof(chipId) * 6);
+        // char *Uptime = (char *)malloc(15 + (sizeof(int) * 4));
 
         /*resource calculation*/
         esp_chip_info(&chip_info);
@@ -530,8 +535,8 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"COMPILE_TIME\":\"%s\",", (timestamp));
         snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"UP_TIME\":\"%s\"}", (Uptime));
 
-        free(MAC);
-        free(Uptime);
+        // free(MAC);
+        // free(Uptime);
 
         // sending the json packet
         // ESP_LOGE("INFO_JSON_REPLY", "%s", temp_buffer);
@@ -665,10 +670,10 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
             {
                 char str[15];
                 memset(str, 0, sizeof(str));
-                (i > 9) ? snprintf(str, 8, "Relay%u", i) : snprintf(str, 7, "Relay%u", i); // str[] => {"Relay16+\0":_}
-                pos = strstr(buffer, str);                                                 // find the string within json buffer
-                snprintf(val, 2, "%s", (pos + strlen(str) + 2));                           // copy 2 characters only
-                Relay_inStatus_Value[i] = (uint8_t)((strtol(val, &endptr, 10)) ? 0 : 1);   // invert logic for relay [i.e :- {ON = 0} & {OFF = 1}]
+                (i > 9) ? (snprintf(str, 8, "Relay%u", i)) : (snprintf(str, 7, "Relay%u", i)); // str[] => {"Relay16+\0":_}
+                pos = strstr(buffer, str);                                                     // find the string within json buffer
+                snprintf(val, 2, "%s", (pos + strlen(str) + 2));                               // copy 2 characters only
+                Relay_inStatus_Value[i] = (uint8_t)((strtol(val, &endptr, 10)) ? 0 : 1);       // invert logic for relay [i.e :- {ON = 0} & {OFF = 1}]
                 // ESP_LOGI("PARSE_val", "%s:%u", str, Relay_inStatus_Value[i]);
             }
         }
@@ -798,13 +803,12 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
 
         if (ESP_receive)
         {
-            for (int i = 3; i > 0; i--)
-            {
-                ESP_LOGW("RESTART_TAG", "Restarting in ... %d", i);
-                vTaskDelay(1000 / portTICK_PERIOD_MS);
-            }
-            ESP_LOGE("RESTARTING ESP_32", "NOW...");
-            vTaskDelay(pdMS_TO_TICKS(10));
+            // for (int i = 2; i > 0; i--)
+            // {
+            ESP_LOGW("RESTART_TAG", "Restarting... NOW.");
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+            // }
+            response.approve = false;
             esp_restart();
         }
     }

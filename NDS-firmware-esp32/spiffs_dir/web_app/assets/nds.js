@@ -26,14 +26,10 @@ form.addEventListener('submit', async function (e) {
     const response = await fetch('/login_auth_post', options);
     if (response.status == 200) {
         const json_data = await response.json();
-        console.log(json_data);
-        console.log('Approve Status : ', json_data.approve);
         if (json_data.approve == 1) {
             window.location.replace('/dashboard');
         }
     } else {
-        console.log(response.status);
-        console.log(response.statusText);
         alert('Wrong username/password. Try again!!');
         window.location.reload();
     }

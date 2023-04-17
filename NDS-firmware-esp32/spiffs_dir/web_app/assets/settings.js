@@ -75,8 +75,6 @@ form.addEventListener('submit', async function (e) {
         const response = await fetch('/settings_post', options);
         if (response.status == 200) {
             const json_data = await response.json();
-            console.log(json_data);
-            console.log('password_set_success : ', json_data.password_set_success);
             if (json_data.password_set_success == 1) {
                 alert('New username & password set : Successful');
                 window.location.replace('/');
@@ -103,6 +101,5 @@ const timer = setInterval(function () {
         alert('Session Timeout...');
         window.location.replace('/');
     }
-    if (time <= 10000)
-        logout.textContent = `User Inactive!! Timeout in... ${sec}s`;
+    if (time <= 10000) { logout.textContent = `User Inactive!! Timeout in... ${sec}s`; }
 }, 1000);
