@@ -7,7 +7,6 @@
 #include "connect.h"
 #include <string.h>
 #include <stdlib.h>
-// #include "nvs.h"
 #include "nvs_flash.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
@@ -263,8 +262,7 @@ esp_err_t relay_handler(httpd_req_t *req) // generally we dont want other file t
 esp_err_t dashboard_handler(httpd_req_t *req) // generally we dont want other file to see this
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    // ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
-    if (response.approve) // approve = 1 -> Login_timeout = False
+    if (response.approve)                         // approve = 1 -> Login_timeout = False
     {
         file_open("/spiffs/dashboard.html", req); // Also, can send other response values from here
         httpd_resp_send(req, NULL, 0);
@@ -276,7 +274,6 @@ esp_err_t dashboard_handler(httpd_req_t *req) // generally we dont want other fi
         file_open("/spiffs/nds.html", req);
         httpd_resp_send(req, NULL, 0);
     }
-    // ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
     return ESP_OK;
 }
 
@@ -420,12 +417,6 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
     }
 
     /*Preparing json data*/
-    // cJSON *JSON_data = cJSON_CreateObject();
-    // (ESP_receive) ? (cJSON_AddNumberToObject(JSON_data, "password_set_success", 1)) : (cJSON_AddNumberToObject(JSON_data, "password_set_success", 0));
-    // char *string_json = cJSON_Print(JSON_data);
-    // free(string_json);
-    // cJSON_free(JSON_data);
-
     char temp_buffer[100];                   // buffer to create the json packet
     bzero(temp_buffer, sizeof(temp_buffer)); // alternative to memset
     (ESP_receive) ? (snprintf(temp_buffer, sizeof(temp_buffer), "{\"password_set_success\":%u}", 1)) : (snprintf(temp_buffer, sizeof(temp_buffer), "{\"password_set_success\":%u}", 0));
@@ -443,6 +434,7 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
  * @param req Pointer to the request being responded.
  * @return - ESP_OK: Compeleted operation.
  */
+
 esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -485,8 +477,6 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         char Uptime[30];
         bzero(Uptime, sizeof(Uptime));
         Uptime[29] = '\0';
-        // char *MAC = (char *)malloc(sizeof(chipId) * 6);
-        // char *Uptime = (char *)malloc(15 + (sizeof(int) * 4));
 
         /*resource calculation*/
         esp_chip_info(&chip_info);
@@ -522,24 +512,20 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         /*create json packet*/
         char temp_buffer[512];                   // buffer to create the json packet
         bzero(temp_buffer, sizeof(temp_buffer)); // alternative to memset
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "{\"Approve\":1,");
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"CHIP_MODEL\":\"ESP_32\",");
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"CHIP_ID_MAC\":\"%s\",", (MAC));
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"CHIP_CORES\":%d,", (chip_info.cores));
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FLASH_SIZE\":%d,", (spi_flash_get_chip_size() / (1024 * 1024)));
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"HEAP_SIZE\":%d,", (FreeHeap));
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FREE_DRAM\":%d,", (DRam / 1024));
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FREE_IRAM\":%d,", (IRam / 1024));
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FREE_HEAP\":%d,", (LargestFreeHeap));
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"BOOT_COUNT\":%d,", (val));
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"COMPILE_TIME\":\"%s\",", (timestamp));
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"UP_TIME\":\"%s\"}", (Uptime));
-
-        // free(MAC);
-        // free(Uptime);
+        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "{\"Approve\":1,\"CHIP_MODEL\":\"ESP_32\",\"CHIP_ID_MAC\":\"%s\",\"CHIP_CORES\":%d,\"FLASH_SIZE\":%d,\"HEAP_SIZE\":%d,\"FREE_DRAM\":%d,\"FREE_IRAM\":%d,\"FREE_HEAP\":%d,\"BOOT_COUNT\":%d,\"COMPILE_TIME\":\"%s\",\"UP_TIME\":\"%s\"}", (MAC), (chip_info.cores), (spi_flash_get_chip_size() / (1024 * 1024)), (FreeHeap), (DRam / 1024), (IRam / 1024), (LargestFreeHeap), (val), (timestamp), (Uptime));
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"CHIP_MODEL\":\"ESP_32\",");
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"CHIP_ID_MAC\":\"%s\",", (MAC));
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"CHIP_CORES\":%d,", (chip_info.cores));
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FLASH_SIZE\":%d,", (spi_flash_get_chip_size() / (1024 * 1024)));
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"HEAP_SIZE\":%d,", (FreeHeap));
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FREE_DRAM\":%d,", (DRam / 1024));
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FREE_IRAM\":%d,", (IRam / 1024));
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FREE_HEAP\":%d,", (LargestFreeHeap));
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"BOOT_COUNT\":%d,", (val));
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"COMPILE_TIME\":\"%s\",", (timestamp));
+        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"UP_TIME\":\"%s\"}", (Uptime));
 
         // sending the json packet
-        // ESP_LOGE("INFO_JSON_REPLY", "%s", temp_buffer);
         httpd_resp_set_type(req, "application/json"); // sending json data as response
         httpd_resp_sendstr(req, temp_buffer);         // chunk
         httpd_resp_send(req, NULL, 0);
@@ -579,24 +565,17 @@ esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post
     {
         snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"random\":%u,", Relay_Status_Value[RANDOM_UPDATE]);
         snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"serial\":%u}", 0);
-        // cJSON_AddNumberToObject(JSON_data, "random", Relay_Status_Value[RANDOM_UPDATE]); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
-        // cJSON_AddNumberToObject(JSON_data, "serial", 0);                                 // serial => [0/0ff] vs [1/ON]
     }
     else if ((0 == Relay_Status_Value[RANDOM_UPDATE]) && (1 == Relay_Status_Value[SERIAL_UPDATE]))
     {
         snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"random\":%u,", 0);
         snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"serial\":%u}", 1);
-        // cJSON_AddNumberToObject(JSON_data, "random", 0); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
-        // cJSON_AddNumberToObject(JSON_data, "serial", 1); // serial => [0/0ff] vs [1/ON]
     }
     else
     {
         snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"random\":%u,", 0);
         snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"serial\":%u}", 0);
-        // cJSON_AddNumberToObject(JSON_data, "random", 0); // random => [0/0ff] vs [1/ON , 2/ON , 3/ON , 4/ON]
-        // cJSON_AddNumberToObject(JSON_data, "serial", 0); // serial => [0/0ff] vs [1/ON]
     }
-    // ESP_LOGI("BTN_REFRESH_JSON_REPLY", "%s", temp_buffer);
     /******************************************  SENDING JSON PACKET *******************************************************************/
     httpd_resp_set_type(req, "application/json"); // sending json data as response
     httpd_resp_sendstr(req, temp_buffer);         // chunk
@@ -624,26 +603,6 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
     // Parsing json structured credentials
     if (strstr(buffer, ":") != NULL)
     {
-        // parsing json data into Relay_status_array
-
-        // cJSON *payload = cJSON_Parse(buffer); // returns an object holding respective [ key:value pair data ]
-        // if (payload)
-        // {
-        //     Relay_inStatus_Value[SERIAL_UPDATE] = (cJSON_GetObjectItem(payload, "serial")->valueint);     // parse serial
-        //     Relay_inStatus_Value[RANDOM_UPDATE] = (cJSON_GetObjectItem(payload, "random")->valueint);     // parse random
-        //     if ((0 == Relay_inStatus_Value[SERIAL_UPDATE]) && (0 == Relay_inStatus_Value[RANDOM_UPDATE])) // First, storing the button status [relay1 - to - relay16]
-        //     {
-        //         for (uint8_t i = 1; i <= 16; i++)
-        //         {
-        //             char str[10];
-        //             memset(str, 0, sizeof(str));
-        //             sprintf(str, "Relay%u", i);
-        //             Relay_inStatus_Value[i] = (cJSON_GetObjectItem(payload, str)->valueint) ? 0 : 1; // invert logic for relay [i.e :- {ON = 0} & {OFF = 1}]
-        //         }
-        //     }
-        //     cJSON_Delete(payload);
-        // }
-
         // manual parsing
         // {...
         // "random":4,
@@ -674,7 +633,6 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
                 pos = strstr(buffer, str);                                                     // find the string within json buffer
                 snprintf(val, 2, "%s", (pos + strlen(str) + 2));                               // copy 2 characters only
                 Relay_inStatus_Value[i] = (uint8_t)((strtol(val, &endptr, 10)) ? 0 : 1);       // invert logic for relay [i.e :- {ON = 0} & {OFF = 1}]
-                // ESP_LOGI("PARSE_val", "%s:%u", str, Relay_inStatus_Value[i]);
             }
         }
         ESP_LOGI("RELAY_JSON_POST_PARSE", "serial = %d , random = %d", Relay_inStatus_Value[SERIAL_UPDATE], Relay_inStatus_Value[RANDOM_UPDATE]);
@@ -783,11 +741,6 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
             ESP_receive = false;
         }
         /*Preparing json data*/
-        // cJSON *JSON_data = cJSON_CreateObject();
-        // (ESP_receive) ? cJSON_AddNumberToObject(JSON_data, "restart_successful", 1) : cJSON_AddNumberToObject(JSON_data, "restart_successful", 0); // approve -> 'restart'
-        // cJSON_AddNumberToObject(JSON_data, "IP_addr3", (STA_ADDR3) ? STA_ADDR3 : 0);                                                               // INTERNAL STORAGE
-        // char *string_json = cJSON_Print(JSON_data);
-
         char temp_buffer[100];
         bzero(temp_buffer, sizeof(temp_buffer));
         (ESP_receive) ? (snprintf(temp_buffer, sizeof(temp_buffer), "{\"restart_successful\":%u,", 1)) : (snprintf(temp_buffer, sizeof(temp_buffer), "{\"restart_successful\":%u,", 0));
@@ -798,8 +751,6 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
         httpd_resp_sendstr(req, temp_buffer);         // chunk
         httpd_resp_send(req, NULL, 0);
         ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
-        // free(string_json);
-        // cJSON_free(JSON_data);
 
         if (ESP_receive)
         {
@@ -866,8 +817,7 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
         // ESP_LOGI("Manual_Parse_tag", "%s", cred.username);
         // ESP_LOGI("Manual_Parse_tag", "%s", cred.password);
 
-        // first decide the login_mode
-        // response.approve = true []
+        // first decide the login_mode; response.approve => true.
         esp_err_t res = (login_cred(&cred));
         if (res > 0) // data not found in nvs
         {
@@ -904,20 +854,13 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
         }
 
         /* Sending json data */
-
-        // cJSON *JSON_data = cJSON_CreateObject();
-        // cJSON_AddNumberToObject(JSON_data, "approve", (uint8_t)response.approve);
-        // char *string_json = cJSON_Print(JSON_data);
         char temp_buffer[50];
         bzero(temp_buffer, sizeof(temp_buffer));
         snprintf(temp_buffer, sizeof(temp_buffer), "{\"approve\":%u}", (uint8_t)response.approve);
-
         ESP_LOGI("LOGIN_JSON_REPLY", "%s", temp_buffer);
         httpd_resp_set_type(req, "application/json"); // sending json data as response
         httpd_resp_sendstr(req, temp_buffer);         // chunk
         httpd_resp_send(req, NULL, 0);
-        // free(string_json);
-        // cJSON_free(JSON_data);
     }
     else
     {
@@ -1095,15 +1038,7 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
     httpd_req_recv(req, buffer, req->content_len); // "local_ssid=xxx\r\nlocal_pass=xxxx\r\n"// revieve the contents inside buf
     ESP_LOGW("portal_data", "Buffer : %s", buffer);
 
-    // manual parsing
-    // char *ssid = strtok(buffer,"\r\n");
-    // char *pass = strtok(NULL,"\r\n");       // NULL -> use the same string "buffer"
-    // //ssid=xxx\0
-    // //pass=xxx\0
-    // ssid = strchr(ssid,'=')+1;  // moving the pointer to right of '='
-    // pass = strchr(pass,'=')+1;
-    // printf("ssid: %s pass: %s",ssid,pass);
-
+    /*Parsing Incomming Data*/
     cJSON *payload = cJSON_Parse(buffer);
     if (payload)
     {
@@ -1112,9 +1047,6 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
         cJSON_Delete(payload);
     }
 
-    // cJSON *JSON_data = cJSON_CreateObject();
-    // cJSON_AddNumberToObject(JSON_data, "IP_addr3", (STA_ADDR3) ? STA_ADDR3 : 0); // INTERNAL STORAGE
-    // char *string_json = cJSON_Print(JSON_data);
     char temp_buffer[50];
     bzero(temp_buffer, sizeof(temp_buffer));
     snprintf(temp_buffer, sizeof(temp_buffer), "{\"IP_addr3\":%u}", (uint8_t)((STA_ADDR3) ? STA_ADDR3 : 0));
@@ -1123,9 +1055,6 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
     httpd_resp_set_type(req, "application/json"); // sending json data as response
     httpd_resp_sendstr(req, temp_buffer);         // chunk
     httpd_resp_send(req, NULL, 0);
-
-    // free(string_json);
-    // cJSON_free(JSON_data);
 
     vTaskDelay(200 / portTICK_PERIOD_MS);
     xTaskCreate(connect_to_local_AP, "connect_to_local_ap", 4096, &ap_config, 1, NULL);
@@ -1327,73 +1256,6 @@ void start_dns_server(void)
         ESP_LOGE("DNS_TAG", "DNS server started...");
     }
 }
-
-// void start_MDNS(void)
-// {
-//     ESP_ERROR_CHECK(mdns_init());
-//     ESP_ERROR_CHECK(mdns_hostname_set(local_server_name));
-//     ESP_LOGI("MDNS_TAG", "mdns hostname set to: [%s]", local_server_name);
-//     ESP_ERROR_CHECK(mdns_instance_name_set("local_Server_instance"));
-//     mdns_txt_item_t serviceTxtData[3] = {
-//         {"board", "esp32"},
-//         {"u", "user"},
-//         {"p", "password"}};
-//     ESP_ERROR_CHECK(mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData, 3));
-//     ESP_LOGE("MDNS_TAG", "Server_name [STA-Mode] => '%s.local'", local_server_name);
-// }
-//
-// static bool check_and_print_result(mdns_search_once_t *search)
-// {
-//     // Check if any result is available
-//     mdns_result_t *result = NULL;
-//     if (!mdns_query_async_get_results(search, 0, &result))
-//     {
-//         return false;
-//     }
-//     if (!result)
-//     { // search timeout, but no result
-//         return true;
-//     }
-//     // If yes, print the result
-//     mdns_ip_addr_t *a = result->addr;
-//     while (a)
-//     {
-//         if (a->addr.type == ESP_IPADDR_TYPE_V6)
-//         {
-//             printf("  AAAA: " IPV6STR "\n", IPV62STR(a->addr.u_addr.ip6));
-//         }
-//         else
-//         {
-//             printf("  A   : " IPSTR "\n", IP2STR(&(a->addr.u_addr.ip4)));
-//         }
-//         a = a->next;
-//     }
-//     // and free the result
-//     mdns_query_results_free(result);
-//     return true;
-// }
-// static void query_mdns_hosts_async(const char *host_name)
-// {
-//     ESP_LOGI("MDNS_TAG", "Query both A and AAAA: %s.local", host_name);
-//     mdns_search_once_t *s_a = mdns_query_async_new(host_name, NULL, NULL, MDNS_TYPE_A, 1000, 1, NULL);
-//     mdns_search_once_t *s_aaaa = mdns_query_async_new(host_name, NULL, NULL, MDNS_TYPE_AAAA, 1000, 1, NULL);
-//     while (s_a || s_aaaa)
-//     {
-//         if (s_a && check_and_print_result(s_a))
-//         {
-//             ESP_LOGI("MDNS_TAG", "Query A %s.local finished", host_name);
-//             mdns_query_async_delete(s_a);
-//             s_a = NULL;
-//         }
-//         if (s_aaaa && check_and_print_result(s_aaaa))
-//         {
-//             ESP_LOGI("MDNS_TAG", "Query AAAA %s.local finished", host_name);
-//             mdns_query_async_delete(s_aaaa);
-//             s_aaaa = NULL;
-//         }
-//         vTaskDelay(50 / portTICK_PERIOD_MS);
-//     }
-// }
 
 /*******************************************************************************
  *                          End of File

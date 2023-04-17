@@ -61,18 +61,26 @@ void RESTART_WIFI(uint8_t mode)
         break;
     case ESP_OK:
         if (mode)
+        {
             ESP_LOGE("REBOOT_TAG", "STA Restarted ? ... %s", (STA_RESTART ? "Already restarted once" : "not restarted"));
+        }
         else
+        {
             ESP_LOGE("REBOOT_TAG", "AP Restarted ? ... %s", (AP_RESTART ? "Already restarted once" : "not restarted"));
+        }
         break;
     }
     if (!status_val)
     {
         status_val = 1;
         if (mode)
+        {
             ESP_ERROR_CHECK(nvs_set_u8(reset, "statusSTA", status_val)); // set the internal value using "status_val"
+        }
         else
+        {
             ESP_ERROR_CHECK(nvs_set_u8(reset, "statusAP", status_val)); // set the internal value using "status_val"
+        }
     }
     ESP_ERROR_CHECK(nvs_commit(reset));
     nvs_close(reset);

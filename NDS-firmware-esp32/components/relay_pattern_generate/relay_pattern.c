@@ -65,7 +65,6 @@ void Serial_Timer_Callback(void *params) // Callback triggered every 1000mS -> 1
     else
     {
         gpio_set_level(REALY_PINS[position], R_ON); // [0 -> 3]
-        // ESP_LOGW("Serial_led", "relay:%d [ %s ]", position, ((dir) ? "->" : "<-"));
     }
     (dir) ? position++ : position--; // increases the pointer position by 1 every second
 }
@@ -99,7 +98,9 @@ void Random_Timer_Callback(void *params) // Callback triggered every 1000mS -> 1
     /*Every 1 sec the random_seconds value increases by 1*/
     random_seconds++;
     if (random_seconds > 15)
+    {
         random_seconds = 0;
+    }
 }
 
 /**
@@ -119,29 +120,6 @@ static void Serial_Patttern_generator(bool state) // receiver // Serial_timer st
         break;
     }
 }
-// static void Serial_Patttern_task(void *params) // receiver // Serial_timer start or stop
-// {
-//     static uint32_t state;
-//     static esp_err_t isOn1 = ESP_FAIL;
-//     while (1)
-//     {
-//         xTaskNotifyWait(0, 0, &state, portMAX_DELAY);
-//         switch (state)
-//         {
-//         case 1: // 1 => Start the timer
-//             isOn1 = esp_timer_start_periodic(esp_timer_handle1, 1000000);
-//             break;
-//         case 0: // 0 => stop timer
-//             if (isOn1 == ESP_OK)
-//             {
-//                 esp_timer_stop(esp_timer_handle1);
-//                 isOn1 = ESP_FAIL;
-//             }
-//             break;
-//         }
-//     }
-//     vTaskDelete(NULL);
-// }
 
 /**
  * @brief Function that activates a random_pattern_timer2.
@@ -196,16 +174,22 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
                 {
                     uint8_t val = 0;
                     if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, "random", &val))
-                        Relay_Status_Value[RANDOM_UPDATE] = 0; // random status value must be ->0 (default)
+                    {
+                        Relay_Status_Value[RANDOM_UPDATE] = 0;
+                    } // random status value must be ->0 (default)
                     else
-                        Relay_Status_Value[RANDOM_UPDATE] = val; // 0,1,2,3,4
-                    // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %d : %s", "random", val, (Relay_Status_Value[RANDOM_UPDATE] ? "random_ON" : "random_OFF"));
+                    {
+                        Relay_Status_Value[RANDOM_UPDATE] = val;
+                    } // 0,1,2,3,4
 
                     if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, "serial", &val))
-                        Relay_Status_Value[SERIAL_UPDATE] = 0; // serial status value must be ->0 (default)
+                    {
+                        Relay_Status_Value[SERIAL_UPDATE] = 0;
+                    } // serial status value must be ->0 (default)
                     else
-                        Relay_Status_Value[SERIAL_UPDATE] = val; // 1,0
-                    // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %d : %s", "serial", val, (Relay_Status_Value[SERIAL_UPDATE] ? "serial_ON" : "serial_OFF"));
+                    {
+                        Relay_Status_Value[SERIAL_UPDATE] = val;
+                    } // 1,0
 
                     for (uint8_t i = 1; i <= RELAY_UPDATE_16; i++) // get "1/0" -> relay_status [1-16]
                     {
@@ -213,10 +197,13 @@ static void Relay_switch_update(void *params) // -> also a notification sender t
                         memset(str, 0, sizeof(str));
                         sprintf(str, "Relay%u", i);
                         if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(update, str, &val))
-                            Relay_Status_Value[i] = R_OFF; // need to be inverted
+                        {
+                            Relay_Status_Value[i] = R_OFF;
+                        } // need to be inverted
                         else
-                            Relay_Status_Value[i] = val; // 1,0
-                                                         // ESP_LOGW("DISPLAY_RELAY", "%s : stored_state -> %s ", str, (Relay_Status_Value[i]) ? "R_OFF" : "R_ON");
+                        {
+                            Relay_Status_Value[i] = val;
+                        } // 1,0
                     }
                     nvs_close(update); // no commits to avoid changes
                 }
