@@ -30,7 +30,7 @@
 #include "relay_pattern.h"
 #include "reboot_count.h"
 #include "restart_reset_random_intr.h"
-// #include "nvs.h"
+#include "ota_update.h"
 #include "nvs_flash.h"
 #include "cJSON.h"
 #include "driver/timer.h"
@@ -46,7 +46,6 @@
 #include "esp_spi_flash.h"
 #include "esp_system.h"
 #include "lwip/sockets.h"
-// #include "esp_intr_alloc.h"
 
 /*******************************************************************************
  *                          Type & Macro Definitions
@@ -99,8 +98,9 @@
 #define LOCAL_PASS_INDEX 1
 
 // Extern variables
-extern esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
-extern esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
+// extern esp_timer_handle_t esp_OTAtimer_handle;
+// extern esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
+// extern esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
 
 /*******************************************************************************
  *                          Static Function Definitions
@@ -179,29 +179,20 @@ esp_err_t initialize_nvs(ap_config_t *local_config)
  *******************************************************************************/
 void app_main(void)
 {
+
+    /***************************************************************/
+    ap_config_t local_config; // ssid store sample
     /***************************************************************/
     gpio_pad_select_gpio(SYS_LED);                 // SYS_LED turns ON in both AP & STA phase.
     gpio_set_direction(SYS_LED, GPIO_MODE_OUTPUT); // System ON/OFF-led initialized
     gpio_set_level(SYS_LED, SYS_LED_ON);           // turn-ON system led
     ESP_LOGE("SYSTEM_LED", "ON");                  // comment
     /***************************************************************/
-    ap_config_t local_config; // ssid store sample
-    // Create & initialize serial timer
-    const esp_timer_create_args_t esp_timer_create_args1 = {
-        .callback = Serial_Timer_Callback,
-        .name = "Serial timer"};
-    esp_timer_create(&esp_timer_create_args1, &esp_timer_handle1);
-    /***************************************************************/
-    // Create & initialize Random timer
-    const esp_timer_create_args_t esp_timer_create_args2 = {
-        .callback = Random_Timer_Callback,
-        .name = "Random timer"};
-    esp_timer_create(&esp_timer_create_args2, &esp_timer_handle2);
-    /***************************************************************/
     wifi_init();               // wifi_initializtion
     INIT_RS_PIN();             // initialize the rest_activate
     INIT_RAND_PIN();           // initialize the random_activate
     setup_relay_update_task(); // create task to handle the relay activations
+    /***************************************************************/
     if (ESP_OK == initialize_nvs(&local_config))
     {
         ESP_LOGE("LOCAL_SSID", "%s", local_config.local_ssid);
@@ -213,6 +204,8 @@ void app_main(void)
             if (!get_STA_RESTART())
                 esp_restart();
             Activate_Relays(); // activate the 'serial_operation_functionality'
+            initialize_ota_setup();    // introduce the OTA_updater_task
+    
         }
     }
     else

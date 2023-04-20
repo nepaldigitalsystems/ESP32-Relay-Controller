@@ -7,13 +7,13 @@
 #include "string.h"
 #include "esp_log.h"
 #include "esp_err.h"
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-
 #include "esp_netif.h"
 #include "esp_wifi.h"
+
+#include "esp_sntp.h"
 
 /*******************************************************************************
  *                          Static Data Definitions
@@ -218,6 +218,32 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
                 nvs_close(sta_host);
             }
         }
+
+        ESP_LOGI("SNTP_TAG", "Initializing SNTP");
+        sntp_setoperatingmode(SNTP_OPMODE_POLL);
+        sntp_setservername(0, "pool.ntp.org");
+        // sntp_set_time_sync_notification_cb("time_sync_notification_cb");
+        sntp_init();
+
+        // wait for time to be set
+        time_t now = 0;
+        struct tm timeinfo = {0};
+        int retry = 0;
+        const int retry_count = 10;
+        while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
+        {
+            ESP_LOGI("SNTP_TAG", "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        }
+        time(&now);
+        localtime_r(&now, &timeinfo);
+        char strftime_buf[64];
+        // Set timezone to Nepal Standard Time
+        setenv("TZ", "UTC+05:45", 1);
+        tzset();
+        localtime_r(&now, &timeinfo);
+        strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+        ESP_LOGI("SNTP_TAG", "The current date/time in NEPAL is: %s", strftime_buf);
     }
     break;
     case WIFI_EVENT_AP_START:
@@ -301,6 +327,9 @@ esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
         esp_netif_set_ip_info(ESP_NETIF, &ip_info);
     }
     //---------------------------------------------------------------------------------------
+#ifdef LWIP_DHCP_GET_NTP_SRV
+    sntp_servermode_dhcp(1);
+#endif
     esp_wifi_set_mode(WIFI_MODE_STA);                   // setting the mode of wifi (AP / STA)
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config); // pass the wifi_config ; if set as station
     esp_wifi_start();

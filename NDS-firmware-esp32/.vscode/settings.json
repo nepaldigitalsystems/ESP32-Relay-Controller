@@ -67,7 +67,12 @@
         "esp_intr_alloc.h": "c",
         "gpio.h": "c",
         "semphr.h": "c",
-        "esp_spi_flash.h": "c"
+        "esp_spi_flash.h": "c",
+        "esp_https_ota.h": "c",
+        "esp_http_client.h": "c",
+        "esp_ota_ops.h": "c",
+        "rtc_io.h": "c",
+        "ota_update.h": "c"
     },
     "idf.flashType": "UART"
 }

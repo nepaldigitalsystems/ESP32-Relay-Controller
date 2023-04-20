@@ -339,7 +339,7 @@ esp_err_t captive_handler(httpd_req_t *req) // generally we dont want other file
 esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
     static settings_pass_name_t set_pass_name;
     bool ESP_receive;
     char buffer[250];
@@ -425,7 +425,7 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
     httpd_resp_sendstr(req, temp_buffer);         // chunk
     httpd_resp_send(req, NULL, 0);
 
-    ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
     return ESP_OK;
 }
 
@@ -438,7 +438,7 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
 esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
     bool ESP_receive;
     char buffer[20];
     memset(&buffer, 0, sizeof(buffer));
@@ -465,8 +465,8 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         uint8_t chipId[6];
         memset(&chipId, 0, sizeof(chipId));
         int sysUpTime[4];
-        char timestamp[30];
         memset(&sysUpTime, 0, sizeof(sysUpTime));
+        char timestamp[30];
         struct tm Start_Time;
         esp_chip_info_t chip_info;
         const char *compile_date2 = __DATE__;
@@ -530,7 +530,7 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         httpd_resp_sendstr(req, temp_buffer);         // chunk
         httpd_resp_send(req, NULL, 0);
     }
-    ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
     return ESP_OK;
 }
 
@@ -542,7 +542,7 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
 esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
-    ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
     char buffer[20];
     memset(&buffer, 0, sizeof(buffer));
     size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
@@ -580,7 +580,7 @@ esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post
     httpd_resp_set_type(req, "application/json"); // sending json data as response
     httpd_resp_sendstr(req, temp_buffer);         // chunk
     httpd_resp_send(req, NULL, 0);
-    ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
     return ESP_OK;
 }
 
@@ -592,7 +592,7 @@ esp_err_t relay_btn_refresh_handler(httpd_req_t *req) // invoked when login_post
 esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri);
-    ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
     char buffer[250];
     memset(&buffer, 0, sizeof(buffer));
     size_t recv_size = (req->content_len) > sizeof(buffer) ? sizeof(buffer) : (req->content_len);
@@ -707,7 +707,7 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
         httpd_resp_set_status(req, "204 NO CONTENT");
         httpd_resp_send(req, NULL, 0);
     }
-    ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
     return ESP_OK;
 }
 
@@ -719,7 +719,7 @@ esp_err_t relay_json_post_handler(httpd_req_t *req) // invoked when login_post i
 esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
     bool ESP_receive;
     char buffer[20]; // this stores username and password into buffer //
     memset(&buffer, 0, sizeof(buffer));
@@ -750,15 +750,13 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
         httpd_resp_set_type(req, "application/json"); // sending json data as response
         httpd_resp_sendstr(req, temp_buffer);         // chunk
         httpd_resp_send(req, NULL, 0);
-        ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
+        // ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
 
         if (ESP_receive)
         {
-            // for (int i = 2; i > 0; i--)
-            // {
+
             ESP_LOGW("RESTART_TAG", "Restarting... NOW.");
             vTaskDelay(500 / portTICK_PERIOD_MS);
-            // }
             response.approve = false;
             esp_restart();
         }
@@ -768,7 +766,7 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
         ESP_LOGE("RELAY_INPUT", "Incomming JSON_packet not proper!!");
         httpd_resp_set_status(req, "204 NO CONTENT");
         httpd_resp_send(req, NULL, 0);
-        ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
+        // ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
     }
     return ESP_OK;
 }
@@ -781,7 +779,7 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
 esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
     static auth_t cred; // cred obj // stores data into the memory even after this function terminates
     char buffer[100];   // this stores username and password into buffer //
     memset(&buffer, 0, sizeof(buffer));
@@ -868,7 +866,7 @@ esp_err_t login_auth_handler(httpd_req_t *req) // invoked when login_post is act
         httpd_resp_set_status(req, "204 NO CONTENT");
         httpd_resp_send(req, NULL, 0);
     }
-    ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
     return ESP_OK;
 }
 
@@ -1030,7 +1028,7 @@ void connect_to_local_AP(void *params)
 esp_err_t AP_TO_STA(httpd_req_t *req)
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
-    ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 1", "free-heap: %u", xPortGetFreeHeapSize());
     static ap_config_t ap_config; // required to stay in memory
 
     char buffer[100];
@@ -1058,7 +1056,7 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
 
     vTaskDelay(200 / portTICK_PERIOD_MS);
     xTaskCreate(connect_to_local_AP, "connect_to_local_ap", 4096, &ap_config, 1, NULL);
-    ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
+    // ESP_LOGE("heap-track - 2", "free-heap: %u", xPortGetFreeHeapSize());
     return ESP_OK;
 }
 /****************** to scan URLS when [ esp => AP type ]*****************************/
