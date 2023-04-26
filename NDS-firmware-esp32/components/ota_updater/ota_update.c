@@ -9,99 +9,106 @@
 #include "esp_http_client.h"
 #include "esp_https_ota.h"
 #include "esp_log.h"
+#include "esp_system.h"
 #include "esp_ota_ops.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include "cJSON.h"
 
 #define TAG "OTA_TAG"
-#define OTA_URL "https://doc-08-bk-docs.googleusercontent.com/docs/securesc/r04snpjbdhim7haundde6pt66mhmoai3/aa7gfh2ef18muta4s8mtek4suu064nvo/1682490675000/15923875642182763784/15923875642182763784/1Ktjjeb_TiInwE645dO6zAqBpvamwkNDK?e=download&ax=ALy03A77t450kdGgpuCT5o-OcvI8FyyOVIH64F-Tl83znoE_tMG-W1qKri-M-gxbnVfutshbyeTurl7_uT4X76fulK1G9t6Q741zykcBd_Kz-rGOOuGBzvQpJpQ9fNGjFDa6487B_rv08NU6_ec3lPVw9kVZS8Q2SVrD7F2YESnSbFoAgomB1m2klY8gQw-S7gQMqAI2F2StTrsBgaXF5r7bnQGs1s2Oa76rNP3VPNUk71yu3_UzOieBZC939v3gf57CQjCkCYFc29R6N1QNlecFvhTjhnVH483llKFy8PgbuFcmxLOcJIPJwFuIivSQfN_l5-KY14Y7bqUntKdExTwwXzSlh28a63JaVdT8G8FxA89lfSLYxaZmx1DH5reWtQXQKY8N2j7QXaB-Upr528xTxDBxek4KdVc6ZHBFfkOsqjIwnIg5O4bI90CjOag0yGemkEJ-brkdGFICeszI6Vn3UBqKNGVJg-zpKUCvtbrzEgrLVBqmPUu_9d56yM1YlBcxzfZDfCSWFVzg_qEE8DbiBQ8VmhuBKZLlT5bDvO_MUkCIaTYLJk6Kvk--rlpXwEC5p2o4DXTJv_c-iFPmWS8U393gJolf8gsd7hvR964BRVdTOoWoeBjHRI-5pCBSNY7hnaUtwYQh9BxWLVwQeFLEnEo-00OvSi1S-3J23HOEP9sAo2O8MMN7Qy0xm1nNVuaKGF--Leir5ZQ3rLEPWS6JZ6SzoTzh1bTZ32g5ZHCdPDvAaix4Y5mfPJgw7yTqnrh2WaAoWFuAiHEmpz04zijmlYFEiQMfEe1LDekf6NMw7ReT8lq6sln0bsFjp15C_0pNc0ET0tLYI1dK_N8kre0taAikZaFefR38fPVWMsbnwEcsDcRhjZfPYD5zRgF5itIj3cBpBD-3FkEEz1LWjHSBsb87rVX--J_K5e0&uuid=463c15d2-034e-4efc-b0bc-b22ec228a515&authuser=0&nonce=l1cgjks3le3ls&user=15923875642182763784&hash=g007vsd0kns6ghgbvhkna3v4of6au58b"
+#define UPDATE_JSON_URL ".../firmware.json"
+// #define OTA_URL "https://nepaldigisys.com/static/firmware/ESP32_Relay.bin"
+
+// receive buffer
+char rcv_buffer[200];
 
 // #define CONFIG_SNTP_TIME_SYNC_METHOD_IMMED 1
+
+static float FIRMWARE_VERSION = 0;
 
 static xSemaphoreHandle ota_semaphore;
 static esp_timer_handle_t esp_OTAtimer_handle;
 
-const int software_version = 1;
-const char *google_cert = "-----BEGIN CERTIFICATE-----\r\n"
-                          "MIIOPTCCDSWgAwIBAgIRANVRkRZmSKIBCiVhv69JoOYwDQYJKoZIhvcNAQELBQAw\r\n"
-                          "RjELMAkGA1UEBhMCVVMxIjAgBgNVBAoTGUdvb2dsZSBUcnVzdCBTZXJ2aWNlcyBM\r\n"
-                          "TEMxEzARBgNVBAMTCkdUUyBDQSAxQzMwHhcNMjMwNDAzMDgxNzU4WhcNMjMwNjI2\r\n"
-                          "MDgxNzU3WjAXMRUwEwYDVQQDDAwqLmdvb2dsZS5jb20wWTATBgcqhkjOPQIBBggq\r\n"
-                          "hkjOPQMBBwNCAAQuH7/mN1E3fr4AT/buHz+qSaoSaZxWbrhmyY4Q+0AnYHTt+qVH\r\n"
-                          "952+RpqnWjBdr9OIpCVFnYqKge2zvL8AFPT1o4IMHjCCDBowDgYDVR0PAQH/BAQD\r\n"
-                          "AgeAMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYE\r\n"
-                          "FET6sq8x/8nmwD/gz34idirjZJfKMB8GA1UdIwQYMBaAFIp0f6+Fze6VzT2c0OJG\r\n"
-                          "FPNxNR0nMGoGCCsGAQUFBwEBBF4wXDAnBggrBgEFBQcwAYYbaHR0cDovL29jc3Au\r\n"
-                          "cGtpLmdvb2cvZ3RzMWMzMDEGCCsGAQUFBzAChiVodHRwOi8vcGtpLmdvb2cvcmVw\r\n"
-                          "by9jZXJ0cy9ndHMxYzMuZGVyMIIJzQYDVR0RBIIJxDCCCcCCDCouZ29vZ2xlLmNv\r\n"
-                          "bYIWKi5hcHBlbmdpbmUuZ29vZ2xlLmNvbYIJKi5iZG4uZGV2ghUqLm9yaWdpbi10\r\n"
-                          "ZXN0LmJkbi5kZXaCEiouY2xvdWQuZ29vZ2xlLmNvbYIYKi5jcm93ZHNvdXJjZS5n\r\n"
-                          "b29nbGUuY29tghgqLmRhdGFjb21wdXRlLmdvb2dsZS5jb22CCyouZ29vZ2xlLmNh\r\n"
-                          "ggsqLmdvb2dsZS5jbIIOKi5nb29nbGUuY28uaW6CDiouZ29vZ2xlLmNvLmpwgg4q\r\n"
-                          "Lmdvb2dsZS5jby51a4IPKi5nb29nbGUuY29tLmFygg8qLmdvb2dsZS5jb20uYXWC\r\n"
-                          "DyouZ29vZ2xlLmNvbS5icoIPKi5nb29nbGUuY29tLmNvgg8qLmdvb2dsZS5jb20u\r\n"
-                          "bXiCDyouZ29vZ2xlLmNvbS50coIPKi5nb29nbGUuY29tLnZuggsqLmdvb2dsZS5k\r\n"
-                          "ZYILKi5nb29nbGUuZXOCCyouZ29vZ2xlLmZyggsqLmdvb2dsZS5odYILKi5nb29n\r\n"
-                          "bGUuaXSCCyouZ29vZ2xlLm5sggsqLmdvb2dsZS5wbIILKi5nb29nbGUucHSCEiou\r\n"
-                          "Z29vZ2xlYWRhcGlzLmNvbYIPKi5nb29nbGVhcGlzLmNughEqLmdvb2dsZXZpZGVv\r\n"
-                          "LmNvbYIMKi5nc3RhdGljLmNughAqLmdzdGF0aWMtY24uY29tgg9nb29nbGVjbmFw\r\n"
-                          "cHMuY26CESouZ29vZ2xlY25hcHBzLmNughFnb29nbGVhcHBzLWNuLmNvbYITKi5n\r\n"
-                          "b29nbGVhcHBzLWNuLmNvbYIMZ2tlY25hcHBzLmNugg4qLmdrZWNuYXBwcy5jboIS\r\n"
-                          "Z29vZ2xlZG93bmxvYWRzLmNughQqLmdvb2dsZWRvd25sb2Fkcy5jboIQcmVjYXB0\r\n"
-                          "Y2hhLm5ldC5jboISKi5yZWNhcHRjaGEubmV0LmNughByZWNhcHRjaGEtY24ubmV0\r\n"
-                          "ghIqLnJlY2FwdGNoYS1jbi5uZXSCC3dpZGV2aW5lLmNugg0qLndpZGV2aW5lLmNu\r\n"
-                          "ghFhbXBwcm9qZWN0Lm9yZy5jboITKi5hbXBwcm9qZWN0Lm9yZy5jboIRYW1wcHJv\r\n"
-                          "amVjdC5uZXQuY26CEyouYW1wcHJvamVjdC5uZXQuY26CF2dvb2dsZS1hbmFseXRp\r\n"
-                          "Y3MtY24uY29tghkqLmdvb2dsZS1hbmFseXRpY3MtY24uY29tghdnb29nbGVhZHNl\r\n"
-                          "cnZpY2VzLWNuLmNvbYIZKi5nb29nbGVhZHNlcnZpY2VzLWNuLmNvbYIRZ29vZ2xl\r\n"
-                          "dmFkcy1jbi5jb22CEyouZ29vZ2xldmFkcy1jbi5jb22CEWdvb2dsZWFwaXMtY24u\r\n"
-                          "Y29tghMqLmdvb2dsZWFwaXMtY24uY29tghVnb29nbGVvcHRpbWl6ZS1jbi5jb22C\r\n"
-                          "FyouZ29vZ2xlb3B0aW1pemUtY24uY29tghJkb3VibGVjbGljay1jbi5uZXSCFCou\r\n"
-                          "ZG91YmxlY2xpY2stY24ubmV0ghgqLmZscy5kb3VibGVjbGljay1jbi5uZXSCFiou\r\n"
-                          "Zy5kb3VibGVjbGljay1jbi5uZXSCDmRvdWJsZWNsaWNrLmNughAqLmRvdWJsZWNs\r\n"
-                          "aWNrLmNughQqLmZscy5kb3VibGVjbGljay5jboISKi5nLmRvdWJsZWNsaWNrLmNu\r\n"
-                          "ghFkYXJ0c2VhcmNoLWNuLm5ldIITKi5kYXJ0c2VhcmNoLWNuLm5ldIIdZ29vZ2xl\r\n"
-                          "dHJhdmVsYWRzZXJ2aWNlcy1jbi5jb22CHyouZ29vZ2xldHJhdmVsYWRzZXJ2aWNl\r\n"
-                          "cy1jbi5jb22CGGdvb2dsZXRhZ3NlcnZpY2VzLWNuLmNvbYIaKi5nb29nbGV0YWdz\r\n"
-                          "ZXJ2aWNlcy1jbi5jb22CF2dvb2dsZXRhZ21hbmFnZXItY24uY29tghkqLmdvb2ds\r\n"
-                          "ZXRhZ21hbmFnZXItY24uY29tghhnb29nbGVzeW5kaWNhdGlvbi1jbi5jb22CGiou\r\n"
-                          "Z29vZ2xlc3luZGljYXRpb24tY24uY29tgiQqLnNhZmVmcmFtZS5nb29nbGVzeW5k\r\n"
-                          "aWNhdGlvbi1jbi5jb22CFmFwcC1tZWFzdXJlbWVudC1jbi5jb22CGCouYXBwLW1l\r\n"
-                          "YXN1cmVtZW50LWNuLmNvbYILZ3Z0MS1jbi5jb22CDSouZ3Z0MS1jbi5jb22CC2d2\r\n"
-                          "dDItY24uY29tgg0qLmd2dDItY24uY29tggsybWRuLWNuLm5ldIINKi4ybWRuLWNu\r\n"
-                          "Lm5ldIIUZ29vZ2xlZmxpZ2h0cy1jbi5uZXSCFiouZ29vZ2xlZmxpZ2h0cy1jbi5u\r\n"
-                          "ZXSCDGFkbW9iLWNuLmNvbYIOKi5hZG1vYi1jbi5jb22CFGdvb2dsZXNhbmRib3gt\r\n"
-                          "Y24uY29tghYqLmdvb2dsZXNhbmRib3gtY24uY29tgh4qLnNhZmVudXAuZ29vZ2xl\r\n"
-                          "c2FuZGJveC1jbi5jb22CDSouZ3N0YXRpYy5jb22CFCoubWV0cmljLmdzdGF0aWMu\r\n"
-                          "Y29tggoqLmd2dDEuY29tghEqLmdjcGNkbi5ndnQxLmNvbYIKKi5ndnQyLmNvbYIO\r\n"
-                          "Ki5nY3AuZ3Z0Mi5jb22CECoudXJsLmdvb2dsZS5jb22CFioueW91dHViZS1ub2Nv\r\n"
-                          "b2tpZS5jb22CCyoueXRpbWcuY29tggthbmRyb2lkLmNvbYINKi5hbmRyb2lkLmNv\r\n"
-                          "bYITKi5mbGFzaC5hbmRyb2lkLmNvbYIEZy5jboIGKi5nLmNuggRnLmNvggYqLmcu\r\n"
-                          "Y2+CBmdvby5nbIIKd3d3Lmdvby5nbIIUZ29vZ2xlLWFuYWx5dGljcy5jb22CFiou\r\n"
-                          "Z29vZ2xlLWFuYWx5dGljcy5jb22CCmdvb2dsZS5jb22CEmdvb2dsZWNvbW1lcmNl\r\n"
-                          "LmNvbYIUKi5nb29nbGVjb21tZXJjZS5jb22CCGdncGh0LmNuggoqLmdncGh0LmNu\r\n"
-                          "ggp1cmNoaW4uY29tggwqLnVyY2hpbi5jb22CCHlvdXR1LmJlggt5b3V0dWJlLmNv\r\n"
-                          "bYINKi55b3V0dWJlLmNvbYIUeW91dHViZWVkdWNhdGlvbi5jb22CFioueW91dHVi\r\n"
-                          "ZWVkdWNhdGlvbi5jb22CD3lvdXR1YmVraWRzLmNvbYIRKi55b3V0dWJla2lkcy5j\r\n"
-                          "b22CBXl0LmJlggcqLnl0LmJlghphbmRyb2lkLmNsaWVudHMuZ29vZ2xlLmNvbYIb\r\n"
-                          "ZGV2ZWxvcGVyLmFuZHJvaWQuZ29vZ2xlLmNughxkZXZlbG9wZXJzLmFuZHJvaWQu\r\n"
-                          "Z29vZ2xlLmNughhzb3VyY2UuYW5kcm9pZC5nb29nbGUuY24wIQYDVR0gBBowGDAI\r\n"
-                          "BgZngQwBAgEwDAYKKwYBBAHWeQIFAzA8BgNVHR8ENTAzMDGgL6AthitodHRwOi8v\r\n"
-                          "Y3Jscy5wa2kuZ29vZy9ndHMxYzMvUXFGeGJpOU00OGMuY3JsMIIBBQYKKwYBBAHW\r\n"
-                          "eQIEAgSB9gSB8wDxAHcArfe++nz/EMiLnT2cHj4YarRnKV3PsQwkyoWGNOvcgooA\r\n"
-                          "AAGHRmi5jAAABAMASDBGAiEA5GT6zLffOV9nFyH5KVgUjM1NSOh2z56H5CKh61eM\r\n"
-                          "/V8CIQDDVDOJQ/gn2SXHlM2f+r9dDoOOWMEJ0si7+Y02USY4sgB2ALNzdwfhhFD4\r\n"
-                          "Y4bWBancEQlKeS2xZwwLh9zwAw55NqWaAAABh0ZouWsAAAQDAEcwRQIgWa/o6iit\r\n"
-                          "+yyx1/Ec2gT0zI6+CpKNbPaDRkMCpowgfYQCIQCfxCmN2eUJgrTKUeDS1rzDi3qe\r\n"
-                          "9t/IwUFnI/ObYEqXsTANBgkqhkiG9w0BAQsFAAOCAQEA2ohY9gl5/nJbzOMfZGbI\r\n"
-                          "BpOM0wtbnQk95p4IhmfV1G3WSvs9Myyf/EwgAT9ljD3UcZKcQqgC4txXbaV6xyLh\r\n"
-                          "g0xQHPIL/IcfRHtiYtksYg36WrctBUdStumlwxQYc7TIfHaUffO42N3zNCTVT9Il\r\n"
-                          "5ojPi1dYqP7yoSXsuqOKpVH7D827zv4vvMA6t0nYM49Pa7rXYrDuY3yrOgGml+7V\r\n"
-                          "93UBNTDXxbbiWAiAc4C+K+xb36PVtn3Q24Okd8j1ABy012/IXiZM9pZbklIbW9EP\r\n"
-                          "ndS9zxK191MlzkkL10nURP99f0L7LxABFjKwIFJXntrhtkcmi09rU65um5PhT0Gq\r\n"
-                          "8w==\r\n"
-                          "-----END CERTIFICATE-----\r\n";
+const char server_cert[] = "-----BEGIN CERTIFICATE-----\r\n"
+                           "MIIOPTCCDSWgAwIBAgIRANVRkRZmSKIBCiVhv69JoOYwDQYJKoZIhvcNAQELBQAw\r\n"
+                           "RjELMAkGA1UEBhMCVVMxIjAgBgNVBAoTGUdvb2dsZSBUcnVzdCBTZXJ2aWNlcyBM\r\n"
+                           "TEMxEzARBgNVBAMTCkdUUyBDQSAxQzMwHhcNMjMwNDAzMDgxNzU4WhcNMjMwNjI2\r\n"
+                           "MDgxNzU3WjAXMRUwEwYDVQQDDAwqLmdvb2dsZS5jb20wWTATBgcqhkjOPQIBBggq\r\n"
+                           "hkjOPQMBBwNCAAQuH7/mN1E3fr4AT/buHz+qSaoSaZxWbrhmyY4Q+0AnYHTt+qVH\r\n"
+                           "952+RpqnWjBdr9OIpCVFnYqKge2zvL8AFPT1o4IMHjCCDBowDgYDVR0PAQH/BAQD\r\n"
+                           "AgeAMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYE\r\n"
+                           "FET6sq8x/8nmwD/gz34idirjZJfKMB8GA1UdIwQYMBaAFIp0f6+Fze6VzT2c0OJG\r\n"
+                           "FPNxNR0nMGoGCCsGAQUFBwEBBF4wXDAnBggrBgEFBQcwAYYbaHR0cDovL29jc3Au\r\n"
+                           "cGtpLmdvb2cvZ3RzMWMzMDEGCCsGAQUFBzAChiVodHRwOi8vcGtpLmdvb2cvcmVw\r\n"
+                           "by9jZXJ0cy9ndHMxYzMuZGVyMIIJzQYDVR0RBIIJxDCCCcCCDCouZ29vZ2xlLmNv\r\n"
+                           "bYIWKi5hcHBlbmdpbmUuZ29vZ2xlLmNvbYIJKi5iZG4uZGV2ghUqLm9yaWdpbi10\r\n"
+                           "ZXN0LmJkbi5kZXaCEiouY2xvdWQuZ29vZ2xlLmNvbYIYKi5jcm93ZHNvdXJjZS5n\r\n"
+                           "b29nbGUuY29tghgqLmRhdGFjb21wdXRlLmdvb2dsZS5jb22CCyouZ29vZ2xlLmNh\r\n"
+                           "ggsqLmdvb2dsZS5jbIIOKi5nb29nbGUuY28uaW6CDiouZ29vZ2xlLmNvLmpwgg4q\r\n"
+                           "Lmdvb2dsZS5jby51a4IPKi5nb29nbGUuY29tLmFygg8qLmdvb2dsZS5jb20uYXWC\r\n"
+                           "DyouZ29vZ2xlLmNvbS5icoIPKi5nb29nbGUuY29tLmNvgg8qLmdvb2dsZS5jb20u\r\n"
+                           "bXiCDyouZ29vZ2xlLmNvbS50coIPKi5nb29nbGUuY29tLnZuggsqLmdvb2dsZS5k\r\n"
+                           "ZYILKi5nb29nbGUuZXOCCyouZ29vZ2xlLmZyggsqLmdvb2dsZS5odYILKi5nb29n\r\n"
+                           "bGUuaXSCCyouZ29vZ2xlLm5sggsqLmdvb2dsZS5wbIILKi5nb29nbGUucHSCEiou\r\n"
+                           "Z29vZ2xlYWRhcGlzLmNvbYIPKi5nb29nbGVhcGlzLmNughEqLmdvb2dsZXZpZGVv\r\n"
+                           "LmNvbYIMKi5nc3RhdGljLmNughAqLmdzdGF0aWMtY24uY29tgg9nb29nbGVjbmFw\r\n"
+                           "cHMuY26CESouZ29vZ2xlY25hcHBzLmNughFnb29nbGVhcHBzLWNuLmNvbYITKi5n\r\n"
+                           "b29nbGVhcHBzLWNuLmNvbYIMZ2tlY25hcHBzLmNugg4qLmdrZWNuYXBwcy5jboIS\r\n"
+                           "Z29vZ2xlZG93bmxvYWRzLmNughQqLmdvb2dsZWRvd25sb2Fkcy5jboIQcmVjYXB0\r\n"
+                           "Y2hhLm5ldC5jboISKi5yZWNhcHRjaGEubmV0LmNughByZWNhcHRjaGEtY24ubmV0\r\n"
+                           "ghIqLnJlY2FwdGNoYS1jbi5uZXSCC3dpZGV2aW5lLmNugg0qLndpZGV2aW5lLmNu\r\n"
+                           "ghFhbXBwcm9qZWN0Lm9yZy5jboITKi5hbXBwcm9qZWN0Lm9yZy5jboIRYW1wcHJv\r\n"
+                           "amVjdC5uZXQuY26CEyouYW1wcHJvamVjdC5uZXQuY26CF2dvb2dsZS1hbmFseXRp\r\n"
+                           "Y3MtY24uY29tghkqLmdvb2dsZS1hbmFseXRpY3MtY24uY29tghdnb29nbGVhZHNl\r\n"
+                           "cnZpY2VzLWNuLmNvbYIZKi5nb29nbGVhZHNlcnZpY2VzLWNuLmNvbYIRZ29vZ2xl\r\n"
+                           "dmFkcy1jbi5jb22CEyouZ29vZ2xldmFkcy1jbi5jb22CEWdvb2dsZWFwaXMtY24u\r\n"
+                           "Y29tghMqLmdvb2dsZWFwaXMtY24uY29tghVnb29nbGVvcHRpbWl6ZS1jbi5jb22C\r\n"
+                           "FyouZ29vZ2xlb3B0aW1pemUtY24uY29tghJkb3VibGVjbGljay1jbi5uZXSCFCou\r\n"
+                           "ZG91YmxlY2xpY2stY24ubmV0ghgqLmZscy5kb3VibGVjbGljay1jbi5uZXSCFiou\r\n"
+                           "Zy5kb3VibGVjbGljay1jbi5uZXSCDmRvdWJsZWNsaWNrLmNughAqLmRvdWJsZWNs\r\n"
+                           "aWNrLmNughQqLmZscy5kb3VibGVjbGljay5jboISKi5nLmRvdWJsZWNsaWNrLmNu\r\n"
+                           "ghFkYXJ0c2VhcmNoLWNuLm5ldIITKi5kYXJ0c2VhcmNoLWNuLm5ldIIdZ29vZ2xl\r\n"
+                           "dHJhdmVsYWRzZXJ2aWNlcy1jbi5jb22CHyouZ29vZ2xldHJhdmVsYWRzZXJ2aWNl\r\n"
+                           "cy1jbi5jb22CGGdvb2dsZXRhZ3NlcnZpY2VzLWNuLmNvbYIaKi5nb29nbGV0YWdz\r\n"
+                           "ZXJ2aWNlcy1jbi5jb22CF2dvb2dsZXRhZ21hbmFnZXItY24uY29tghkqLmdvb2ds\r\n"
+                           "ZXRhZ21hbmFnZXItY24uY29tghhnb29nbGVzeW5kaWNhdGlvbi1jbi5jb22CGiou\r\n"
+                           "Z29vZ2xlc3luZGljYXRpb24tY24uY29tgiQqLnNhZmVmcmFtZS5nb29nbGVzeW5k\r\n"
+                           "aWNhdGlvbi1jbi5jb22CFmFwcC1tZWFzdXJlbWVudC1jbi5jb22CGCouYXBwLW1l\r\n"
+                           "YXN1cmVtZW50LWNuLmNvbYILZ3Z0MS1jbi5jb22CDSouZ3Z0MS1jbi5jb22CC2d2\r\n"
+                           "dDItY24uY29tgg0qLmd2dDItY24uY29tggsybWRuLWNuLm5ldIINKi4ybWRuLWNu\r\n"
+                           "Lm5ldIIUZ29vZ2xlZmxpZ2h0cy1jbi5uZXSCFiouZ29vZ2xlZmxpZ2h0cy1jbi5u\r\n"
+                           "ZXSCDGFkbW9iLWNuLmNvbYIOKi5hZG1vYi1jbi5jb22CFGdvb2dsZXNhbmRib3gt\r\n"
+                           "Y24uY29tghYqLmdvb2dsZXNhbmRib3gtY24uY29tgh4qLnNhZmVudXAuZ29vZ2xl\r\n"
+                           "c2FuZGJveC1jbi5jb22CDSouZ3N0YXRpYy5jb22CFCoubWV0cmljLmdzdGF0aWMu\r\n"
+                           "Y29tggoqLmd2dDEuY29tghEqLmdjcGNkbi5ndnQxLmNvbYIKKi5ndnQyLmNvbYIO\r\n"
+                           "Ki5nY3AuZ3Z0Mi5jb22CECoudXJsLmdvb2dsZS5jb22CFioueW91dHViZS1ub2Nv\r\n"
+                           "b2tpZS5jb22CCyoueXRpbWcuY29tggthbmRyb2lkLmNvbYINKi5hbmRyb2lkLmNv\r\n"
+                           "bYITKi5mbGFzaC5hbmRyb2lkLmNvbYIEZy5jboIGKi5nLmNuggRnLmNvggYqLmcu\r\n"
+                           "Y2+CBmdvby5nbIIKd3d3Lmdvby5nbIIUZ29vZ2xlLWFuYWx5dGljcy5jb22CFiou\r\n"
+                           "Z29vZ2xlLWFuYWx5dGljcy5jb22CCmdvb2dsZS5jb22CEmdvb2dsZWNvbW1lcmNl\r\n"
+                           "LmNvbYIUKi5nb29nbGVjb21tZXJjZS5jb22CCGdncGh0LmNuggoqLmdncGh0LmNu\r\n"
+                           "ggp1cmNoaW4uY29tggwqLnVyY2hpbi5jb22CCHlvdXR1LmJlggt5b3V0dWJlLmNv\r\n"
+                           "bYINKi55b3V0dWJlLmNvbYIUeW91dHViZWVkdWNhdGlvbi5jb22CFioueW91dHVi\r\n"
+                           "ZWVkdWNhdGlvbi5jb22CD3lvdXR1YmVraWRzLmNvbYIRKi55b3V0dWJla2lkcy5j\r\n"
+                           "b22CBXl0LmJlggcqLnl0LmJlghphbmRyb2lkLmNsaWVudHMuZ29vZ2xlLmNvbYIb\r\n"
+                           "ZGV2ZWxvcGVyLmFuZHJvaWQuZ29vZ2xlLmNughxkZXZlbG9wZXJzLmFuZHJvaWQu\r\n"
+                           "Z29vZ2xlLmNughhzb3VyY2UuYW5kcm9pZC5nb29nbGUuY24wIQYDVR0gBBowGDAI\r\n"
+                           "BgZngQwBAgEwDAYKKwYBBAHWeQIFAzA8BgNVHR8ENTAzMDGgL6AthitodHRwOi8v\r\n"
+                           "Y3Jscy5wa2kuZ29vZy9ndHMxYzMvUXFGeGJpOU00OGMuY3JsMIIBBQYKKwYBBAHW\r\n"
+                           "eQIEAgSB9gSB8wDxAHcArfe++nz/EMiLnT2cHj4YarRnKV3PsQwkyoWGNOvcgooA\r\n"
+                           "AAGHRmi5jAAABAMASDBGAiEA5GT6zLffOV9nFyH5KVgUjM1NSOh2z56H5CKh61eM\r\n"
+                           "/V8CIQDDVDOJQ/gn2SXHlM2f+r9dDoOOWMEJ0si7+Y02USY4sgB2ALNzdwfhhFD4\r\n"
+                           "Y4bWBancEQlKeS2xZwwLh9zwAw55NqWaAAABh0ZouWsAAAQDAEcwRQIgWa/o6iit\r\n"
+                           "+yyx1/Ec2gT0zI6+CpKNbPaDRkMCpowgfYQCIQCfxCmN2eUJgrTKUeDS1rzDi3qe\r\n"
+                           "9t/IwUFnI/ObYEqXsTANBgkqhkiG9w0BAQsFAAOCAQEA2ohY9gl5/nJbzOMfZGbI\r\n"
+                           "BpOM0wtbnQk95p4IhmfV1G3WSvs9Myyf/EwgAT9ljD3UcZKcQqgC4txXbaV6xyLh\r\n"
+                           "g0xQHPIL/IcfRHtiYtksYg36WrctBUdStumlwxQYc7TIfHaUffO42N3zNCTVT9Il\r\n"
+                           "5ojPi1dYqP7yoSXsuqOKpVH7D827zv4vvMA6t0nYM49Pa7rXYrDuY3yrOgGml+7V\r\n"
+                           "93UBNTDXxbbiWAiAc4C+K+xb36PVtn3Q24Okd8j1ABy012/IXiZM9pZbklIbW9EP\r\n"
+                           "ndS9zxK191MlzkkL10nURP99f0L7LxABFjKwIFJXntrhtkcmi09rU65um5PhT0Gq\r\n"
+                           "8w==\r\n"
+                           "-----END CERTIFICATE-----\r\n";
 // extern const uint8_t server_cert_pem_start[] asm("_binary_google2_crt_start"); // include from flash
 // extern const uint8_t server_cert_pem_end[] asm("_binary_google2_crt_end");
 
@@ -123,6 +130,10 @@ esp_err_t client_event_handler(esp_http_client_event_t *evt)
         break;
     case HTTP_EVENT_ON_DATA:
         ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+        if (!esp_http_client_is_chunked_response(evt->client))
+        {
+            strncpy(rcv_buffer, (char *)evt->data, evt->data_len);
+        }
         break;
     case HTTP_EVENT_ON_FINISH:
         ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
@@ -161,14 +172,8 @@ static void check_ota_update_task(void *data)
     {
         esp_timer_stop(esp_OTAtimer_handle);
         ESP_LOGW("RESTARTING_OTA_TIMER", "...");
-        esp_timer_start_periodic(esp_OTAtimer_handle, 30000000); // 20 Sec
+        esp_timer_start_periodic(esp_OTAtimer_handle, 30000000); // 30 Sec
     }
-
-    esp_http_client_config_t clientConfig = {
-        .url = OTA_URL, // our ota location
-        .event_handler = client_event_handler,
-        .cert_pem = google_cert, //(char *)server_cert_pem_start //// if CA cert of URLs differ then it should be appended to `cert_pem` member of `http_config`
-    };
 
     // condition to check every two days
     for (;;)
@@ -177,19 +182,89 @@ static void check_ota_update_task(void *data)
         {
             if (xSemaphoreTake(ota_semaphore, portMAX_DELAY))
             {
-                ESP_LOGI(TAG, "Invoking OTA...");
+                ESP_LOGI(TAG, "Looking for new firmware...OTA...");
 
-                if (ESP_OK == esp_https_ota(&clientConfig))
+                esp_http_client_config_t config = {
+                    .url = UPDATE_JSON_URL, // our ota location
+                    .event_handler = client_event_handler,
+                    // .cert_pem = NULL, //(char *)server_cert_pem_start //// if CA cert of URLs differ then it should be appended to `cert_pem` member of `http_config`
+                };
+                esp_http_client_handle_t client = esp_http_client_init(&config);
+
+                // downloading the json file
+                if (ESP_OK == esp_http_client_perform(client))
                 {
-                    // download the new bin file and copy to ota sector
-                    ESP_LOGI(TAG, "OTA flash succsessfull for version %d. Restarting...", software_version);
-                    vTaskDelay(500 / portTICK_PERIOD_MS);
-                    esp_restart();
+                    // parse the json file
+                    cJSON *json = cJSON_Parse(rcv_buffer);
+                    if (json == NULL)
+                    {
+                        ESP_LOGW(TAG, "downloaded file is not a valid json, aborting...\n");
+                    }
+                    else
+                    {
+                        cJSON *version = cJSON_GetObjectItemCaseSensitive(json, "version");
+                        cJSON *file = cJSON_GetObjectItemCaseSensitive(json, "file");
+                        // check the version
+                        if (!cJSON_IsNumber(version))
+                        {
+                            ESP_LOGW(TAG, "unable to read new version, aborting...\n");
+                        }
+                        else
+                        {
+                            float new_version = version->valuedouble;
+                            if (new_version > FIRMWARE_VERSION)
+                            {
+                                ESP_LOGW(TAG, "current firmware version (%.1f) is lower than the available one (%.1f), upgrading...\n", FIRMWARE_VERSION, new_version);
+                                if (cJSON_IsString(file) && (file->valuestring != NULL))
+                                {
+                                    ESP_LOGW(TAG, "downloading and installing new firmware (%s)...\n", file->valuestring);
+
+                                    esp_http_client_config_t ota_client_config = {
+                                        .url = file->valuestring,
+                                        .cert_pem = server_cert,
+                                    };
+                                    esp_err_t ret = esp_https_ota(&ota_client_config);
+                                    if (ret == ESP_OK)
+                                    {
+                                        ESP_LOGW(TAG, "OTA OK, restarting...\n");
+                                        FIRMWARE_VERSION = new_version;
+                                        esp_restart();
+                                    }
+                                    else
+                                    {
+                                        ESP_LOGW(TAG, "OTA failed...\n");
+                                    }
+                                }
+                                else
+                                {
+                                    ESP_LOGW(TAG, "unable to read the new file name, aborting...\n");
+                                }
+                            }
+                            else
+                            {
+                                ESP_LOGW(TAG, "current firmware version (%.1f) is greater or equal to the available one (%.1f), nothing to do...\n", FIRMWARE_VERSION, new_version);
+                            }
+                        }
+                    }
                 }
                 else
                 {
-                    ESP_LOGE(TAG, "Failed to update firmware");
+                    ESP_LOGW(TAG, "unable to download the json file, aborting...\n");
                 }
+                // cleanup
+                esp_http_client_cleanup(client);
+
+                // if (ESP_OK == esp_https_ota(&clientConfig))
+                // {
+                //     // download the new bin file and copy to ota sector
+                //     ESP_LOGI(TAG, "OTA flash succsessfull for version %d. Restarting...", software_version);
+                //     vTaskDelay(500 / portTICK_PERIOD_MS);
+                //     esp_restart();
+                // }
+                // else
+                // {
+                //     ESP_LOGE(TAG, "Failed to update firmware");
+                // }
 
                 // esp_https_ota_config_t ota_config = {
                 //     .http_config = &clientConfig};
@@ -225,8 +300,8 @@ static void check_ota_update_task(void *data)
 
                 // if (ESP_OK == esp_https_ota_finish(ota_handle))
                 // {
-                //     printf("restarting..\n");
-                //     vTaskDelay(pdMS_TO_TICKS(2000));
+                //     ESP_LOGW(TAG,"restarting..\n");
+                //     vTaskDelay(pdMS_TO_TICKS(1000));
                 //     esp_restart();
                 // }
                 // else
@@ -270,7 +345,7 @@ static void OTA_Timer_Callback(void *params)
         if ((current_timeinfo.tm_min - compile_timeinfo.tm_min) > 2) // OTA update after 2 min passes
         {
             // update the compile time
-            ESP_LOGW("OTA_Update", "Activating OTA operation");
+            // ESP_LOGW("OTA_Update", "Activating OTA operation");
             Activate_OTA();
         }
         else
