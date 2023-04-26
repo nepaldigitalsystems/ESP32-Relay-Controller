@@ -8,6 +8,7 @@ void http_server_ap_mode(void);
 void http_server_sta_mode(void);
 void Connect_Portal(void);
 void start_dns_server(void);
+void wifi_disconnect();
 // void start_MDNS(void);
 
 #endif

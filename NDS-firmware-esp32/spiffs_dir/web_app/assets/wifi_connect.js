@@ -32,7 +32,7 @@ form.addEventListener('submit', async function (e) {
     const json_data = await response.json();
     if (json_data.IP_addr3 >= 0) {
       alert(
-        `Resetting your wifi. Connect your device to "${ssid.value}" network. \n Your NDS_IP is 192.168.${json_data.IP_addr3 == 0 ? 'X' : json_data.IP_addr3}.100`
+        `Resetting your wifi. Connect your device to "${ssid.value}" network. \n Your NDS_IP is 192.168.${json_data.IP_addr3 == 0 ? 'X' : json_data.IP_addr3}.${json_data.IP_addr4 == 0 ? 'X' : json_data.IP_addr4}`
       );
       window.location.reload;
     }

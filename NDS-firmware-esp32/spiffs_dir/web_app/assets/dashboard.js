@@ -51,8 +51,7 @@ restart.addEventListener('click', async function (e) {
     const json_data = await response.json();
     if (json_data.restart_successful == 1) {
       window.location.replace('/');
-      time = 3000;
-
+      time = 2000;// delay before reloading [range(1000-5000)]
     }
     else {
       alert(`Restart unsuccessful....`);
@@ -86,5 +85,5 @@ const timer = setInterval(function () {
     alert('Session Timeout......Press "ENTER".');
     window.location.replace('/');
   }
-  if (time <= 10000) { logout.textContent = `User Inactive!! Timeout in... ${sec}s`; }
+  if (time <= 10000) { logout.textContent = `Timeout in... ${sec}s`; }
 }, 1000);

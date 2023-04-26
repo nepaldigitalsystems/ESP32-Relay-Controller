@@ -61,7 +61,7 @@ void IRAM_ATTR restart_reset_random_isr(void *args)
  */
 static void restart_reset_Task(void *params)
 {
-    while (1)
+    for (;;)
     {
         if (ulTaskNotifyTake(pdTRUE, portMAX_DELAY))
         {
@@ -131,7 +131,7 @@ static void restart_reset_Task(void *params)
  */
 static void random_activate_Task(void *params)
 {
-    while (1)
+    for (;;)
     {
         if (ulTaskNotifyTake(pdTRUE, portMAX_DELAY))
         {

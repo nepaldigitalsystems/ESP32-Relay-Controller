@@ -24,34 +24,46 @@
  *                          Include Files
  *******************************************************************************/
 #include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <sys/time.h>
 #include "DATA_FIELD.h"
 #include "server.h"
 #include "connect.h"
 #include "relay_pattern.h"
 #include "reboot_count.h"
 #include "restart_reset_random_intr.h"
+#include "sync_time.h"
 #include "ota_update.h"
+
 #include "nvs_flash.h"
 #include "cJSON.h"
 #include "driver/timer.h"
 #include "driver/gpio.h"
+
 #include "esp_log.h"
+#include "esp_attr.h"
 #include "esp_http_server.h"
 #include "esp_spiffs.h"
 #include "esp_wifi.h"
+#include "esp_spi_flash.h"
+#include "esp_system.h"
+#include "esp_sntp.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "freertos/semphr.h"
-#include "esp_spi_flash.h"
-#include "esp_system.h"
 #include "lwip/sockets.h"
+
+#define CONFIG_SNTP_TIME_SYNC_METHOD_IMMED 1
 
 /*******************************************************************************
  *                          Type & Macro Definitions
  *******************************************************************************/
 /* LIST of namespaces and keys
- * namespace => sta_num ; key = no. ;
+ * namespace => sta_num ; key = no.3 ; X
+ * namespace => sta_num ; key = no.4 ; X
  * namespace => wifiCreds ; key = store_ssid  ;
  * namespace => wifiCreds ; key = store_pass  ;
  * namespace => loginCreds ; key = username  ;
@@ -97,11 +109,8 @@
 #define LOCAL_SSID_INDEX 0
 #define LOCAL_PASS_INDEX 1
 
-// Extern variables
-// extern esp_timer_handle_t esp_OTAtimer_handle;
-// extern esp_timer_handle_t esp_timer_handle1; // timer1 for indipendent serial pattern
-// extern esp_timer_handle_t esp_timer_handle2; // timer2 for indipendent random pattern
-
+bool flag_sntp_triggered = false;
+// RTC_DATA_ATTR static bool flag_triggerd_status_SRAM;
 /*******************************************************************************
  *                          Static Function Definitions
  *******************************************************************************/
@@ -191,21 +200,26 @@ void app_main(void)
     wifi_init();               // wifi_initializtion
     INIT_RS_PIN();             // initialize the rest_activate
     INIT_RAND_PIN();           // initialize the random_activate
-    setup_relay_update_task(); // create task to handle the relay activations
+    setup_relay_update_task(); // this function creates a task to handle the relay activations
     /***************************************************************/
     if (ESP_OK == initialize_nvs(&local_config))
     {
         ESP_LOGE("LOCAL_SSID", "%s", local_config.local_ssid);
         ESP_LOGE("LOCAL_PASS", "%s", local_config.local_pass);
-        if (ESP_OK == wifi_connect_sta(local_config.local_ssid, local_config.local_pass, 15000)) // if the local ssid/pass doesn't match
+        if (ESP_OK == wifi_connect_sta(local_config.local_ssid, local_config.local_pass, 30000)) // if the local ssid/pass doesn't match
         {
             ESP_LOGW("STA_connect", "CONNECT TO LOCAL_SSID ... Successful.");
             RESTART_WIFI(STA_mode); // inspect the STA mode
             if (!get_STA_RESTART())
+            {
+                wifi_disconnect();
                 esp_restart();
-            Activate_Relays(); // activate the 'serial_operation_functionality'
-            initialize_ota_setup();    // introduce the OTA_updater_task
-    
+            }
+            char Current_Date_Time[100];
+            Get_current_date_time(Current_Date_Time);
+            ESP_LOGE("SNTP_SERVER", "(main.c)current date and time is = %s\n", Current_Date_Time);
+            Activate_Relays();      // activate the 'serial_operation_functionality'
+            initialize_ota_setup(); // introduce the OTA_updater_task
         }
     }
     else
@@ -213,7 +227,10 @@ void app_main(void)
         ESP_LOGW("AP_connect", "NO_LOCAL_SSID found.... Re-enter local network");
         wifi_connect_ap("ESP-32_local");
         if (!get_AP_RESTART())
+        {
+            wifi_disconnect();
             esp_restart();
+        }
         // Activate Serial and update in NVS_storage
         nvs_handle_t nvs_relay;
         nvs_open("Relay_Status", NVS_READWRITE, &nvs_relay);

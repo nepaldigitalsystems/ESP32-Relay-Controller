@@ -39,6 +39,7 @@ static uint8_t Relay_inStatus_Value[RELAY_UPDATE_MAX] = {0}; // 1-18
 
 /*extern variables*/
 extern uint32_t STA_ADDR3;
+extern uint32_t STA_ADDR4;
 extern xSemaphoreHandle xSEMA;
 extern uint8_t Relay_Status_Value[RELAY_UPDATE_MAX];
 extern uint8_t Relay_Update_Success[RELAY_UPDATE_MAX]; // 1-18
@@ -434,7 +435,6 @@ esp_err_t settings_post_handler(httpd_req_t *req) // invoked when login_post is 
  * @param req Pointer to the request being responded.
  * @return - ESP_OK: Compeleted operation.
  */
-
 esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is activated
 {
     ESP_LOGI("ESP_SERVER", "URL:- %s", req->uri); // display the URL
@@ -488,7 +488,7 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         sprintf(MAC, "%02x:%02x:%02x:%02x:%02x:%02x", chipId[0], chipId[1], chipId[2], chipId[3], chipId[4], chipId[5]);
 
         /*Compile time*/
-        strptime(compile_date2, "%b %d %Y", &Start_Time);
+        strptime(compile_date2, "%b %d %Y", &Start_Time); // string to time
         strptime(compile_time2, "%I:%M:%S", &Start_Time);
         strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %I:%M:%S.%p", &Start_Time); // convert date and time to string
 
@@ -513,17 +513,6 @@ esp_err_t info_post_handler(httpd_req_t *req) // invoked when login_post is acti
         char temp_buffer[512];                   // buffer to create the json packet
         bzero(temp_buffer, sizeof(temp_buffer)); // alternative to memset
         snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "{\"Approve\":1,\"CHIP_MODEL\":\"ESP_32\",\"CHIP_ID_MAC\":\"%s\",\"CHIP_CORES\":%d,\"FLASH_SIZE\":%d,\"HEAP_SIZE\":%d,\"FREE_DRAM\":%d,\"FREE_IRAM\":%d,\"FREE_HEAP\":%d,\"BOOT_COUNT\":%d,\"COMPILE_TIME\":\"%s\",\"UP_TIME\":\"%s\"}", (MAC), (chip_info.cores), (spi_flash_get_chip_size() / (1024 * 1024)), (FreeHeap), (DRam / 1024), (IRam / 1024), (LargestFreeHeap), (val), (timestamp), (Uptime));
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"CHIP_MODEL\":\"ESP_32\",");
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"CHIP_ID_MAC\":\"%s\",", (MAC));
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"CHIP_CORES\":%d,", (chip_info.cores));
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FLASH_SIZE\":%d,", (spi_flash_get_chip_size() / (1024 * 1024)));
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"HEAP_SIZE\":%d,", (FreeHeap));
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FREE_DRAM\":%d,", (DRam / 1024));
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FREE_IRAM\":%d,", (IRam / 1024));
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"FREE_HEAP\":%d,", (LargestFreeHeap));
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"BOOT_COUNT\":%d,", (val));
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"COMPILE_TIME\":\"%s\",", (timestamp));
-        // snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"UP_TIME\":\"%s\"}", (Uptime));
 
         // sending the json packet
         httpd_resp_set_type(req, "application/json"); // sending json data as response
@@ -744,7 +733,7 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
         char temp_buffer[100];
         bzero(temp_buffer, sizeof(temp_buffer));
         (ESP_receive) ? (snprintf(temp_buffer, sizeof(temp_buffer), "{\"restart_successful\":%u,", 1)) : (snprintf(temp_buffer, sizeof(temp_buffer), "{\"restart_successful\":%u,", 0));
-        snprintf(temp_buffer + strlen(temp_buffer), sizeof(temp_buffer) - strlen(temp_buffer), "\"IP_addr3\":%u}", (uint8_t)((STA_ADDR3) ? STA_ADDR3 : 0));
+        snprintf((temp_buffer + strlen(temp_buffer)), (sizeof(temp_buffer) - strlen(temp_buffer)), "\"IP_addr3\":%u,\"IP_addr4\":%u}", (uint8_t)((STA_ADDR3) ? STA_ADDR3 : 0), (uint8_t)((STA_ADDR4) ? STA_ADDR4 : 0));
 
         ESP_LOGE("RESTART_JSON_REPLY", "%s", temp_buffer);
         httpd_resp_set_type(req, "application/json"); // sending json data as response
@@ -754,10 +743,10 @@ esp_err_t restart_handler(httpd_req_t *req) // invoked when login_post is activa
 
         if (ESP_receive)
         {
-
             ESP_LOGW("RESTART_TAG", "Restarting... NOW.");
-            vTaskDelay(500 / portTICK_PERIOD_MS);
+            vTaskDelay(600 / portTICK_PERIOD_MS);
             response.approve = false;
+            wifi_disconnect();
             esp_restart();
         }
     }
@@ -977,16 +966,15 @@ esp_err_t img_handler(httpd_req_t *req) // generally we dont want other file to 
  */
 void connect_to_local_AP(void *params)
 {
-    // vTaskDelay(100 / portTICK_PERIOD_MS);
     ap_config_t *ap_config = (ap_config_t *)params; // type casting to ap_config_t
-
     // wifi_destroy_netif();                               // destroy netif infos [like ip,mac..] for wifi_AP_mode
-    wifi_disconnect();     // disconnect the wifi_AP_mode
     dns_hijack_srv_stop(); // just making sure to close
+    wifi_disconnect();     // disconnect the wifi_AP_mode
+
     ESP_LOGE("PARSE_SSID", "%s", ap_config->local_ssid);
     ESP_LOGE("PARSE_PASS", "%s", ap_config->local_pass);
 
-    if (wifi_connect_sta(ap_config->local_ssid, ap_config->local_pass, 20000) == ESP_OK) // if the local ssid/pass doesn't match
+    if (ESP_OK == wifi_connect_sta(ap_config->local_ssid, ap_config->local_pass, 30000)) // if the local ssid/pass doesn't match
     {
         ESP_LOGI("AP_to_STA_TAG", "CONNECTED TO New_SSID... > Saving cred of %s in NVS... ", ap_config->local_ssid);
         // nvs_flash_init(); // no harm in re_initing the nvs
@@ -999,16 +987,14 @@ void connect_to_local_AP(void *params)
             ESP_ERROR_CHECK(nvs_commit(nvs_write_handle));
             nvs_close(nvs_write_handle);
         }
-
         // start http server for login after [ ESP => STA ]
         ESP_LOGE("AP_TO_STA_RESTART", "STA Connection successful");
         for (uint8_t a = 3; a > 0; a--)
         {
             ESP_LOGE("AP_TO_STA_RESTART", "Restarting STA mode in ...%d", a);
-            vTaskDelay(pdMS_TO_TICKS(500));
+            vTaskDelay(750 / portTICK_PERIOD_MS);
         }
         wifi_disconnect();
-        vTaskDelay(pdMS_TO_TICKS(5));
         esp_restart();
     }
     else
@@ -1047,7 +1033,7 @@ esp_err_t AP_TO_STA(httpd_req_t *req)
 
     char temp_buffer[50];
     bzero(temp_buffer, sizeof(temp_buffer));
-    snprintf(temp_buffer, sizeof(temp_buffer), "{\"IP_addr3\":%u}", (uint8_t)((STA_ADDR3) ? STA_ADDR3 : 0));
+    snprintf(temp_buffer, sizeof(temp_buffer), "{\"IP_addr3\":%u,\"IP_addr4\":%u}", (uint8_t)((STA_ADDR3) ? STA_ADDR3 : 0), (uint8_t)((STA_ADDR4) ? STA_ADDR4 : 0));
 
     ESP_LOGE("JSON_REPLY", "%s", temp_buffer);
     httpd_resp_set_type(req, "application/json"); // sending json data as response

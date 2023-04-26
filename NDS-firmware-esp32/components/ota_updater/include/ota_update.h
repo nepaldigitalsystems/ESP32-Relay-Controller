@@ -3,8 +3,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <esp_err.h>
 
-void initialize_ota_setup();
-void Activate_OTA();
+void initialize_ota_setup(void);
+esp_err_t Activate_OTA(void);
 
 #endif

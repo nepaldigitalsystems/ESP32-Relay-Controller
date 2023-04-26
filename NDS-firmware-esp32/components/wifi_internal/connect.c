@@ -3,8 +3,8 @@
  *******************************************************************************/
 #include "stdio.h"
 #include "nvs_flash.h"
-// #include "nvs.h"
 #include "string.h"
+#include "sync_time.h"
 #include "esp_log.h"
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
@@ -12,7 +12,6 @@
 #include "freertos/event_groups.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
-
 #include "esp_sntp.h"
 
 /*******************************************************************************
@@ -25,13 +24,17 @@
 // The netmask specification.
 #define AP_DEVICE_NETMASK "255.255.255.0"
 
+// static bool flag_sntp_triggered = false;
+static char Current_Date_Time[100];
 uint32_t STA_ADDR3 = 0;                      // variable to store the host_no. from IP-stack when connecting in STA mode
+uint32_t STA_ADDR4 = 0;                      // variable to store the host_no. from IP-stack when connecting in STA mode
 static uint8_t RECONNECT_COUNT = 0;          // variable to count no. of failed tries during STA connection.
 static esp_netif_t *ESP_NETIF = NULL;        // creating a global reference to network interface
 static EventGroupHandle_t WIFI_EVENTS;       // create event groups for WIFI_EVENTS
 static const int CONNECTED_GOT_IP = BIT0;    // indicator for device connection.
 static const int DISCONNECTED_GOT_IP = BIT1; // indicator for device disconnection.
 
+/*extern functions*/
 extern void start_dns_server(void);
 extern void http_server_ap_mode(void);
 extern void http_server_sta_mode(void);
@@ -205,45 +208,22 @@ void event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t
     {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
         ESP_LOGE("IP_EVENT", "STATION GOT IP.. ESP32-STA IP:" IPSTR, IP2STR(&event->ip_info.ip));
+        // if ((0 == STA_ADDR3) || (0 == STA_ADDR4))
+        // {
+        STA_ADDR3 = (uint32_t)esp_ip4_addr3_16(&event->ip_info.ip);
+        STA_ADDR4 = (uint32_t)esp_ip4_addr4_16(&event->ip_info.ip);
+        ESP_LOGE("STA_IP_TAG", "ESP32_NEW, Host_addr => %d:%d", STA_ADDR3, STA_ADDR4);
+        nvs_handle_t sta_host;
+        if (ESP_OK == nvs_open("sta_num", NVS_READWRITE, &sta_host))
+        {
+            ESP_ERROR_CHECK(nvs_set_u32(sta_host, "no.3", STA_ADDR3)); // key_ID3 = "no.3"
+            ESP_ERROR_CHECK(nvs_commit(sta_host));
+            ESP_ERROR_CHECK(nvs_set_u32(sta_host, "no.4", STA_ADDR4)); // key_ID3 = "no.4"
+            ESP_ERROR_CHECK(nvs_commit(sta_host));
+            nvs_close(sta_host);
+        }
+        // }
         xEventGroupSetBits(WIFI_EVENTS, CONNECTED_GOT_IP); // WIFI_EVENTS => BIT0 ; True
-        if (STA_ADDR3 == 0)
-        {
-            STA_ADDR3 = (uint32_t)esp_ip4_addr3_16(&event->ip_info.ip);
-            ESP_LOGE("STA_IP_TAG", "ESP32_NEW, IP_addr3: %d", STA_ADDR3);
-            nvs_handle_t sta_host;
-            if (ESP_OK == nvs_open("sta_num", NVS_READWRITE, &sta_host))
-            {
-                ESP_ERROR_CHECK(nvs_set_u32(sta_host, "no.", STA_ADDR3));
-                ESP_ERROR_CHECK(nvs_commit(sta_host));
-                nvs_close(sta_host);
-            }
-        }
-
-        ESP_LOGI("SNTP_TAG", "Initializing SNTP");
-        sntp_setoperatingmode(SNTP_OPMODE_POLL);
-        sntp_setservername(0, "pool.ntp.org");
-        // sntp_set_time_sync_notification_cb("time_sync_notification_cb");
-        sntp_init();
-
-        // wait for time to be set
-        time_t now = 0;
-        struct tm timeinfo = {0};
-        int retry = 0;
-        const int retry_count = 10;
-        while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
-        {
-            ESP_LOGI("SNTP_TAG", "Waiting for system time to be set... (%d/%d)", retry, retry_count);
-            vTaskDelay(100 / portTICK_PERIOD_MS);
-        }
-        time(&now);
-        localtime_r(&now, &timeinfo);
-        char strftime_buf[64];
-        // Set timezone to Nepal Standard Time
-        setenv("TZ", "UTC+05:45", 1);
-        tzset();
-        localtime_r(&now, &timeinfo);
-        strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-        ESP_LOGI("SNTP_TAG", "The current date/time in NEPAL is: %s", strftime_buf);
     }
     break;
     case WIFI_EVENT_AP_START:
@@ -309,37 +289,36 @@ esp_err_t wifi_connect_sta(const char *SSID, const char *PASS, int timeout)
     strncpy((char *)wifi_config.sta.password, PASS, sizeof(wifi_config.sta.password) - 1); // [31byte + 1-terminator] // only two types to choose fro (ap / sta)
 
     //---------------------------------------------------------------------------------------
-    nvs_handle_t my_handle; // check for internally stored , sta_host_number
-    ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &my_handle));
-    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u32(my_handle, "no.", &STA_ADDR3))
-    {
-        STA_ADDR3 = 0;
-    }
-    ESP_ERROR_CHECK(nvs_commit(my_handle));
-    nvs_close(my_handle);
-    if (STA_ADDR3 > 0)
-    {
-        esp_netif_dhcpc_stop(ESP_NETIF);
-        esp_netif_ip_info_t ip_info;
-        IP4_ADDR(&ip_info.ip, 192, 168, STA_ADDR3, 100);
-        IP4_ADDR(&ip_info.gw, 192, 168, STA_ADDR3, 254);
-        IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
-        esp_netif_set_ip_info(ESP_NETIF, &ip_info);
-    }
-    //---------------------------------------------------------------------------------------
+    // nvs_handle_t my_handle; // check for internally stored , sta_host_number
+    // ESP_ERROR_CHECK(nvs_open("sta_num", NVS_READWRITE, &my_handle));
+    // if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u32(my_handle, "no.", &STA_ADDR3))
+    // {
+    //     STA_ADDR3 = 0;
+    // }
+    // ESP_ERROR_CHECK(nvs_commit(my_handle));
+    // nvs_close(my_handle);
+
+    // flag_sntp_triggered = true; // this is the only flag trigger point (connect.c -> wifi_connect_sta)
 #ifdef LWIP_DHCP_GET_NTP_SRV
     sntp_servermode_dhcp(1);
 #endif
-    esp_wifi_set_mode(WIFI_MODE_STA);                   // setting the mode of wifi (AP / STA)
-    esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config); // pass the wifi_config ; if set as station
-    esp_wifi_start();
+
+    //---------------------------------------------------------------------------------------
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));                   // setting the mode of wifi (AP / STA)
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config)); // pass the wifi_config ; if set as station
+    ESP_ERROR_CHECK(esp_wifi_start());
+
     vTaskDelay(pdMS_TO_TICKS(10));
     Connect_Portal();
     http_server_sta_mode();
-
     EventBits_t result = xEventGroupWaitBits(WIFI_EVENTS, CONNECTED_GOT_IP | DISCONNECTED_GOT_IP, true, false, pdMS_TO_TICKS(timeout));
     if (result == CONNECTED_GOT_IP)
     {
+        Set_SystemTime_SNTP();
+        Get_current_date_time(Current_Date_Time); // write the date/time into the "Current_Date_Time" var
+        ESP_LOGE("SNTP_SERVER", "(connect.c)current date and time is = %s\n", Current_Date_Time);
+        sntp_stop();
         return ESP_OK;
     }
     return ESP_FAIL;

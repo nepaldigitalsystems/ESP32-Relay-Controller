@@ -270,7 +270,6 @@ void Activate_Relays()
  */
 void setup_relay_update_task()
 {
-
     // Create & initialize serial timer
     const esp_timer_create_args_t esp_timer_create_args1 = {
         .callback = Serial_Timer_Callback,

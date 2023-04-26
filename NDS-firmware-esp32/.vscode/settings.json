@@ -72,7 +72,12 @@
         "esp_http_client.h": "c",
         "esp_ota_ops.h": "c",
         "rtc_io.h": "c",
-        "ota_update.h": "c"
+        "ota_update.h": "c",
+        "esp_attr.h": "c",
+        "esp_sleep.h": "c",
+        "sync_time.h": "c",
+        "atomic": "c",
+        "esp_event.h": "c"
     },
     "idf.flashType": "UART"
 }
